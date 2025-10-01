@@ -146,13 +146,23 @@ Deno.serve(async (req) => {
     
     console.log('Generated token for instance (prefix only):', tokenPrefix);
 
+    // Generate temporary number if agent doesn't have whatsapp_phone configured
+    let whatsappNumber = agent.whatsapp_phone;
+    if (!whatsappNumber) {
+      const tempNumberFormat = settings.default_temp_number_format || '0000000.temp.{agentId}';
+      whatsappNumber = tempNumberFormat.replace('{agentId}', agentId);
+      console.log('Using temporary number for agent without WhatsApp phone:', whatsappNumber);
+    } else {
+      console.log('Using configured WhatsApp phone:', whatsappNumber);
+    }
+
     // Build request body from settings with all required fields
     const requestBody: any = {
       instanceName,
       token: uniqueToken,
       integration: settings.default_integration || 'WHATSAPP-BAILEYS',
       qrcode: settings.qrcode_enabled === 'true',
-      number: agent.whatsapp_phone || '',
+      number: whatsappNumber,
       rejectCall: settings.reject_call === 'true',
       msgCall: settings.msg_call || 'Desculpe, não aceito chamadas no momento.',
       groupsIgnore: settings.groups_ignore === 'true',
