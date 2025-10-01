@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -34,16 +34,26 @@ export function useProducts() {
     endDate: undefined,
   });
   const { toast } = useToast();
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
+      // Cancel any pending request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
       setLoading(true);
+      abortControllerRef.current = new AbortController();
+
       let query = supabase
         .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("id, name, category, price, stock, status, description, user_id, created_at, updated_at")
+        .order("created_at", { ascending: false })
+        .limit(100);
 
-      // Apply filters
+      // Apply filters efficiently
       if (filters.search) {
         query = query.ilike("name", `%${filters.search}%`);
       }
@@ -66,17 +76,20 @@ export function useProducts() {
 
       if (error) throw error;
       setProducts(data || []);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Erro ao carregar produtos",
-        description: "Não foi possível carregar a lista de produtos.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error("Error fetching products:", error);
+        toast({
+          title: "Erro ao carregar produtos",
+          description: "Não foi possível carregar a lista de produtos.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
     }
-  };
+  }, [filters, toast]);
 
   const createProduct = async (product: Omit<Product, "id" | "created_at" | "updated_at" | "user_id">) => {
     try {
@@ -156,9 +169,25 @@ export function useProducts() {
     }
   };
 
+  // Debounce filter changes to avoid excessive queries
   useEffect(() => {
-    fetchProducts();
-  }, [filters]);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      fetchProducts();
+    }, 500);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [fetchProducts]);
 
   return {
     products,

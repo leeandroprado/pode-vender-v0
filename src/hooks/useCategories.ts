@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,33 +13,76 @@ export interface Category {
   updated_at: string;
 }
 
+// Cache configuration
+const CACHE_KEY = 'categories_cache';
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+interface CacheData {
+  data: Category[];
+  timestamp: number;
+}
+
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async (skipCache = false) => {
     try {
+      // Cancel any pending request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Check cache first
+      if (!skipCache) {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const cacheData: CacheData = JSON.parse(cached);
+          const now = Date.now();
+          if (now - cacheData.timestamp < CACHE_TTL) {
+            setCategories(cacheData.data);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
       setLoading(true);
+      abortControllerRef.current = new AbortController();
+
       const { data, error } = await supabase
         .from("categories")
-        .select("*")
+        .select("id, name, description, color, user_id, is_active, created_at, updated_at")
         .eq("is_active", true)
-        .order("name", { ascending: true });
+        .order("name", { ascending: true })
+        .limit(100);
 
       if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast({
-        title: "Erro ao carregar categorias",
-        description: "Não foi possível carregar a lista de categorias.",
-        variant: "destructive",
-      });
+
+      const categoriesData = data || [];
+      setCategories(categoriesData);
+
+      // Update cache
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        data: categoriesData,
+        timestamp: Date.now(),
+      }));
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error("Error fetching categories:", error);
+        toast({
+          title: "Erro ao carregar categorias",
+          description: "Não foi possível carregar a lista de categorias.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
     }
-  };
+  }, [toast]);
 
   const createCategory = async (category: Omit<Category, "id" | "created_at" | "updated_at" | "user_id" | "is_active">) => {
     try {
@@ -68,7 +111,9 @@ export function useCategories() {
         description: "A categoria foi criada com sucesso.",
       });
 
-      fetchCategories();
+      // Invalidate cache and refetch
+      localStorage.removeItem(CACHE_KEY);
+      fetchCategories(true);
     } catch (error) {
       console.error("Error creating category:", error);
       toast({
@@ -94,7 +139,9 @@ export function useCategories() {
         description: "A categoria foi atualizada com sucesso.",
       });
 
-      fetchCategories();
+      // Invalidate cache and refetch
+      localStorage.removeItem(CACHE_KEY);
+      fetchCategories(true);
     } catch (error) {
       console.error("Error updating category:", error);
       toast({
@@ -108,7 +155,6 @@ export function useCategories() {
 
   const deleteCategory = async (id: string) => {
     try {
-      // Soft delete - just set is_active to false
       const { error } = await supabase
         .from("categories")
         .update({ is_active: false })
@@ -121,7 +167,9 @@ export function useCategories() {
         description: "A categoria foi excluída com sucesso.",
       });
 
-      fetchCategories();
+      // Invalidate cache and refetch
+      localStorage.removeItem(CACHE_KEY);
+      fetchCategories(true);
     } catch (error) {
       console.error("Error deleting category:", error);
       toast({
@@ -135,7 +183,13 @@ export function useCategories() {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [fetchCategories]);
 
   return {
     categories,
@@ -143,6 +197,6 @@ export function useCategories() {
     createCategory,
     updateCategory,
     deleteCategory,
-    refetch: fetchCategories,
+    refetch: () => fetchCategories(true),
   };
 }

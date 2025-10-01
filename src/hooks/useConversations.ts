@@ -30,18 +30,21 @@ export const useConversations = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch conversations
+  // Fetch conversations with optimized query
   const { data: conversations, isLoading: isLoadingConversations, error: conversationsError } = useQuery({
     queryKey: ['conversations'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conversations')
-        .select('*')
-        .order('last_message_at', { ascending: false });
+        .select('id, user_id, whatsapp_phone, whatsapp_instance_id, status, last_message_at, created_at, updated_at, metadata')
+        .order('last_message_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
       return data as Conversation[];
     },
+    staleTime: 30000, // Cache for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   // Setup realtime subscriptions
@@ -110,14 +113,17 @@ export const useMessages = (conversationId: string | null) => {
       
       const { data, error } = await supabase
         .from('messages')
-        .select('*')
+        .select('id, conversation_id, sender_type, sender_id, content, message_type, timestamp, whatsapp_message_id')
         .eq('conversation_id', conversationId)
-        .order('timestamp', { ascending: true });
+        .order('timestamp', { ascending: true })
+        .limit(200);
 
       if (error) throw error;
       return data as Message[];
     },
     enabled: !!conversationId,
+    staleTime: 10000, // Cache for 10 seconds
+    gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
   });
 
   // Setup realtime subscriptions for messages

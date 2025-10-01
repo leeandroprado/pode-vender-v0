@@ -33,12 +33,15 @@ export const useAgents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agents")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("id, name, description, model, prompt_system, status, whatsapp_connected, whatsapp_phone, conversations_count, created_at, updated_at")
+        .order("created_at", { ascending: false })
+        .limit(100);
 
       if (error) throw error;
       return data as Agent[];
     },
+    staleTime: 30000, // Cache for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const { data: whatsappInstances, refetch: fetchWhatsappInstances } = useQuery({
@@ -46,12 +49,15 @@ export const useAgents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("whatsapp_instances")
-        .select("*");
+        .select("id, agent_id, user_id, instance_id, instance_name, status, integration, qr_code_base64, qr_code_text, hash, settings, created_at, updated_at")
+        .limit(50);
 
       if (error) throw error;
       return data as WhatsappInstance[];
     },
     initialData: [],
+    staleTime: 20000, // Cache for 20 seconds
+    gcTime: 3 * 60 * 1000, // Keep in cache for 3 minutes
   });
 
   const createAgent = useMutation({
