@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Agent = Tables<"agents">;
+type WhatsappInstance = Tables<"whatsapp_instances">;
 
 type CreateAgentInput = {
   name: string;
@@ -38,6 +39,19 @@ export const useAgents = () => {
       if (error) throw error;
       return data as Agent[];
     },
+  });
+
+  const { data: whatsappInstances, refetch: fetchWhatsappInstances } = useQuery({
+    queryKey: ["whatsapp_instances"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("whatsapp_instances")
+        .select("*");
+
+      if (error) throw error;
+      return data as WhatsappInstance[];
+    },
+    initialData: [],
   });
 
   const createAgent = useMutation({
@@ -130,5 +144,7 @@ export const useAgents = () => {
     createAgent,
     updateAgent,
     deleteAgent,
+    whatsappInstances: whatsappInstances || [],
+    fetchWhatsappInstances,
   };
 };

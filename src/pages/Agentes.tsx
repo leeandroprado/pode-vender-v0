@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Bot, Plus, QrCode, Settings, Loader2, CheckCircle } from "lucide-react";
 import { useAgents } from "@/hooks/useAgents";
 import { NewAgentDialog } from "@/components/NewAgentDialog";
@@ -28,10 +29,38 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function Agentes() {
-  const { agents, isLoading } = useAgents();
+  const { agents, isLoading, updateAgent, whatsappInstances, fetchWhatsappInstances } = useAgents();
   const [configureAgent, setConfigureAgent] = useState<Agent | null>(null);
   const [qrCodeAgent, setQrCodeAgent] = useState<Agent | null>(null);
   const [statusAgent, setStatusAgent] = useState<Agent | null>(null);
+
+  useEffect(() => {
+    if (agents.length > 0) {
+      fetchWhatsappInstances();
+    }
+  }, [agents, fetchWhatsappInstances]);
+
+  const handleToggleStatus = async (agent: Agent, checked: boolean) => {
+    await updateAgent.mutateAsync({
+      id: agent.id,
+      status: checked ? "active" : "inactive",
+    });
+  };
+
+  const getWhatsappStatus = (agentId: string) => {
+    const instance = whatsappInstances.find((inst) => inst.agent_id === agentId);
+    if (!instance) return { label: "Desconectado", connected: false };
+    
+    const statusMap: Record<string, { label: string; connected: boolean }> = {
+      connected: { label: "Conectado", connected: true },
+      open: { label: "Conectado", connected: true },
+      connecting: { label: "Conectando", connected: false },
+      disconnected: { label: "Desconectado", connected: false },
+      error: { label: "Erro", connected: false },
+    };
+    
+    return statusMap[instance.status] || { label: "Desconhecido", connected: false };
+  };
 
   return (
     <div className="space-y-6">
@@ -69,24 +98,37 @@ export default function Agentes() {
                       <CardDescription>{modelLabels[agent.model] || agent.model}</CardDescription>
                     </div>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      agent.status === "active"
-                        ? "bg-success/10 text-success border-success/20"
-                        : "bg-muted text-muted-foreground"
-                    }
-                  >
-                    {statusLabels[agent.status]}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={agent.status === "active"}
+                      onCheckedChange={(checked) => handleToggleStatus(agent, checked)}
+                      disabled={updateAgent.isPending}
+                    />
+                    <Badge
+                      variant="outline"
+                      className={
+                        agent.status === "active"
+                          ? "bg-success/10 text-success border-success/20"
+                          : "bg-muted text-muted-foreground"
+                      }
+                    >
+                      {statusLabels[agent.status]}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">WhatsApp</span>
-                    <span className="font-medium">
-                      {agent.whatsapp_connected ? "Conectado" : "Desconectado"}
+                    <span 
+                      className={`font-medium ${
+                        getWhatsappStatus(agent.id).connected 
+                          ? "text-success" 
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {getWhatsappStatus(agent.id).label}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -100,14 +142,15 @@ export default function Agentes() {
                   size="sm"
                   className="flex-1 gap-2"
                   onClick={() => {
-                    if (agent.whatsapp_connected) {
+                    const whatsappStatus = getWhatsappStatus(agent.id);
+                    if (whatsappStatus.connected) {
                       setStatusAgent(agent);
                     } else {
                       setQrCodeAgent(agent);
                     }
                   }}
                 >
-                  {agent.whatsapp_connected ? (
+                  {getWhatsappStatus(agent.id).connected ? (
                     <>
                       <CheckCircle className="h-4 w-4" />
                       Status

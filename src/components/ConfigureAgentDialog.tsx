@@ -22,6 +22,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormDescription,
@@ -80,7 +90,8 @@ interface ConfigureAgentDialogProps {
 }
 
 export function ConfigureAgentDialog({ agent, open, onOpenChange }: ConfigureAgentDialogProps) {
-  const { updateAgent } = useAgents();
+  const { updateAgent, deleteAgent } = useAgents();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -110,6 +121,13 @@ export function ConfigureAgentDialog({ agent, open, onOpenChange }: ConfigureAge
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!agent) return;
     await updateAgent.mutateAsync({ id: agent.id, ...values } as UpdateAgentInput);
+    onOpenChange(false);
+  };
+
+  const handleDelete = async () => {
+    if (!agent) return;
+    await deleteAgent.mutateAsync(agent.id);
+    setShowDeleteDialog(false);
     onOpenChange(false);
   };
 
@@ -241,17 +259,46 @@ export function ConfigureAgentDialog({ agent, open, onOpenChange }: ConfigureAge
               )}
             />
 
-            <div className="flex gap-3 justify-end">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
+            <div className="flex gap-3 justify-between pt-4 border-t">
+              <Button 
+                type="button" 
+                variant="destructive" 
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                Excluir Agente
               </Button>
-              <Button type="submit" disabled={updateAgent.isPending}>
-                {updateAgent.isPending ? "Salvando..." : "Salvar Alterações"}
-              </Button>
+              <div className="flex gap-3">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={updateAgent.isPending}>
+                  {updateAgent.isPending ? "Salvando..." : "Salvar Alterações"}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>
       </DialogContent>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O agente "{agent?.name}" será permanentemente excluído.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteAgent.isPending ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
