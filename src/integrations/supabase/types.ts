@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agents: {
+        Row: {
+          conversations_count: number
+          created_at: string
+          description: string | null
+          id: string
+          model: Database["public"]["Enums"]["ai_model"]
+          name: string
+          prompt_system: string
+          qr_code: string | null
+          status: Database["public"]["Enums"]["agent_status"]
+          updated_at: string
+          user_id: string
+          whatsapp_connected: boolean
+          whatsapp_phone: string | null
+        }
+        Insert: {
+          conversations_count?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          model?: Database["public"]["Enums"]["ai_model"]
+          name: string
+          prompt_system?: string
+          qr_code?: string | null
+          status?: Database["public"]["Enums"]["agent_status"]
+          updated_at?: string
+          user_id: string
+          whatsapp_connected?: boolean
+          whatsapp_phone?: string | null
+        }
+        Update: {
+          conversations_count?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          model?: Database["public"]["Enums"]["ai_model"]
+          name?: string
+          prompt_system?: string
+          qr_code?: string | null
+          status?: Database["public"]["Enums"]["agent_status"]
+          updated_at?: string
+          user_id?: string
+          whatsapp_connected?: boolean
+          whatsapp_phone?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -38,6 +85,14 @@ export type Database = {
       }
     }
     Enums: {
+      agent_status: "active" | "inactive" | "training"
+      ai_model:
+        | "google/gemini-2.5-pro"
+        | "google/gemini-2.5-flash"
+        | "google/gemini-2.5-flash-lite"
+        | "openai/gpt-5"
+        | "openai/gpt-5-mini"
+        | "openai/gpt-5-nano"
       plan_type: "trial" | "basic" | "professional"
       user_role: "super_admin" | "admin" | "caixa"
     }
@@ -167,6 +222,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      agent_status: ["active", "inactive", "training"],
+      ai_model: [
+        "google/gemini-2.5-pro",
+        "google/gemini-2.5-flash",
+        "google/gemini-2.5-flash-lite",
+        "openai/gpt-5",
+        "openai/gpt-5-mini",
+        "openai/gpt-5-nano",
+      ],
       plan_type: ["trial", "basic", "professional"],
       user_role: ["super_admin", "admin", "caixa"],
     },
