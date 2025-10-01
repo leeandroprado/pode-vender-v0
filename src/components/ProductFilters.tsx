@@ -124,11 +124,11 @@ export function ProductFilters({
           </Button>
         </PopoverTrigger>
         <PopoverContent 
-          className="w-auto p-0 z-[60]" 
-          align="start"
+          className="w-auto p-0 z-[9999]" 
+          align="center"
           side="bottom"
-          sideOffset={8}
-          collisionPadding={8}
+          sideOffset={16}
+          collisionPadding={16}
           avoidCollisions={true}
         >
           <Calendar
@@ -160,11 +160,11 @@ export function ProductFilters({
           </Button>
         </PopoverTrigger>
         <PopoverContent 
-          className="w-auto p-0 z-[60]" 
-          align="start"
+          className="w-auto p-0 z-[9999]" 
+          align="center"
           side="bottom"
-          sideOffset={8}
-          collisionPadding={8}
+          sideOffset={16}
+          collisionPadding={16}
           avoidCollisions={true}
         >
           <Calendar
