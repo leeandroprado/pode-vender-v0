@@ -93,6 +93,9 @@ export type Database = {
         | "openai/gpt-5"
         | "openai/gpt-5-mini"
         | "openai/gpt-5-nano"
+        | "x-ai/grok-code-fast-1"
+        | "x-ai/grok-4-fast:free"
+        | "deepseek/deepseek-chat-v3-0324"
       plan_type: "trial" | "basic" | "professional"
       user_role: "super_admin" | "admin" | "caixa"
     }
@@ -230,6 +233,9 @@ export const Constants = {
         "openai/gpt-5",
         "openai/gpt-5-mini",
         "openai/gpt-5-nano",
+        "x-ai/grok-code-fast-1",
+        "x-ai/grok-4-fast:free",
+        "deepseek/deepseek-chat-v3-0324",
       ],
       plan_type: ["trial", "basic", "professional"],
       user_role: ["super_admin", "admin", "caixa"],
