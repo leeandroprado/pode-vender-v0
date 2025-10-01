@@ -1,6 +1,9 @@
 import { StatCard } from "@/components/StatCard";
+import { ProductStatCard } from "@/components/ProductStatCard";
+import { CategoryStatsCard } from "@/components/CategoryStatsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, CheckCircle2, ShoppingCart, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, CheckCircle2, ShoppingCart, TrendingUp, Calendar, Filter } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -13,6 +16,8 @@ import {
   Pie,
   Cell,
   Legend,
+  LineChart,
+  Line,
 } from "recharts";
 
 const attendanceData = [
@@ -25,55 +30,153 @@ const attendanceData = [
   { name: "Dom", ativos: 5, finalizados: 28 },
 ];
 
+const revenueData = [
+  { name: "Jan", valor: 4200 },
+  { name: "Fev", valor: 5100 },
+  { name: "Mar", valor: 4800 },
+  { name: "Abr", valor: 6200 },
+  { name: "Mai", valor: 7100 },
+  { name: "Jun", valor: 6800 },
+  { name: "Jul", valor: 8500 },
+];
+
 const cartStatusData = [
-  { name: "Finalizados", value: 156, color: "hsl(var(--success))" },
-  { name: "Em Aberto", value: 43, color: "hsl(var(--warning))" },
+  { name: "Eletrônicos", value: 156, color: "hsl(var(--chart-1))" },
+  { name: "Moda", value: 89, color: "hsl(var(--chart-2))" },
+  { name: "Casa", value: 43, color: "hsl(var(--chart-3))" },
+  { name: "Outros", value: 28, color: "hsl(var(--chart-4))" },
+];
+
+const productDonutData = [
+  { name: "Produtos A", value: 45, color: "hsl(var(--chart-1))" },
+  { name: "Produtos B", value: 30, color: "hsl(var(--chart-2))" },
+  { name: "Produtos C", value: 25, color: "hsl(var(--chart-3))" },
+];
+
+const categoryItems = [
+  { name: "Notebooks", value: 234, percentage: 12, color: "hsl(var(--chart-1))" },
+  { name: "Smartphones", value: 189, percentage: 8, color: "hsl(var(--chart-2))" },
+  { name: "Acessórios", value: 156, percentage: 15, color: "hsl(var(--chart-3))" },
+  { name: "Tablets", value: 98, percentage: 5, color: "hsl(var(--chart-4))" },
+];
+
+const miniChartData = [
+  { value: 20 }, { value: 35 }, { value: 28 }, { value: 42 }, 
+  { value: 38 }, { value: 52 }, { value: 48 }, { value: 61 },
 ];
 
 export default function Dashboard() {
+  const today = new Date().toLocaleDateString('pt-BR', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="mt-2 text-muted-foreground">
-          Visão geral do desempenho dos seus agentes de IA
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="mt-2 text-sm text-muted-foreground capitalize">
+            {today}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Calendar className="mr-2 h-4 w-4" />
+            Filtrar período
+          </Button>
+          <Button variant="outline" size="sm">
+            <Filter className="mr-2 h-4 w-4" />
+            Filtros
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Atendimentos em Aberto"
+          title="Conversas Ativas"
           value={24}
           icon={MessageSquare}
           trend={{ value: "+12%", isPositive: true }}
+          miniChart={miniChartData}
+          miniChartColor="hsl(var(--chart-1))"
         />
         <StatCard
-          title="Atendimentos Finalizados"
-          value={321}
-          icon={CheckCircle2}
+          title="Taxa de Conversão"
+          value="68%"
+          icon={TrendingUp}
           trend={{ value: "+8%", isPositive: true }}
+          miniChart={miniChartData}
+          miniChartColor="hsl(var(--chart-2))"
         />
         <StatCard
           title="Carrinhos em Aberto"
           value={43}
           icon={ShoppingCart}
           trend={{ value: "-5%", isPositive: false }}
+          miniChart={miniChartData}
+          miniChartColor="hsl(var(--chart-3))"
         />
         <StatCard
-          title="Carrinhos Finalizados"
-          value={156}
-          icon={TrendingUp}
+          title="Ticket Médio"
+          value="R$ 487"
+          icon={CheckCircle2}
           trend={{ value: "+23%", isPositive: true }}
+          miniChart={miniChartData}
+          miniChartColor="hsl(var(--success))"
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Receita Mensal</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="name" className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)",
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="valor" 
+                    stroke="hsl(var(--chart-1))" 
+                    strokeWidth={3}
+                    dot={{ fill: "hsl(var(--chart-1))", strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        <ProductStatCard
+          title="Produtos Vendidos"
+          value={2847}
+          percentage={18}
+          data={productDonutData}
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Atendimentos por Dia</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={attendanceData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="name" className="text-xs" />
@@ -93,19 +196,24 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        <CategoryStatsCard
+          title="Top Categorias"
+          items={categoryItems}
+        />
+
         <Card>
           <CardHeader>
-            <CardTitle>Status dos Carrinhos</CardTitle>
+            <CardTitle>Vendas por Categoria</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
                   data={cartStatusData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
-                  outerRadius={100}
+                  outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
                 >
