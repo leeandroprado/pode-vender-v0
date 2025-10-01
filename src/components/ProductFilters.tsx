@@ -57,14 +57,14 @@ export function ProductFilters({
   return (
     <div className="flex flex-col sm:flex-row flex-wrap gap-3">
       <Select
-        value={filters.category}
-        onValueChange={(value) => onFilterChange("category", value)}
+        value={filters.category || "all"}
+        onValueChange={(value) => onFilterChange("category", value === "all" ? "" : value)}
       >
         <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder="Categoria" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todas</SelectItem>
+          <SelectItem value="all">Todas</SelectItem>
           {categories.map((category) => (
             <SelectItem key={category} value={category}>
               {category}
@@ -74,14 +74,14 @@ export function ProductFilters({
       </Select>
 
       <Select
-        value={filters.status}
-        onValueChange={(value) => onFilterChange("status", value)}
+        value={filters.status || "all"}
+        onValueChange={(value) => onFilterChange("status", value === "all" ? "" : value)}
       >
         <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todos</SelectItem>
+          <SelectItem value="all">Todos</SelectItem>
           {statuses.map((status) => (
             <SelectItem key={status.value} value={status.value}>
               <div className="flex items-center gap-2">
