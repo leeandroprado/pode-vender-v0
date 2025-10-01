@@ -39,10 +39,12 @@ export function useProducts() {
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const cachedCountRef = useRef<number>(0);
+  const lastFiltersRef = useRef<ProductFilters>(filters);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  const fetchProducts = useCallback(async () => {
+  const fetchProducts = useCallback(async (skipCount: boolean = false) => {
     try {
       // Cancel any pending request
       if (abortControllerRef.current) {
@@ -52,34 +54,38 @@ export function useProducts() {
       setLoading(true);
       abortControllerRef.current = new AbortController();
 
-      // Build base query for counting
-      let countQuery = supabase
-        .from("products")
-        .select("*", { count: "exact", head: true });
+      // Only fetch count if filters changed or we don't have a cached count
+      if (!skipCount) {
+        // Build base query for counting
+        let countQuery = supabase
+          .from("products")
+          .select("*", { count: "exact", head: true });
 
-      // Apply filters to count query
-      if (filters.search) {
-        countQuery = countQuery.ilike("name", `%${filters.search}%`);
-      }
-      if (filters.category) {
-        countQuery = countQuery.eq("category", filters.category);
-      }
-      if (filters.status) {
-        countQuery = countQuery.eq("status", filters.status);
-      }
-      if (filters.startDate) {
-        countQuery = countQuery.gte("created_at", filters.startDate.toISOString());
-      }
-      if (filters.endDate) {
-        const endOfDay = new Date(filters.endDate);
-        endOfDay.setHours(23, 59, 59, 999);
-        countQuery = countQuery.lte("created_at", endOfDay.toISOString());
-      }
+        // Apply filters to count query
+        if (filters.search) {
+          countQuery = countQuery.ilike("name", `%${filters.search}%`);
+        }
+        if (filters.category) {
+          countQuery = countQuery.eq("category", filters.category);
+        }
+        if (filters.status) {
+          countQuery = countQuery.eq("status", filters.status);
+        }
+        if (filters.startDate) {
+          countQuery = countQuery.gte("created_at", filters.startDate.toISOString());
+        }
+        if (filters.endDate) {
+          const endOfDay = new Date(filters.endDate);
+          endOfDay.setHours(23, 59, 59, 999);
+          countQuery = countQuery.lte("created_at", endOfDay.toISOString());
+        }
 
-      // Get total count
-      const { count, error: countError } = await countQuery;
-      if (countError) throw countError;
-      setTotalCount(count || 0);
+        // Get total count
+        const { count, error: countError } = await countQuery;
+        if (countError) throw countError;
+        cachedCountRef.current = count || 0;
+        setTotalCount(count || 0);
+      }
 
       // Build data query with pagination
       const from = (currentPage - 1) * pageSize;
@@ -228,17 +234,27 @@ export function useProducts() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
+    lastFiltersRef.current = filters;
   }, [filters]);
 
-  // Debounce filter changes to avoid excessive queries
+  // Immediate fetch for pagination changes (no debounce)
   useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
+    const filtersChanged = JSON.stringify(lastFiltersRef.current) !== JSON.stringify(filters);
+    
+    if (filtersChanged) {
+      // Filters changed, use debounce
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
 
-    debounceTimerRef.current = setTimeout(() => {
-      fetchProducts();
-    }, 500);
+      debounceTimerRef.current = setTimeout(() => {
+        fetchProducts(false); // Fetch with count
+        lastFiltersRef.current = filters;
+      }, 500);
+    } else {
+      // Only page changed, fetch immediately without count
+      fetchProducts(true);
+    }
 
     return () => {
       if (debounceTimerRef.current) {
@@ -248,7 +264,7 @@ export function useProducts() {
         abortControllerRef.current.abort();
       }
     };
-  }, [fetchProducts]);
+  }, [fetchProducts, filters, currentPage]);
 
   return {
     products,
