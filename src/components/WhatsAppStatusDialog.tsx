@@ -1,10 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Phone, Clock, AlertCircle } from "lucide-react";
+import { CheckCircle, Phone, Clock, AlertCircle, Unplug } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { useAgents } from "@/hooks/useAgents";
 
 type Agent = Tables<"agents">;
 type WhatsAppInstance = Tables<"whatsapp_instances">;
@@ -18,6 +19,7 @@ interface WhatsAppStatusDialogProps {
 export const WhatsAppStatusDialog = ({ agent, open, onOpenChange }: WhatsAppStatusDialogProps) => {
   const [instance, setInstance] = useState<WhatsAppInstance | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { disconnectWhatsApp } = useAgents();
 
   useEffect(() => {
     if (open && agent) {
@@ -139,8 +141,24 @@ export const WhatsAppStatusDialog = ({ agent, open, onOpenChange }: WhatsAppStat
           </div>
         )}
 
-        <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+        <DialogFooter className="flex gap-2">
+          {instance?.status === "connected" && (
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (agent) {
+                  disconnectWhatsApp.mutate(agent.id);
+                  onOpenChange(false);
+                }
+              }}
+              disabled={disconnectWhatsApp.isPending}
+              className="gap-2"
+            >
+              <Unplug className="h-4 w-4" />
+              Desconectar
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

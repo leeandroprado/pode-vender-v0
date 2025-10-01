@@ -137,6 +137,36 @@ export const useAgents = () => {
     },
   });
 
+  const disconnectWhatsApp = useMutation({
+    mutationFn: async (agentId: string) => {
+      const { data, error } = await supabase.functions.invoke(
+        "whatsapp-disconnect-instance",
+        {
+          body: { agentId },
+        }
+      );
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["agents"] });
+      queryClient.invalidateQueries({ queryKey: ["whatsapp_instances"] });
+      toast({
+        title: "WhatsApp desconectado",
+        description: "O WhatsApp foi desconectado com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao desconectar",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     agents: agents || [],
     isLoading,
@@ -144,6 +174,7 @@ export const useAgents = () => {
     createAgent,
     updateAgent,
     deleteAgent,
+    disconnectWhatsApp,
     whatsappInstances: whatsappInstances || [],
     fetchWhatsappInstances,
   };

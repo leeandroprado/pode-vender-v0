@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.whatsapp-get-instance-status]
 verify_jwt = true
+
+[functions.whatsapp-disconnect-instance]
+verify_jwt = true
