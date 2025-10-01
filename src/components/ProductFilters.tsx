@@ -13,6 +13,7 @@ import { CalendarIcon, X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCategories } from "@/hooks/useCategories";
 import { useState } from "react";
 
 interface ProductFiltersProps {
@@ -25,15 +26,6 @@ interface ProductFiltersProps {
   onFilterChange: (key: string, value: any) => void;
   onClearFilters: () => void;
 }
-
-const categories = [
-  "Eletrônicos",
-  "Acessórios",
-  "Áudio",
-  "Computadores",
-  "Periféricos",
-  "Outros",
-];
 
 const statuses = [
   { value: "ativo", label: "Ativo" },
@@ -48,6 +40,7 @@ export function ProductFilters({
   onClearFilters,
 }: ProductFiltersProps) {
   const isMobile = useIsMobile();
+  const { categories } = useCategories();
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
   
@@ -66,8 +59,8 @@ export function ProductFilters({
         <SelectContent>
           <SelectItem value="all">Todas</SelectItem>
           {categories.map((category) => (
-            <SelectItem key={category} value={category}>
-              {category}
+            <SelectItem key={category.id} value={category.name}>
+              {category.name}
             </SelectItem>
           ))}
         </SelectContent>

@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { useCategories } from "@/hooks/useCategories";
 
 const productSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(200, "Nome muito longo"),
@@ -46,15 +47,6 @@ interface NewProductDialogProps {
   onSubmit: (data: any) => Promise<void>;
 }
 
-const categories = [
-  "Eletrônicos",
-  "Acessórios",
-  "Áudio",
-  "Computadores",
-  "Periféricos",
-  "Outros",
-];
-
 const statuses = [
   { value: "ativo", label: "Ativo" },
   { value: "inativo", label: "Inativo" },
@@ -64,6 +56,7 @@ const statuses = [
 
 export function NewProductDialog({ open, onOpenChange, onSubmit }: NewProductDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { categories } = useCategories();
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -138,8 +131,8 @@ export function NewProductDialog({ open, onOpenChange, onSubmit }: NewProductDia
                       </FormControl>
                       <SelectContent>
                         {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
+                          <SelectItem key={category.id} value={category.name}>
+                            {category.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

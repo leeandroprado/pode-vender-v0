@@ -12,18 +12,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Upload, MoreVertical, Loader2 } from "lucide-react";
+import { Plus, Search, Upload, MoreVertical, Loader2, FolderKanban } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { NewProductDialog } from "@/components/NewProductDialog";
 import { ImportProductsDialog } from "@/components/ImportProductsDialog";
 import { ProductFilters } from "@/components/ProductFilters";
 import { ExportDropdown } from "@/components/ExportDropdown";
+import { CategoryManagementDialog } from "@/components/CategoryManagementDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Produtos() {
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [categoryManagementOpen, setCategoryManagementOpen] = useState(false);
   const { products, loading, filters, setFilters, createProduct, refetch } = useProducts();
   const isMobile = useIsMobile();
 
@@ -72,6 +74,15 @@ export default function Produtos() {
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {!isMobile && <ExportDropdown products={products} />}
+          <Button
+            variant="outline"
+            className="gap-2 flex-1 sm:flex-none"
+            onClick={() => setCategoryManagementOpen(true)}
+            size={isMobile ? "sm" : "default"}
+          >
+            <FolderKanban className="h-4 w-4" />
+            <span className="hidden sm:inline">Categorias</span>
+          </Button>
           <Button
             variant="outline"
             className="gap-2 flex-1 sm:flex-none"
@@ -226,6 +237,11 @@ export default function Produtos() {
         open={importOpen}
         onOpenChange={setImportOpen}
         onImportComplete={refetch}
+      />
+
+      <CategoryManagementDialog
+        open={categoryManagementOpen}
+        onOpenChange={setCategoryManagementOpen}
       />
     </div>
   );
