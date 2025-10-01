@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Plus, QrCode, Settings, Loader2 } from "lucide-react";
+import { Bot, Plus, QrCode, Settings, Loader2, CheckCircle } from "lucide-react";
 import { useAgents } from "@/hooks/useAgents";
 import { NewAgentDialog } from "@/components/NewAgentDialog";
 import { ConfigureAgentDialog } from "@/components/ConfigureAgentDialog";
 import { QRCodeDialog } from "@/components/QRCodeDialog";
+import { WhatsAppStatusDialog } from "@/components/WhatsAppStatusDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Agent = Tables<"agents">;
@@ -30,6 +31,7 @@ export default function Agentes() {
   const { agents, isLoading } = useAgents();
   const [configureAgent, setConfigureAgent] = useState<Agent | null>(null);
   const [qrCodeAgent, setQrCodeAgent] = useState<Agent | null>(null);
+  const [statusAgent, setStatusAgent] = useState<Agent | null>(null);
 
   return (
     <div className="space-y-6">
@@ -93,15 +95,30 @@ export default function Agentes() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 gap-2"
-                    onClick={() => setQrCodeAgent(agent)}
-                  >
-                    <QrCode className="h-4 w-4" />
-                    QR Code
-                  </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-2"
+                  onClick={() => {
+                    if (agent.whatsapp_connected) {
+                      setStatusAgent(agent);
+                    } else {
+                      setQrCodeAgent(agent);
+                    }
+                  }}
+                >
+                  {agent.whatsapp_connected ? (
+                    <>
+                      <CheckCircle className="h-4 w-4" />
+                      Status
+                    </>
+                  ) : (
+                    <>
+                      <QrCode className="h-4 w-4" />
+                      QR Code
+                    </>
+                  )}
+                </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -144,6 +161,12 @@ export default function Agentes() {
         agent={qrCodeAgent}
         open={!!qrCodeAgent}
         onOpenChange={(open) => !open && setQrCodeAgent(null)}
+      />
+      
+      <WhatsAppStatusDialog
+        agent={statusAgent}
+        open={!!statusAgent}
+        onOpenChange={(open) => !open && setStatusAgent(null)}
       />
     </div>
   );
