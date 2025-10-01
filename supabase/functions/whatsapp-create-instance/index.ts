@@ -119,23 +119,63 @@ Deno.serve(async (req) => {
       throw new Error('APIZAP_API_KEY not configured');
     }
 
+    console.log('Fetching system settings...');
+
+    // Fetch system settings from database
+    const { data: settingsData, error: settingsError } = await supabase
+      .from('system_settings')
+      .select('setting_key, setting_value')
+      .eq('category', 'apizap');
+
+    if (settingsError) {
+      console.error('Error fetching system settings:', settingsError);
+      throw new Error('Failed to fetch system settings');
+    }
+
+    // Transform settings array into object
+    const settings: Record<string, string> = {};
+    settingsData?.forEach((setting) => {
+      settings[setting.setting_key] = setting.setting_value || '';
+    });
+
+    console.log('Creating WhatsApp instance with ApiZap...');
+
+    // Build request body from settings
+    const requestBody: any = {
+      instanceName,
+      integration: settings.default_integration || 'WHATSAPP-BAILEYS',
+      qrcode: settings.qrcode_enabled === 'true',
+      rejectCall: settings.reject_call === 'true',
+      groupsIgnore: settings.groups_ignore === 'true',
+      alwaysOnline: settings.always_online === 'true',
+      readMessages: settings.read_messages === 'true',
+      syncFullHistory: settings.sync_full_history === 'true',
+    };
+
+    // Add webhook if enabled
+    if (settings.webhook_enabled === 'true' && settings.webhook_url) {
+      requestBody.webhook = {
+        url: settings.webhook_url,
+        byEvents: settings.webhook_by_events === 'true',
+        base64: settings.webhook_base64 === 'true',
+        headers: {
+          authorization: settings.webhook_auth_header || '',
+          'Content-Type': settings.webhook_content_type || 'application/json',
+        },
+      };
+    }
+
+    const baseUrl = settings.base_url || 'https://api.apizap.tech';
+    const createEndpoint = settings.create_instance_endpoint || '/instance/create';
+
     // Call Apizap API to create instance
-    const apizapResponse = await fetch('https://api.apizap.tech/instance/create', {
+    const apizapResponse = await fetch(`${baseUrl}${createEndpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': apizapApiKey,
       },
-      body: JSON.stringify({
-        instanceName,
-        integration: 'WHATSAPP-BAILEYS',
-        qrcode: true,
-        rejectCall: true,
-        groupsIgnore: true,
-        alwaysOnline: true,
-        readMessages: false,
-        syncFullHistory: true,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!apizapResponse.ok) {

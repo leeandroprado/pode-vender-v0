@@ -16,6 +16,8 @@ import Conta from "./pages/Conta";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
+import SystemSettings from "./pages/SystemSettings";
+import { SuperAdminRoute } from "./components/SuperAdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,7 @@ const App = () => (
             <Route path="/conversas" element={<ProtectedRoute><DashboardLayout><Conversas /></DashboardLayout></ProtectedRoute>} />
             <Route path="/atividades" element={<ProtectedRoute><DashboardLayout><Atividades /></DashboardLayout></ProtectedRoute>} />
             <Route path="/conta" element={<ProtectedRoute><DashboardLayout><Conta /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/settings-system" element={<ProtectedRoute><SuperAdminRoute><SystemSettings /></SuperAdminRoute></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

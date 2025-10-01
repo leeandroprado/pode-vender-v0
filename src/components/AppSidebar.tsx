@@ -1,5 +1,6 @@
-import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +25,7 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
+  const { isSuperAdmin } = useUserRole();
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border px-6 py-4">
@@ -61,6 +63,24 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              
+              {isSuperAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/settings-system"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-primary font-medium"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      }
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Configurações</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

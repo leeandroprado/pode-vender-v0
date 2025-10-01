@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.whatsapp-disconnect-instance]
 verify_jwt = true
+
+[functions.get-system-settings]
+verify_jwt = false
