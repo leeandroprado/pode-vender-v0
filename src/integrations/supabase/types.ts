@@ -62,6 +62,62 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_instances: {
+        Row: {
+          agent_id: string
+          created_at: string
+          hash: string | null
+          id: string
+          instance_id: string | null
+          instance_name: string
+          integration: string
+          qr_code_base64: string | null
+          qr_code_text: string | null
+          settings: Json | null
+          status: Database["public"]["Enums"]["whatsapp_instance_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          hash?: string | null
+          id?: string
+          instance_id?: string | null
+          instance_name: string
+          integration?: string
+          qr_code_base64?: string | null
+          qr_code_text?: string | null
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["whatsapp_instance_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          hash?: string | null
+          id?: string
+          instance_id?: string | null
+          instance_name?: string
+          integration?: string
+          qr_code_base64?: string | null
+          qr_code_text?: string | null
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["whatsapp_instance_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_instances_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: true
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -98,6 +154,11 @@ export type Database = {
         | "deepseek/deepseek-chat-v3-0324"
       plan_type: "trial" | "basic" | "professional"
       user_role: "super_admin" | "admin" | "caixa"
+      whatsapp_instance_status:
+        | "connecting"
+        | "connected"
+        | "disconnected"
+        | "error"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -239,6 +300,12 @@ export const Constants = {
       ],
       plan_type: ["trial", "basic", "professional"],
       user_role: ["super_admin", "admin", "caixa"],
+      whatsapp_instance_status: [
+        "connecting",
+        "connected",
+        "disconnected",
+        "error",
+      ],
     },
   },
 } as const

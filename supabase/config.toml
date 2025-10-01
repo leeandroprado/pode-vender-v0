@@ -1,1 +1,7 @@
 project_id = "tefidquitahjjxpeowzt"
+
+[functions.whatsapp-create-instance]
+verify_jwt = true
+
+[functions.whatsapp-get-instance-status]
+verify_jwt = true
