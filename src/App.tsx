@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Agentes from "./pages/Agentes";
 import Produtos from "./pages/Produtos";
 import Clientes from "./pages/Clientes";
+import Conversas from "./pages/Conversas";
 import Atividades from "./pages/Atividades";
 import Conta from "./pages/Conta";
 import Login from "./pages/Login";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/agentes" element={<ProtectedRoute><DashboardLayout><Agentes /></DashboardLayout></ProtectedRoute>} />
             <Route path="/produtos" element={<ProtectedRoute><DashboardLayout><Produtos /></DashboardLayout></ProtectedRoute>} />
             <Route path="/clientes" element={<ProtectedRoute><DashboardLayout><Clientes /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/conversas" element={<ProtectedRoute><DashboardLayout><Conversas /></DashboardLayout></ProtectedRoute>} />
             <Route path="/atividades" element={<ProtectedRoute><DashboardLayout><Atividades /></DashboardLayout></ProtectedRoute>} />
             <Route path="/conta" element={<ProtectedRoute><DashboardLayout><Conta /></DashboardLayout></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />

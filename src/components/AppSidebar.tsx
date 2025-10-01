@@ -1,4 +1,4 @@
-import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle } from "lucide-react";
+import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -18,6 +18,7 @@ const menuItems = [
   { title: "Meus Agentes", url: "/agentes", icon: Bot },
   { title: "Produtos", url: "/produtos", icon: Package },
   { title: "Clientes", url: "/clientes", icon: Users },
+  { title: "Conversas", url: "/conversas", icon: MessageCircle },
   { title: "Atividades", url: "/atividades", icon: Activity },
   { title: "Minha Conta", url: "/conta", icon: UserCircle },
 ];
