@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { Product } from "@/hooks/useProducts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,18 +16,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Upload, MoreVertical, Loader2, FolderKanban } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { NewProductDialog } from "@/components/NewProductDialog";
+import { EditProductDialog } from "@/components/EditProductDialog";
 import { ImportProductsDialog } from "@/components/ImportProductsDialog";
 import { ProductFilters } from "@/components/ProductFilters";
 import { ExportDropdown } from "@/components/ExportDropdown";
 import { CategoryManagementDialog } from "@/components/CategoryManagementDialog";
+import { ProductActionsDropdown } from "@/components/ProductActionsDropdown";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Produtos() {
   const [newProductOpen, setNewProductOpen] = useState(false);
+  const [editProductOpen, setEditProductOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [categoryManagementOpen, setCategoryManagementOpen] = useState(false);
-  const { products, loading, filters, setFilters, createProduct, refetch } = useProducts();
+  const { products, loading, filters, setFilters, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
   const isMobile = useIsMobile();
 
   const handleFilterChange = (key: string, value: any) => {
@@ -41,6 +46,11 @@ export default function Produtos() {
       startDate: undefined,
       endDate: undefined,
     });
+  };
+
+  const handleEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setEditProductOpen(true);
   };
 
   const getStatusLabel = (status: string) => {
@@ -150,9 +160,11 @@ export default function Produtos() {
                         <h3 className="font-semibold text-base">{product.name}</h3>
                         <p className="text-sm text-muted-foreground">{product.category}</p>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+                      <ProductActionsDropdown
+                        product={product}
+                        onEdit={handleEdit}
+                        onDelete={deleteProduct}
+                      />
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="space-y-1">
@@ -207,9 +219,11 @@ export default function Produtos() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
+                        <ProductActionsDropdown
+                          product={product}
+                          onEdit={handleEdit}
+                          onDelete={deleteProduct}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -242,6 +256,13 @@ export default function Produtos() {
       <CategoryManagementDialog
         open={categoryManagementOpen}
         onOpenChange={setCategoryManagementOpen}
+      />
+
+      <EditProductDialog
+        open={editProductOpen}
+        onOpenChange={setEditProductOpen}
+        product={selectedProduct}
+        onSubmit={updateProduct}
       />
     </div>
   );
