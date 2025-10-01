@@ -111,7 +111,7 @@ export function ProductFilters({
           <Button
             variant="outline"
             className={cn(
-              "w-[200px] justify-start text-left font-normal",
+              "w-[260px] justify-start text-left font-normal",
               !filters.startDate && "text-muted-foreground"
             )}
           >
@@ -147,7 +147,7 @@ export function ProductFilters({
           <Button
             variant="outline"
             className={cn(
-              "w-[200px] justify-start text-left font-normal",
+              "w-[260px] justify-start text-left font-normal",
               !filters.endDate && "text-muted-foreground"
             )}
           >
