@@ -26,6 +26,9 @@ export interface ProductFilters {
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize] = useState(20);
   const [filters, setFilters] = useState<ProductFilters>({
     search: "",
     category: "",
@@ -37,6 +40,8 @@ export function useProducts() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const totalPages = Math.ceil(totalCount / pageSize);
+
   const fetchProducts = useCallback(async () => {
     try {
       // Cancel any pending request
@@ -47,32 +52,65 @@ export function useProducts() {
       setLoading(true);
       abortControllerRef.current = new AbortController();
 
-      let query = supabase
+      // Build base query for counting
+      let countQuery = supabase
         .from("products")
-        .select("id, name, category, price, stock, status, description, user_id, created_at, updated_at")
-        .order("created_at", { ascending: false })
-        .limit(100);
+        .select("*", { count: "exact", head: true });
 
-      // Apply filters efficiently
+      // Apply filters to count query
       if (filters.search) {
-        query = query.ilike("name", `%${filters.search}%`);
+        countQuery = countQuery.ilike("name", `%${filters.search}%`);
       }
       if (filters.category) {
-        query = query.eq("category", filters.category);
+        countQuery = countQuery.eq("category", filters.category);
       }
       if (filters.status) {
-        query = query.eq("status", filters.status);
+        countQuery = countQuery.eq("status", filters.status);
       }
       if (filters.startDate) {
-        query = query.gte("created_at", filters.startDate.toISOString());
+        countQuery = countQuery.gte("created_at", filters.startDate.toISOString());
       }
       if (filters.endDate) {
         const endOfDay = new Date(filters.endDate);
         endOfDay.setHours(23, 59, 59, 999);
-        query = query.lte("created_at", endOfDay.toISOString());
+        countQuery = countQuery.lte("created_at", endOfDay.toISOString());
       }
 
-      const { data, error } = await query;
+      // Get total count
+      const { count, error: countError } = await countQuery;
+      if (countError) throw countError;
+      setTotalCount(count || 0);
+
+      // Build data query with pagination
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let dataQuery = supabase
+        .from("products")
+        .select("id, name, category, price, stock, status, description, user_id, created_at, updated_at")
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      // Apply filters to data query
+      if (filters.search) {
+        dataQuery = dataQuery.ilike("name", `%${filters.search}%`);
+      }
+      if (filters.category) {
+        dataQuery = dataQuery.eq("category", filters.category);
+      }
+      if (filters.status) {
+        dataQuery = dataQuery.eq("status", filters.status);
+      }
+      if (filters.startDate) {
+        dataQuery = dataQuery.gte("created_at", filters.startDate.toISOString());
+      }
+      if (filters.endDate) {
+        const endOfDay = new Date(filters.endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        dataQuery = dataQuery.lte("created_at", endOfDay.toISOString());
+      }
+
+      const { data, error } = await dataQuery;
 
       if (error) throw error;
       setProducts(data || []);
@@ -89,7 +127,7 @@ export function useProducts() {
       setLoading(false);
       abortControllerRef.current = null;
     }
-  }, [filters, toast]);
+  }, [filters, currentPage, pageSize, toast]);
 
   const createProduct = async (product: Omit<Product, "id" | "created_at" | "updated_at" | "user_id">) => {
     try {
@@ -169,6 +207,29 @@ export function useProducts() {
     }
   };
 
+  const goToPage = useCallback((page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  }, [totalPages]);
+
+  const nextPage = useCallback(() => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  }, [currentPage, totalPages]);
+
+  const previousPage = useCallback(() => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  }, [currentPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
   // Debounce filter changes to avoid excessive queries
   useEffect(() => {
     if (debounceTimerRef.current) {
@@ -194,6 +255,13 @@ export function useProducts() {
     loading,
     filters,
     setFilters,
+    currentPage,
+    totalCount,
+    pageSize,
+    totalPages,
+    goToPage,
+    nextPage,
+    previousPage,
     createProduct,
     updateProduct,
     deleteProduct,

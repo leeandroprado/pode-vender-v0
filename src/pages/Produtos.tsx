@@ -13,6 +13,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Plus, Search, Upload, MoreVertical, Loader2, FolderKanban } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { NewProductDialog } from "@/components/NewProductDialog";
@@ -31,7 +40,23 @@ export default function Produtos() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [categoryManagementOpen, setCategoryManagementOpen] = useState(false);
-  const { products, loading, filters, setFilters, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
+  const { 
+    products, 
+    loading, 
+    filters, 
+    setFilters, 
+    currentPage, 
+    totalCount, 
+    pageSize, 
+    totalPages,
+    goToPage,
+    nextPage,
+    previousPage,
+    createProduct, 
+    updateProduct, 
+    deleteProduct, 
+    refetch 
+  } = useProducts();
   const isMobile = useIsMobile();
 
   const handleFilterChange = (key: string, value: any) => {
@@ -232,10 +257,73 @@ export default function Produtos() {
             </div>
           )}
 
-          {products.length > 0 && (
-            <div className="mt-4 text-sm text-muted-foreground">
-              Mostrando {products.length}{" "}
-              {products.length === 1 ? "produto" : "produtos"}
+          {products.length > 0 && totalPages > 0 && (
+            <div className="mt-6 space-y-4">
+              <div className="text-sm text-muted-foreground text-center">
+                Página {currentPage} de {totalPages} • Mostrando {products.length} de {totalCount}{" "}
+                {totalCount === 1 ? "produto" : "produtos"}
+              </div>
+
+              {totalPages > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          previousPage();
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      // Show first page, last page, current page, and pages around current
+                      const showPage = 
+                        page === 1 || 
+                        page === totalPages || 
+                        (page >= currentPage - 1 && page <= currentPage + 1);
+
+                      if (!showPage) {
+                        // Show ellipsis if there's a gap
+                        if (page === currentPage - 2 || page === currentPage + 2) {
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                        }
+                        return null;
+                      }
+
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={(e) => {
+                              e.preventDefault();
+                              goToPage(page);
+                            }}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          nextPage();
+                        }}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
             </div>
           )}
         </CardContent>
