@@ -140,20 +140,37 @@ Deno.serve(async (req) => {
 
     console.log('Creating WhatsApp instance with ApiZap...');
 
-    // Build request body from settings
+    // Generate unique token for this instance
+    const tokenPrefix = settings.token_prefix || 'apizap_token_';
+    const uniqueToken = `${tokenPrefix}${agentId}_${Date.now()}`;
+    
+    console.log('Generated token for instance (prefix only):', tokenPrefix);
+
+    // Build request body from settings with all required fields
     const requestBody: any = {
       instanceName,
+      token: uniqueToken,
       integration: settings.default_integration || 'WHATSAPP-BAILEYS',
       qrcode: settings.qrcode_enabled === 'true',
+      number: agent.whatsapp_phone || '',
       rejectCall: settings.reject_call === 'true',
+      msgCall: settings.msg_call || 'Desculpe, não aceito chamadas no momento.',
       groupsIgnore: settings.groups_ignore === 'true',
       alwaysOnline: settings.always_online === 'true',
       readMessages: settings.read_messages === 'true',
+      readStatus: settings.read_status === 'true',
       syncFullHistory: settings.sync_full_history === 'true',
     };
 
-    // Add webhook if enabled
-    if (settings.webhook_enabled === 'true' && settings.webhook_url) {
+    // Always add webhook when webhook_enabled is true
+    const webhookEnabled = settings.webhook_enabled === 'true';
+    console.log('Webhook enabled:', webhookEnabled);
+    
+    if (webhookEnabled) {
+      if (!settings.webhook_url) {
+        throw new Error('Webhook URL is required when webhook is enabled');
+      }
+      
       requestBody.webhook = {
         url: settings.webhook_url,
         byEvents: settings.webhook_by_events === 'true',
@@ -163,6 +180,10 @@ Deno.serve(async (req) => {
           'Content-Type': settings.webhook_content_type || 'application/json',
         },
       };
+      
+      console.log('Webhook configured with URL:', settings.webhook_url);
+    } else {
+      console.log('Webhook is disabled in system settings');
     }
 
     const baseUrl = settings.base_url || 'https://api.apizap.tech';
