@@ -181,23 +181,42 @@ Deno.serve(async (req) => {
         throw new Error('Webhook URL is required when webhook is enabled');
       }
       
+      // Build headers object only with non-empty values
+      const webhookHeaders: Record<string, string> = {
+        'Content-Type': settings.webhook_content_type || 'application/json',
+      };
+      
+      // Only add authorization header if it has a value
+      if (settings.webhook_auth_header && settings.webhook_auth_header.trim() !== '') {
+        webhookHeaders.authorization = settings.webhook_auth_header;
+      }
+      
       requestBody.webhook = {
         url: settings.webhook_url,
         byEvents: settings.webhook_by_events === 'true',
         base64: settings.webhook_base64 === 'true',
-        headers: {
-          authorization: settings.webhook_auth_header || '',
-          'Content-Type': settings.webhook_content_type || 'application/json',
-        },
+        headers: webhookHeaders,
       };
       
       console.log('Webhook configured with URL:', settings.webhook_url);
+      console.log('Webhook headers:', Object.keys(webhookHeaders));
     } else {
       console.log('Webhook is disabled in system settings');
     }
 
     const baseUrl = settings.base_url || 'https://api.apizap.tech';
     const createEndpoint = settings.create_instance_endpoint || '/instance/create';
+
+    // Log request body for debugging (without sensitive data)
+    console.log('Request body structure:', {
+      instanceName: requestBody.instanceName,
+      integration: requestBody.integration,
+      qrcode: requestBody.qrcode,
+      number: requestBody.number,
+      hasWebhook: !!requestBody.webhook,
+      webhookUrl: requestBody.webhook?.url,
+      webhookHeadersCount: requestBody.webhook?.headers ? Object.keys(requestBody.webhook.headers).length : 0,
+    });
 
     // Call Apizap API to create instance
     const apizapResponse = await fetch(`${baseUrl}${createEndpoint}`, {
