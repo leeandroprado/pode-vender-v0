@@ -123,7 +123,14 @@ export function ProductFilters({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent 
+          className="w-auto p-0 z-[60]" 
+          align="start"
+          side="bottom"
+          sideOffset={8}
+          collisionPadding={8}
+          avoidCollisions={true}
+        >
           <Calendar
             mode="single"
             selected={filters.startDate}
@@ -152,7 +159,14 @@ export function ProductFilters({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent 
+          className="w-auto p-0 z-[60]" 
+          align="start"
+          side="bottom"
+          sideOffset={8}
+          collisionPadding={8}
+          avoidCollisions={true}
+        >
           <Calendar
             mode="single"
             selected={filters.endDate}
