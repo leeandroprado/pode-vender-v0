@@ -63,16 +63,16 @@ export default function Agentes() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Meus Agentes</h1>
-          <p className="mt-2 text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Meus Agentes</h1>
+          <p className="mt-1 md:mt-2 text-sm md:text-base text-muted-foreground">
             Configure e gerencie seus agentes de IA
           </p>
         </div>
         <NewAgentDialog>
-          <Button className="gap-2">
+          <Button className="gap-2 w-full sm:w-auto">
             <Plus className="h-4 w-4" />
             Novo Agente
           </Button>

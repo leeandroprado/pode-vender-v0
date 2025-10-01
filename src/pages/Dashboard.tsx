@@ -74,22 +74,22 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="mt-2 text-sm text-muted-foreground capitalize">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="mt-1 md:mt-2 text-xs md:text-sm text-muted-foreground capitalize">
             {today}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Calendar className="mr-2 h-4 w-4" />
-            Filtrar período
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Calendar className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Filtrar período</span>
           </Button>
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filtros
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Filter className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Filtros</span>
           </Button>
         </div>
       </div>
@@ -133,10 +133,10 @@ export default function Dashboard() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Receita Mensal</CardTitle>
+              <CardTitle className="text-lg md:text-xl">Receita Mensal</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={revenueData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="name" className="text-xs" />
@@ -237,10 +237,10 @@ export default function Dashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Atividades Recentes</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Atividades Recentes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[
               { action: "Cliente consultou produto: Notebook Dell", time: "2 minutos atrás", type: "info" },
               { action: "Carrinho finalizado - R$ 2.450,00", time: "15 minutos atrás", type: "success" },
@@ -248,9 +248,9 @@ export default function Dashboard() {
               { action: "Cliente cadastrado: João Silva", time: "1 hora atrás", type: "success" },
               { action: "Atendimento encaminhado para humano", time: "2 horas atrás", type: "warning" },
             ].map((activity, index) => (
-              <div key={index} className="flex items-start gap-4 rounded-lg border p-4">
+              <div key={index} className="flex items-start gap-3 rounded-lg border p-3">
                 <div
-                  className={`h-2 w-2 rounded-full mt-2 ${
+                  className={`h-2 w-2 rounded-full mt-2 flex-shrink-0 ${
                     activity.type === "success"
                       ? "bg-success"
                       : activity.type === "warning"
@@ -258,8 +258,8 @@ export default function Dashboard() {
                       : "bg-primary"
                   }`}
                 />
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium">{activity.action}</p>
+                <div className="flex-1 space-y-1 min-w-0">
+                  <p className="text-sm font-medium leading-snug">{activity.action}</p>
                   <p className="text-xs text-muted-foreground">{activity.time}</p>
                 </div>
               </div>

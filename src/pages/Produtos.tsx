@@ -19,11 +19,13 @@ import { ImportProductsDialog } from "@/components/ImportProductsDialog";
 import { ProductFilters } from "@/components/ProductFilters";
 import { ExportDropdown } from "@/components/ExportDropdown";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Produtos() {
   const [newProductOpen, setNewProductOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const { products, loading, filters, setFilters, createProduct, refetch } = useProducts();
+  const isMobile = useIsMobile();
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -60,27 +62,32 @@ export default function Produtos() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Produtos</h1>
-          <p className="mt-2 text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Produtos</h1>
+          <p className="mt-1 md:mt-2 text-sm md:text-base text-muted-foreground">
             Gerencie seu catálogo de produtos
           </p>
         </div>
-        <div className="flex gap-2">
-          <ExportDropdown products={products} />
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          {!isMobile && <ExportDropdown products={products} />}
           <Button
             variant="outline"
-            className="gap-2"
+            className="gap-2 flex-1 sm:flex-none"
             onClick={() => setImportOpen(true)}
+            size={isMobile ? "sm" : "default"}
           >
             <Upload className="h-4 w-4" />
-            Importar Planilha
+            <span className="hidden sm:inline">Importar</span>
           </Button>
-          <Button className="gap-2" onClick={() => setNewProductOpen(true)}>
+          <Button 
+            className="gap-2 flex-1 sm:flex-none" 
+            onClick={() => setNewProductOpen(true)}
+            size={isMobile ? "sm" : "default"}
+          >
             <Plus className="h-4 w-4" />
-            Novo Produto
+            <span className="hidden sm:inline">Novo Produto</span>
           </Button>
         </div>
       </div>
@@ -121,6 +128,40 @@ export default function Produtos() {
                 <Plus className="h-4 w-4" />
                 Adicionar Primeiro Produto
               </Button>
+            </div>
+          ) : isMobile ? (
+            <div className="space-y-3">
+              {products.map((product) => (
+                <Card key={product.id}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-base">{product.name}</h3>
+                        <p className="text-sm text-muted-foreground">{product.category}</p>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="space-y-1">
+                        <p className="text-lg font-bold text-primary">
+                          R$ {product.price.toFixed(2).replace(".", ",")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Estoque: {product.stock}
+                        </p>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={cn(getStatusClass(product.status))}
+                      >
+                        {getStatusLabel(product.status)}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           ) : (
             <div className="rounded-md border">

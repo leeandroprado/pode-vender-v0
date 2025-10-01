@@ -6,17 +6,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, X } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
 
 interface ProductFiltersProps {
   filters: {
@@ -50,24 +47,24 @@ export function ProductFilters({
   onFilterChange,
   onClearFilters,
 }: ProductFiltersProps) {
+  const isMobile = useIsMobile();
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+  
   const hasActiveFilters =
-    filters.category ||
-    filters.status ||
-    filters.startDate ||
-    filters.endDate;
+    filters.category || filters.status || filters.startDate || filters.endDate;
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      {/* Category Filter */}
+    <div className="flex flex-col sm:flex-row flex-wrap gap-3">
       <Select
         value={filters.category}
         onValueChange={(value) => onFilterChange("category", value)}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder="Categoria" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value=" ">Todas as categorias</SelectItem>
+          <SelectItem value="">Todas</SelectItem>
           {categories.map((category) => (
             <SelectItem key={category} value={category}>
               {category}
@@ -76,113 +73,116 @@ export function ProductFilters({
         </SelectContent>
       </Select>
 
-      {/* Status Filter */}
       <Select
         value={filters.status}
         onValueChange={(value) => onFilterChange("status", value)}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value=" ">Todos os status</SelectItem>
+          <SelectItem value="">Todos</SelectItem>
           {statuses.map((status) => (
             <SelectItem key={status.value} value={status.value}>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "mr-2",
-                  status.value === "ativo" && "bg-success/10 text-success border-success/20",
-                  status.value === "baixo_estoque" && "bg-warning/10 text-warning border-warning/20",
-                  status.value === "esgotado" && "bg-destructive/10 text-destructive border-destructive/20",
-                  status.value === "inativo" && "bg-muted text-muted-foreground"
-                )}
-              >
-                {status.label}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-xs",
+                    status.value === "ativo" && "bg-success/10 text-success border-success/20",
+                    status.value === "baixo_estoque" && "bg-warning/10 text-warning border-warning/20",
+                    status.value === "esgotado" && "bg-destructive/10 text-destructive border-destructive/20",
+                    status.value === "inativo" && "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {status.label}
+                </Badge>
+              </div>
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {/* Start Date Filter */}
-      <Popover>
-        <PopoverTrigger asChild>
+      {/* Data Inicial */}
+      <Drawer open={startDateOpen} onOpenChange={setStartDateOpen}>
+        <DrawerTrigger asChild>
           <Button
             variant="outline"
             className={cn(
-              "w-[260px] justify-start text-left font-normal",
+              isMobile ? "w-full" : "w-[260px]",
+              "justify-start text-left font-normal",
               !filters.startDate && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {filters.startDate ? (
-              format(filters.startDate, "PPP", { locale: ptBR })
+              format(filters.startDate, "dd/MM/yyyy")
             ) : (
               <span>Data inicial</span>
             )}
           </Button>
-        </PopoverTrigger>
-        <PopoverContent 
-          className="w-auto p-0 z-[9999]" 
-          align="center"
-          side="bottom"
-          sideOffset={16}
-          collisionPadding={16}
-          avoidCollisions={true}
-        >
-          <Calendar
-            mode="single"
-            selected={filters.startDate}
-            onSelect={(date) => onFilterChange("startDate", date)}
-            initialFocus
-            className="pointer-events-auto"
-          />
-        </PopoverContent>
-      </Popover>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Selecione a data inicial</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 flex justify-center">
+            <Calendar
+              mode="single"
+              selected={filters.startDate}
+              onSelect={(date) => {
+                onFilterChange("startDate", date);
+                setStartDateOpen(false);
+              }}
+              className="pointer-events-auto"
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
 
-      {/* End Date Filter */}
-      <Popover>
-        <PopoverTrigger asChild>
+      {/* Data Final */}
+      <Drawer open={endDateOpen} onOpenChange={setEndDateOpen}>
+        <DrawerTrigger asChild>
           <Button
             variant="outline"
             className={cn(
-              "w-[260px] justify-start text-left font-normal",
+              isMobile ? "w-full" : "w-[260px]",
+              "justify-start text-left font-normal",
               !filters.endDate && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {filters.endDate ? (
-              format(filters.endDate, "PPP", { locale: ptBR })
+              format(filters.endDate, "dd/MM/yyyy")
             ) : (
               <span>Data final</span>
             )}
           </Button>
-        </PopoverTrigger>
-        <PopoverContent 
-          className="w-auto p-0 z-[9999]" 
-          align="center"
-          side="bottom"
-          sideOffset={16}
-          collisionPadding={16}
-          avoidCollisions={true}
-        >
-          <Calendar
-            mode="single"
-            selected={filters.endDate}
-            onSelect={(date) => onFilterChange("endDate", date)}
-            initialFocus
-            className="pointer-events-auto"
-          />
-        </PopoverContent>
-      </Popover>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Selecione a data final</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 flex justify-center">
+            <Calendar
+              mode="single"
+              selected={filters.endDate}
+              onSelect={(date) => {
+                onFilterChange("endDate", date);
+                setEndDateOpen(false);
+              }}
+              className="pointer-events-auto"
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
 
-      {/* Clear Filters */}
       {hasActiveFilters && (
         <Button
           variant="ghost"
+          size="sm"
           onClick={onClearFilters}
-          className="gap-2"
+          className="h-10 gap-2 w-full sm:w-auto"
         >
           <X className="h-4 w-4" />
           Limpar filtros
