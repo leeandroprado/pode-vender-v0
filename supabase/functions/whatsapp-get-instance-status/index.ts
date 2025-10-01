@@ -84,12 +84,19 @@ Deno.serve(async (req) => {
 
     // Map API status to our enum
     let newStatus: 'connecting' | 'connected' | 'disconnected' | 'error' = 'disconnected';
-    if (statusData.state === 'open') {
-      newStatus = 'connected';
-    } else if (statusData.state === 'connecting') {
-      newStatus = 'connecting';
-    } else if (statusData.state === 'close') {
-      newStatus = 'disconnected';
+    
+    // Check if instance object exists and has state property
+    if (statusData.instance && statusData.instance.state) {
+      if (statusData.instance.state === 'open') {
+        newStatus = 'connected';
+      } else if (statusData.instance.state === 'connecting') {
+        newStatus = 'connecting';
+      } else if (statusData.instance.state === 'close') {
+        newStatus = 'disconnected';
+      }
+      console.log('Mapped status:', newStatus);
+    } else {
+      console.error('Invalid status data structure:', statusData);
     }
 
     // Update instance status in database
