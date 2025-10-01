@@ -9,20 +9,40 @@ interface ProductStatCardProps {
 }
 
 export function ProductStatCard({ title, value, percentage, data }: ProductStatCardProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className="transition-all hover:shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-medium text-muted-foreground">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-4xl font-bold tracking-tight">{value}</p>
+              <p className="mt-2 text-sm font-medium text-success">
+                ↑ {percentage}% vs mês anterior
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="transition-all hover:shadow-lg">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-medium text-muted-foreground">{title}</CardTitle>
+        <CardTitle className="text-base md:text-lg font-medium text-muted-foreground">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-4xl font-bold tracking-tight">{value}</p>
-            <p className="mt-2 text-sm font-medium text-success">
+            <p className="text-3xl md:text-4xl font-bold tracking-tight">{value}</p>
+            <p className="mt-2 text-xs md:text-sm font-medium text-success">
               ↑ {percentage}% vs mês anterior
             </p>
           </div>
-          <div className="h-24 w-24">
+          <div style={{ width: '96px', height: '96px', flexShrink: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -33,6 +53,7 @@ export function ProductStatCard({ title, value, percentage, data }: ProductStatC
                   outerRadius={40}
                   paddingAngle={2}
                   dataKey="value"
+                  isAnimationActive={false}
                 >
                   {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
