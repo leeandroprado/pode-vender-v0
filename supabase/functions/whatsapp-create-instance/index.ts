@@ -108,8 +108,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate unique instance name
-    const instanceName = `agent_${agentId.slice(0, 8)}_${Date.now()}`;
+    // Generate instance name using agent ID
+    const instanceName = `agent_${agentId}`;
 
     console.log('Creating instance with name:', instanceName);
 
