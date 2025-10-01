@@ -76,23 +76,23 @@ serve(async (req) => {
       });
     }
 
-    const APIZAP_API_KEY = Deno.env.get("APIZAP_API_KEY");
-    if (!APIZAP_API_KEY) {
-      return new Response(JSON.stringify({ error: "APIZAP_API_KEY not configured" }), {
-        status: 500,
+    // Validate instance hash
+    if (!instance.hash) {
+      return new Response(JSON.stringify({ error: "Instance hash not found" }), {
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Disconnect via Apizap API
-    console.log("Disconnecting instance:", instance.instance_name);
+    console.log("Disconnecting instance:", instance.instance_name, "with hash");
     const disconnectResponse = await fetch(
-      `https://api.apizap.com/instance/logout/${instance.instance_name}`,
+      `https://api.apizap.tech/instance/logout/${instance.instance_name}`,
       {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "apikey": APIZAP_API_KEY,
+          "apikey": instance.hash,
         },
       }
     );
