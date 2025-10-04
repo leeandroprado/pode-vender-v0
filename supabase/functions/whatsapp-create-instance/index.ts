@@ -146,31 +146,33 @@ Deno.serve(async (req) => {
     
     console.log('Generated token for instance (prefix only):', tokenPrefix);
 
-    // Generate temporary number if agent doesn't have whatsapp_phone configured
-    let whatsappNumber = agent.whatsapp_phone;
-    if (!whatsappNumber) {
-      const tempNumberFormat = settings.default_temp_number_format || '0000000.temp.{agentId}';
-      whatsappNumber = tempNumberFormat.replace('{agentId}', agentId);
-      console.log('Using temporary number for agent without WhatsApp phone:', whatsappNumber);
-    } else {
-      console.log('Using configured WhatsApp phone:', whatsappNumber);
-    }
+    console.log('Checking WhatsApp phone configuration...');
 
-    // Build request body from settings with all required fields
+    // Build request body from settings with correct structure
     const requestBody: any = {
       instanceName,
       token: uniqueToken,
       integration: settings.default_integration || 'WHATSAPP-BAILEYS',
       qrcode: settings.qrcode_enabled === 'true',
-      number: whatsappNumber,
-      rejectCall: settings.reject_call === 'true',
-      msgCall: settings.msg_call || 'Desculpe, não aceito chamadas no momento.',
-      groupsIgnore: settings.groups_ignore === 'true',
-      alwaysOnline: settings.always_online === 'true',
-      readMessages: settings.read_messages === 'true',
-      readStatus: settings.read_status === 'true',
-      syncFullHistory: settings.sync_full_history === 'true',
+      settings: {
+        rejectCall: settings.reject_call === 'true',
+        msgCall: settings.msg_call || 'Desculpe, não aceito chamadas no momento.',
+        groupsIgnore: settings.groups_ignore === 'true',
+        alwaysOnline: settings.always_online === 'true',
+        readMessages: settings.read_messages === 'true',
+        readStatus: settings.read_status === 'true',
+        syncFullHistory: settings.sync_full_history === 'true',
+        wavoipToken: settings.wavoip_token || '',
+      },
     };
+
+    // Only add number field if agent has whatsapp_phone configured
+    if (agent.whatsapp_phone) {
+      requestBody.number = agent.whatsapp_phone;
+      console.log('Using configured WhatsApp phone:', agent.whatsapp_phone);
+    } else {
+      console.log('No WhatsApp phone configured, letting API generate number');
+    }
 
     // Always add webhook when webhook_enabled is true
     const webhookEnabled = settings.webhook_enabled === 'true';
@@ -224,16 +226,12 @@ Deno.serve(async (req) => {
     const baseUrl = settings.base_url || 'https://api.apizap.tech';
     const createEndpoint = settings.create_instance_endpoint || '/instance/create';
 
-    // Log request body for debugging (without sensitive data)
-    console.log('Request body structure:', {
-      instanceName: requestBody.instanceName,
-      integration: requestBody.integration,
-      qrcode: requestBody.qrcode,
-      number: requestBody.number,
-      hasWebhook: !!requestBody.webhook,
-      webhookUrl: requestBody.webhook?.url,
-      webhookHeadersCount: requestBody.webhook?.headers ? Object.keys(requestBody.webhook.headers).length : 0,
-    });
+    // Log complete request body for debugging (excluding sensitive token)
+    const debugBody = { ...requestBody };
+    if (debugBody.token) {
+      debugBody.token = '[REDACTED]';
+    }
+    console.log('Complete request body:', JSON.stringify(debugBody, null, 2));
 
     // Call Apizap API to create instance
     const apizapResponse = await fetch(`${baseUrl}${createEndpoint}`, {
