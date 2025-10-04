@@ -181,14 +181,31 @@ Deno.serve(async (req) => {
         throw new Error('Webhook URL is required when webhook is enabled');
       }
       
-      // Build headers object only with non-empty values
-      const webhookHeaders: Record<string, string> = {
-        'Content-Type': settings.webhook_content_type || 'application/json',
-      };
+      // Build headers array in the format ApiZap expects: [{ key: string, value: string }]
+      const webhookHeaders: Array<{ key: string; value: string }> = [];
       
-      // Only add authorization header if it has a value
+      // Add Content-Type header
+      const contentType = settings.webhook_content_type || 'application/json';
+      webhookHeaders.push({
+        key: 'Content-Type',
+        value: contentType,
+      });
+      
+      // Add authorization header only if it has a value
       if (settings.webhook_auth_header && settings.webhook_auth_header.trim() !== '') {
-        webhookHeaders.authorization = settings.webhook_auth_header;
+        webhookHeaders.push({
+          key: 'authorization',
+          value: settings.webhook_auth_header,
+        });
+      }
+      
+      // Validate that we have at least one header
+      if (webhookHeaders.length === 0) {
+        console.warn('No valid webhook headers found, adding default Content-Type header');
+        webhookHeaders.push({
+          key: 'Content-Type',
+          value: 'application/json',
+        });
       }
       
       requestBody.webhook = {
@@ -199,7 +216,7 @@ Deno.serve(async (req) => {
       };
       
       console.log('Webhook configured with URL:', settings.webhook_url);
-      console.log('Webhook headers:', Object.keys(webhookHeaders));
+      console.log('Webhook headers array:', JSON.stringify(webhookHeaders));
     } else {
       console.log('Webhook is disabled in system settings');
     }
