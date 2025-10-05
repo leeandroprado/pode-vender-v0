@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, User, MoreVertical, Phone, Video, Search } from "lucide-react";
+import { Bot, User, MoreVertical, Search, UserPlus, UserCheck } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Message } from "@/hooks/useConversations";
@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { AddClientDialog } from "@/components/AddClientDialog";
+import { useClients } from "@/hooks/useClients";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ConversationDetailProps {
   messages: Message[];
@@ -16,6 +19,8 @@ interface ConversationDetailProps {
   conversationId: string;
   ownerConversation: 'ia' | 'human';
   onOwnerChange: (conversationId: string, owner: 'ia' | 'human') => void;
+  clientId?: string | null;
+  clientName?: string | null;
 }
 
 export const ConversationDetail = ({ 
@@ -23,13 +28,26 @@ export const ConversationDetail = ({
   conversationPhone, 
   conversationId,
   ownerConversation,
-  onOwnerChange 
+  onOwnerChange,
+  clientId,
+  clientName
 }: ConversationDetailProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showAddClientDialog, setShowAddClientDialog] = useState(false);
+  const { clients } = useClients();
+  const queryClient = useQueryClient();
+
+  const currentClient = clientId ? clients.find(c => c.id === clientId) : null;
+  const displayName = currentClient?.name || clientName || conversationPhone;
+  const hasClient = !!clientId;
 
   const handleOwnerToggle = (checked: boolean) => {
     const newOwner = checked ? 'ia' : 'human';
     onOwnerChange(conversationId, newOwner);
+  };
+
+  const handleClientAdded = () => {
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
   };
 
   // Auto-scroll para novas mensagens
@@ -54,8 +72,18 @@ export const ConversationDetail = ({
               </AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="font-semibold">{conversationPhone}</h2>
-              <p className="text-xs text-muted-foreground">online</p>
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold">{displayName}</h2>
+                {hasClient && (
+                  <Badge variant="secondary" className="text-xs">
+                    <UserCheck className="w-3 h-3 mr-1" />
+                    Cliente
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {hasClient ? conversationPhone : "online"}
+              </p>
             </div>
           </div>
 
@@ -71,14 +99,19 @@ export const ConversationDetail = ({
               />
             </div>
             
+            {!hasClient && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowAddClientDialog(true)}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Adicionar Cliente
+              </Button>
+            )}
+            
             <Button variant="ghost" size="icon">
               <Search className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Phone className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Video className="w-5 h-5" />
             </Button>
             <Button variant="ghost" size="icon">
               <MoreVertical className="w-5 h-5" />
@@ -157,6 +190,14 @@ export const ConversationDetail = ({
           </div>
         </ScrollArea>
       </div>
+
+      <AddClientDialog
+        open={showAddClientDialog}
+        onOpenChange={setShowAddClientDialog}
+        conversationId={conversationId}
+        defaultPhone={conversationPhone}
+        onClientAdded={handleClientAdded}
+      />
     </div>
   );
 };

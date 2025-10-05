@@ -14,6 +14,12 @@ export type Conversation = {
   created_at: string;
   updated_at: string;
   metadata: Record<string, any>;
+  client_id?: string | null;
+  clients?: {
+    id: string;
+    name: string;
+    phone: string;
+  } | null;
 };
 
 export type Message = {
@@ -37,7 +43,24 @@ export const useConversations = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conversations')
-        .select('id, user_id, whatsapp_phone, whatsapp_instance_id, status, owner_conversation, last_message_at, created_at, updated_at, metadata')
+        .select(`
+          id, 
+          user_id, 
+          whatsapp_phone, 
+          whatsapp_instance_id, 
+          status, 
+          owner_conversation, 
+          last_message_at, 
+          created_at, 
+          updated_at, 
+          metadata,
+          client_id,
+          clients (
+            id,
+            name,
+            phone
+          )
+        `)
         .order('last_message_at', { ascending: false })
         .limit(100);
 

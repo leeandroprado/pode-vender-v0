@@ -95,8 +95,45 @@ export type Database = {
         }
         Relationships: []
       }
+      clients: {
+        Row: {
+          city: string | null
+          cpf: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
+          client_id: string | null
           created_at: string | null
           id: string
           last_message_at: string | null
@@ -111,6 +148,7 @@ export type Database = {
           whatsapp_phone: string
         }
         Insert: {
+          client_id?: string | null
           created_at?: string | null
           id?: string
           last_message_at?: string | null
@@ -125,6 +163,7 @@ export type Database = {
           whatsapp_phone: string
         }
         Update: {
+          client_id?: string | null
           created_at?: string | null
           id?: string
           last_message_at?: string | null
@@ -139,6 +178,13 @@ export type Database = {
           whatsapp_phone?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "conversations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversations_whatsapp_instance_id_fkey"
             columns: ["whatsapp_instance_id"]

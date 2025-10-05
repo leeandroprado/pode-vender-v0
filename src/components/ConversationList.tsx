@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, User } from "lucide-react";
+import { MessageSquare, User, UserCheck } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Conversation } from "@/hooks/useConversations";
@@ -70,9 +70,14 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <h3 className="font-semibold text-sm truncate">
-                        {conversation.whatsapp_phone}
-                      </h3>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm truncate">
+                          {conversation.clients?.name || conversation.whatsapp_phone}
+                        </h3>
+                        {conversation.client_id && (
+                          <UserCheck className="w-3 h-3 text-primary shrink-0" />
+                        )}
+                      </div>
                       <span className="text-xs text-muted-foreground shrink-0">
                         {formatTimestamp(new Date(conversation.last_message_at))}
                       </span>
@@ -80,7 +85,7 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
 
                     <div className="flex items-center gap-2">
                       <p className="text-sm text-muted-foreground truncate flex-1">
-                        Última mensagem há {formatTimestamp(new Date(conversation.last_message_at))}
+                        {conversation.clients?.name ? conversation.whatsapp_phone : `Última mensagem há ${formatTimestamp(new Date(conversation.last_message_at))}`}
                       </p>
                       <div className="shrink-0">
                         <div className={`w-2 h-2 rounded-full ${getStatusColor(conversation.status)}`} />

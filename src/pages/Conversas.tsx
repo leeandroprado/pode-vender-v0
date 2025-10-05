@@ -102,6 +102,8 @@ const Conversas = () => {
                   conversationId={selectedConversationId}
                   ownerConversation={selectedConversation?.owner_conversation || 'ia'}
                   onOwnerChange={handleOwnerChange}
+                  clientId={selectedConversation?.client_id}
+                  clientName={selectedConversation?.clients?.name}
                 />
                 <MessageInput
                   onSendMessage={handleSendMessage}
