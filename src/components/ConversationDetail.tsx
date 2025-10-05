@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bot, User, MoreVertical, Phone, Video, Search } from "lucide-react";
 import { format } from "date-fns";
@@ -24,10 +25,22 @@ export const ConversationDetail = ({
   ownerConversation,
   onOwnerChange 
 }: ConversationDetailProps) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const handleOwnerToggle = (checked: boolean) => {
     const newOwner = checked ? 'ia' : 'human';
     onOwnerChange(conversationId, newOwner);
   };
+
+  // Auto-scroll para novas mensagens
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Scroll inicial ao trocar de conversa
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+  }, [conversationId]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -140,6 +153,7 @@ export const ConversationDetail = ({
               );
             })
           )}
+          <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
       </div>
