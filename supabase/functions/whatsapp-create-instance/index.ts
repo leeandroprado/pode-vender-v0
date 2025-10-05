@@ -155,6 +155,7 @@ Deno.serve(async (req) => {
       qrcode: settings.qrcode_enabled === 'true',
       rejectCall: settings.reject_call === 'true',
       groupsIgnore: settings.groups_ignore === 'true',
+      syncFullHistory: settings.sync_full_history === 'true',
     };
 
     // Always add webhook when webhook_enabled is true
@@ -178,8 +179,6 @@ Deno.serve(async (req) => {
       
       requestBody.webhook = {
         url: settings.webhook_url,
-        byEvents: settings.webhook_by_events === 'true',
-        base64: settings.webhook_base64 === 'true',
         headers: webhookHeaders,
         events: ['MESSAGES_UPSERT'],
       };
