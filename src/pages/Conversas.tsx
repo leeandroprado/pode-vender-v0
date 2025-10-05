@@ -11,22 +11,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const Conversas = () => {
-  const { conversations, isLoadingConversations, sendMessage, updateConversationOwner } = useConversations();
+  const { conversations, isLoadingConversations, sendMessage, updateConversationOwner, isSendingMessage } = useConversations();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const { messages, isLoadingMessages } = useMessages(selectedConversationId);
-  const { toast } = useToast();
   const isMobile = useIsMobile();
 
   const selectedConversation = conversations?.find((c) => c.id === selectedConversationId);
 
   const handleSendMessage = (content: string) => {
     if (!selectedConversationId) return;
-    
     sendMessage({ conversationId: selectedConversationId, content });
-    toast({
-      title: "Mensagem enviada",
-      description: "Sua mensagem foi enviada com sucesso.",
-    });
   };
 
   const handleOwnerChange = (conversationId: string, owner: 'ia' | 'human') => {
@@ -111,7 +105,7 @@ const Conversas = () => {
                 />
                 <MessageInput
                   onSendMessage={handleSendMessage}
-                  disabled={false}
+                  disabled={isSendingMessage}
                 />
               </>
             )}

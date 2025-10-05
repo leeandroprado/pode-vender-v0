@@ -148,10 +148,24 @@ export const useConversations = () => {
         .eq('id', conversationId);
 
       if (conversationError) throw conversationError;
+
+      // Send message via WhatsApp API
+      const { error: apiError } = await supabase.functions.invoke('whatsapp-send-message', {
+        body: { conversationId, content }
+      });
+
+      if (apiError) {
+        console.error('Error sending WhatsApp message:', apiError);
+        throw new Error('Falha ao enviar mensagem via WhatsApp');
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId] });
+      toast({
+        title: "Mensagem enviada",
+        description: "Sua mensagem foi enviada com sucesso.",
+      });
     },
     onError: (error) => {
       toast({
@@ -169,6 +183,7 @@ export const useConversations = () => {
     updateConversationStatus: updateConversationStatus.mutate,
     updateConversationOwner: updateConversationOwner.mutate,
     sendMessage: sendMessage.mutate,
+    isSendingMessage: sendMessage.isPending,
   };
 };
 
