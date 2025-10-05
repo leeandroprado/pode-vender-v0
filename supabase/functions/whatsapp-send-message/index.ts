@@ -55,23 +55,43 @@ serve(async (req) => {
 
     const { instance_name, hash } = conversation.whatsapp_instances as any;
 
-    // Buscar configurações da API
-    const { data: settings, error: settingsError } = await supabaseClient
+    // Buscar configurações da API usando service role key
+    const serviceRoleClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    console.log('Fetching API settings from system_settings...');
+    
+    const { data: settings, error: settingsError } = await serviceRoleClient
       .from('system_settings')
       .select('setting_key, setting_value')
       .eq('category', 'apizap')
       .in('setting_key', ['base_url', 'send_text_endpoint']);
 
+    console.log('Settings query result:', { settings, error: settingsError });
+
     if (settingsError) {
       console.error('Error fetching settings:', settingsError);
-      throw new Error('Erro ao buscar configurações');
+      throw new Error(`Erro ao buscar configurações: ${settingsError.message}`);
     }
 
-    const baseUrl = settings?.find(s => s.setting_key === 'base_url')?.setting_value;
-    const endpoint = settings?.find(s => s.setting_key === 'send_text_endpoint')?.setting_value;
+    if (!settings || settings.length === 0) {
+      console.error('No settings found for category apizap');
+      throw new Error('Nenhuma configuração encontrada para ApiZap. Verifique as configurações do sistema.');
+    }
+
+    const baseUrl = settings.find(s => s.setting_key === 'base_url')?.setting_value;
+    const endpoint = settings.find(s => s.setting_key === 'send_text_endpoint')?.setting_value;
+
+    console.log('Parsed settings:', { baseUrl, endpoint });
 
     if (!baseUrl || !endpoint) {
-      throw new Error('Configurações da API não encontradas');
+      const missing = [];
+      if (!baseUrl) missing.push('base_url');
+      if (!endpoint) missing.push('send_text_endpoint');
+      console.error('Missing settings:', missing);
+      throw new Error(`Configurações faltando: ${missing.join(', ')}`);
     }
 
     // Construir URL completa
@@ -109,8 +129,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in whatsapp-send-message:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
