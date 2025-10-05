@@ -148,31 +148,14 @@ Deno.serve(async (req) => {
 
     console.log('Checking WhatsApp phone configuration...');
 
-    // Build request body from settings with correct structure
+    // Build request body exactly as per ApiZap curl example
     const requestBody: any = {
       instanceName,
-      token: uniqueToken,
       integration: settings.default_integration || 'WHATSAPP-BAILEYS',
       qrcode: settings.qrcode_enabled === 'true',
-      settings: {
-        rejectCall: settings.reject_call === 'true',
-        msgCall: settings.msg_call || 'Desculpe, não aceito chamadas no momento.',
-        groupsIgnore: settings.groups_ignore === 'true',
-        alwaysOnline: settings.always_online === 'true',
-        readMessages: settings.read_messages === 'true',
-        readStatus: settings.read_status === 'true',
-        syncFullHistory: settings.sync_full_history === 'true',
-        wavoipToken: settings.wavoip_token || '',
-      },
+      rejectCall: settings.reject_call === 'true',
+      groupsIgnore: settings.groups_ignore === 'true',
     };
-
-    // Only add number field if agent has whatsapp_phone configured
-    if (agent.whatsapp_phone) {
-      requestBody.number = agent.whatsapp_phone;
-      console.log('Using configured WhatsApp phone:', agent.whatsapp_phone);
-    } else {
-      console.log('No WhatsApp phone configured, letting API generate number');
-    }
 
     // Always add webhook when webhook_enabled is true
     const webhookEnabled = settings.webhook_enabled === 'true';
@@ -183,31 +166,14 @@ Deno.serve(async (req) => {
         throw new Error('Webhook URL is required when webhook is enabled');
       }
       
-      // Build headers array in the format ApiZap expects: [{ key: string, value: string }]
-      const webhookHeaders: Array<{ key: string; value: string }> = [];
-      
-      // Add Content-Type header
-      const contentType = settings.webhook_content_type || 'application/json';
-      webhookHeaders.push({
-        key: 'Content-Type',
-        value: contentType,
-      });
+      // Build headers object in the format ApiZap expects: { "Header-Name": "value" }
+      const webhookHeaders: Record<string, string> = {
+        'Content-Type': settings.webhook_content_type || 'application/json',
+      };
       
       // Add authorization header only if it has a value
       if (settings.webhook_auth_header && settings.webhook_auth_header.trim() !== '') {
-        webhookHeaders.push({
-          key: 'authorization',
-          value: settings.webhook_auth_header,
-        });
-      }
-      
-      // Validate that we have at least one header
-      if (webhookHeaders.length === 0) {
-        console.warn('No valid webhook headers found, adding default Content-Type header');
-        webhookHeaders.push({
-          key: 'Content-Type',
-          value: 'application/json',
-        });
+        webhookHeaders['authorization'] = settings.webhook_auth_header;
       }
       
       requestBody.webhook = {
@@ -215,10 +181,11 @@ Deno.serve(async (req) => {
         byEvents: settings.webhook_by_events === 'true',
         base64: settings.webhook_base64 === 'true',
         headers: webhookHeaders,
+        events: ['MESSAGES_UPSERT'],
       };
       
       console.log('Webhook configured with URL:', settings.webhook_url);
-      console.log('Webhook headers array:', JSON.stringify(webhookHeaders));
+      console.log('Webhook headers object:', JSON.stringify(webhookHeaders));
     } else {
       console.log('Webhook is disabled in system settings');
     }
