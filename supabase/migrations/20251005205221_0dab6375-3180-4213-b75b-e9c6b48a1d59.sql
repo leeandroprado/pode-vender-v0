@@ -1,0 +1,2 @@
+-- Force types regeneration by adding comment to owner_conversation column
+COMMENT ON COLUMN public.conversations.owner_conversation IS 'Defines who is responsible for this conversation: ia (AI agent) or human (manual handling)';

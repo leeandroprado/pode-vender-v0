@@ -101,6 +101,9 @@ export type Database = {
           id: string
           last_message_at: string | null
           metadata: Json | null
+          owner_conversation:
+            | Database["public"]["Enums"]["owner_conversation"]
+            | null
           status: string
           updated_at: string | null
           user_id: string
@@ -112,6 +115,9 @@ export type Database = {
           id?: string
           last_message_at?: string | null
           metadata?: Json | null
+          owner_conversation?:
+            | Database["public"]["Enums"]["owner_conversation"]
+            | null
           status?: string
           updated_at?: string | null
           user_id: string
@@ -123,6 +129,9 @@ export type Database = {
           id?: string
           last_message_at?: string | null
           metadata?: Json | null
+          owner_conversation?:
+            | Database["public"]["Enums"]["owner_conversation"]
+            | null
           status?: string
           updated_at?: string | null
           user_id?: string
@@ -373,6 +382,7 @@ export type Database = {
         | "x-ai/grok-code-fast-1"
         | "x-ai/grok-4-fast:free"
         | "deepseek/deepseek-chat-v3-0324"
+      owner_conversation: "ia" | "human"
       plan_type: "trial" | "basic" | "professional"
       user_role: "super_admin" | "admin" | "caixa"
       whatsapp_instance_status:
@@ -519,6 +529,7 @@ export const Constants = {
         "x-ai/grok-4-fast:free",
         "deepseek/deepseek-chat-v3-0324",
       ],
+      owner_conversation: ["ia", "human"],
       plan_type: ["trial", "basic", "professional"],
       user_role: ["super_admin", "admin", "caixa"],
       whatsapp_instance_status: [
