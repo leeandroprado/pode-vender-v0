@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,19 +11,69 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, Search, MoreVertical, Pencil, Trash2, UserX } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useClients, Client } from "@/hooks/useClients";
+import { AddClientDialog } from "@/components/AddClientDialog";
+import { EditClientDialog } from "@/components/EditClientDialog";
 
 export default function Clientes() {
   const isMobile = useIsMobile();
-  
-  const clients = [
-    { name: "João Silva", cpf: "123.456.789-00", phone: "(11) 98765-4321", city: "São Paulo", purchases: 5 },
-    { name: "Maria Santos", cpf: "987.654.321-00", phone: "(21) 91234-5678", city: "Rio de Janeiro", purchases: 12 },
-    { name: "Pedro Costa", cpf: "456.789.123-00", phone: "(31) 99876-5432", city: "Belo Horizonte", purchases: 3 },
-    { name: "Ana Oliveira", cpf: "321.654.987-00", phone: "(41) 98765-1234", city: "Curitiba", purchases: 8 },
-    { name: "Carlos Pereira", cpf: "789.123.456-00", phone: "(51) 91234-9876", city: "Porto Alegre", purchases: 15 },
-  ];
+  const { clients, isLoading, createClient, updateClient, deleteClient } = useClients();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  const filteredClients = clients.filter((client) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      client.name.toLowerCase().includes(search) ||
+      client.phone.toLowerCase().includes(search) ||
+      client.cpf?.toLowerCase().includes(search) ||
+      client.city?.toLowerCase().includes(search)
+    );
+  });
+
+  const handleEdit = (client: Client) => {
+    setSelectedClient(client);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (client: Client) => {
+    setSelectedClient(client);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedClient) {
+      await deleteClient.mutateAsync(selectedClient.id);
+      setDeleteDialogOpen(false);
+      setSelectedClient(null);
+    }
+  };
+
+  const handleUpdate = async (id: string, data: Partial<Client>) => {
+    await updateClient.mutateAsync({ id, ...data });
+  };
   
   return (
     <div className="space-y-4 md:space-y-6">
@@ -33,7 +84,10 @@ export default function Clientes() {
             Gerencie sua base de clientes
           </p>
         </div>
-        <Button className="gap-2 w-full sm:w-auto">
+        <Button 
+          className="gap-2 w-full sm:w-auto"
+          onClick={() => setAddDialogOpen(true)}
+        >
           <Plus className="h-4 w-4" />
           Novo Cliente
         </Button>
@@ -44,14 +98,43 @@ export default function Clientes() {
           <div className="flex items-center gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar clientes..." className="pl-10" />
+              <Input 
+                placeholder="Buscar clientes..." 
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
           </div>
 
-          {isMobile ? (
+          {isLoading ? (
             <div className="space-y-3">
-              {clients.map((client, index) => (
-                <Card key={index}>
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </div>
+          ) : filteredClients.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <UserX className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">
+                {searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {searchTerm 
+                  ? "Tente buscar com outros termos" 
+                  : "Comece adicionando seu primeiro cliente"}
+              </p>
+              {!searchTerm && (
+                <Button onClick={() => setAddDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Cliente
+                </Button>
+              )}
+            </div>
+          ) : isMobile ? (
+            <div className="space-y-3">
+              {filteredClients.map((client) => (
+                <Card key={client.id}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -62,26 +145,45 @@ export default function Clientes() {
                         </Avatar>
                         <div>
                           <h3 className="font-semibold text-base">{client.name}</h3>
-                          <p className="text-xs text-muted-foreground">{client.city}</p>
+                          <p className="text-xs text-muted-foreground">{client.city || "N/A"}</p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(client)}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDeleteClick(client)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">CPF:</span>
-                        <span className="font-medium">{client.cpf}</span>
+                        <span className="font-medium">{client.cpf || "N/A"}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Telefone:</span>
                         <span className="font-medium">{client.phone}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Compras:</span>
-                        <span className="font-bold text-primary">{client.purchases}</span>
-                      </div>
+                      {client.email && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Email:</span>
+                          <span className="font-medium text-xs">{client.email}</span>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -96,13 +198,13 @@ export default function Clientes() {
                     <TableHead>CPF</TableHead>
                     <TableHead>Telefone</TableHead>
                     <TableHead>Cidade</TableHead>
-                    <TableHead>Compras</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clients.map((client, index) => (
-                    <TableRow key={index}>
+                  {filteredClients.map((client) => (
+                    <TableRow key={client.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
@@ -113,16 +215,31 @@ export default function Clientes() {
                           <span className="font-medium">{client.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell>{client.cpf}</TableCell>
+                      <TableCell>{client.cpf || "N/A"}</TableCell>
                       <TableCell>{client.phone}</TableCell>
-                      <TableCell>{client.city}</TableCell>
+                      <TableCell>{client.city || "N/A"}</TableCell>
+                      <TableCell className="text-sm">{client.email || "N/A"}</TableCell>
                       <TableCell>
-                        <span className="font-medium">{client.purchases}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(client)}>
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteClick(client)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -132,6 +249,42 @@ export default function Clientes() {
           )}
         </CardContent>
       </Card>
+
+      <AddClientDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onClientAdded={() => setAddDialogOpen(false)}
+      />
+
+      {selectedClient && (
+        <EditClientDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          client={selectedClient}
+          onUpdate={handleUpdate}
+        />
+      )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o cliente <strong>{selectedClient?.name}</strong>? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

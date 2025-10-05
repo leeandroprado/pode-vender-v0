@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useClients } from "@/hooks/useClients";
+import { Client } from "@/hooks/useClients";
 
 const clientSchema = z.object({
-  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  phone: z.string().min(10, "Telefone inválido"),
+  name: z.string().min(1, "Nome é obrigatório"),
+  phone: z.string().min(1, "Telefone é obrigatório"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   cpf: z.string().optional(),
   city: z.string().optional(),
@@ -31,70 +31,49 @@ const clientSchema = z.object({
 
 type ClientFormData = z.infer<typeof clientSchema>;
 
-interface AddClientDialogProps {
+interface EditClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  conversationId?: string;
-  defaultPhone?: string;
-  onClientAdded?: (clientId?: string) => void;
+  client: Client;
+  onUpdate: (id: string, data: Partial<Client>) => void;
 }
 
-export const AddClientDialog = ({
+export function EditClientDialog({
   open,
   onOpenChange,
-  conversationId,
-  defaultPhone,
-  onClientAdded,
-}: AddClientDialogProps) => {
-  const { createClient, linkClientToConversation, clients } = useClients();
+  client,
+  onUpdate,
+}: EditClientDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
-      name: "",
-      phone: defaultPhone || "",
-      email: "",
-      cpf: "",
-      city: "",
+      name: client.name,
+      phone: client.phone,
+      email: client.email || "",
+      cpf: client.cpf || "",
+      city: client.city || "",
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: client.name,
+        phone: client.phone,
+        email: client.email || "",
+        cpf: client.cpf || "",
+        city: client.city || "",
+      });
+    }
+  }, [open, client, form]);
 
   const onSubmit = async (data: ClientFormData) => {
     setIsSubmitting(true);
     try {
-      // Check if client already exists with this phone
-      const existingClient = clients.find(c => c.phone === data.phone);
-      
-      let clientId: string;
-      
-      if (existingClient) {
-        clientId = existingClient.id;
-      } else {
-        // Create new client
-        const newClient = await createClient.mutateAsync({
-          name: data.name,
-          phone: data.phone,
-          email: data.email || undefined,
-          cpf: data.cpf || undefined,
-          city: data.city || undefined,
-        });
-        clientId = newClient.id;
-      }
-
-      // Link client to conversation if conversationId is provided
-      if (conversationId) {
-        await linkClientToConversation.mutateAsync({
-          conversationId,
-          clientId,
-        });
-      }
-
+      await onUpdate(client.id, data);
       onOpenChange(false);
-      form.reset();
-      onClientAdded?.(clientId);
-    } catch (error) {
-      console.error("Error adding client:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -102,11 +81,11 @@ export const AddClientDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Cliente</DialogTitle>
+          <DialogTitle>Editar Cliente</DialogTitle>
           <DialogDescription>
-            Preencha os dados do cliente para vincular a esta conversa.
+            Atualize as informações do cliente
           </DialogDescription>
         </DialogHeader>
 
@@ -119,7 +98,7 @@ export const AddClientDialog = ({
                 <FormItem>
                   <FormLabel>Nome *</FormLabel>
                   <FormControl>
-                    <Input placeholder="João Silva" {...field} />
+                    <Input placeholder="Nome completo" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -133,7 +112,7 @@ export const AddClientDialog = ({
                 <FormItem>
                   <FormLabel>Telefone *</FormLabel>
                   <FormControl>
-                    <Input placeholder="(11) 99999-9999" {...field} />
+                    <Input placeholder="(00) 00000-0000" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,7 +126,7 @@ export const AddClientDialog = ({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="joao@email.com" {...field} />
+                    <Input type="email" placeholder="email@exemplo.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -175,24 +154,23 @@ export const AddClientDialog = ({
                 <FormItem>
                   <FormLabel>Cidade</FormLabel>
                   <FormControl>
-                    <Input placeholder="São Paulo" {...field} />
+                    <Input placeholder="Cidade" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
               >
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Salvando..." : "Salvar Cliente"}
+                {isSubmitting ? "Salvando..." : "Salvar Alterações"}
               </Button>
             </div>
           </form>
@@ -200,4 +178,4 @@ export const AddClientDialog = ({
       </DialogContent>
     </Dialog>
   );
-};
+}
