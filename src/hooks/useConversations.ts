@@ -9,6 +9,7 @@ export type Conversation = {
   whatsapp_phone: string;
   whatsapp_instance_id: string | null;
   status: 'open' | 'closed' | 'waiting';
+  owner_conversation: 'ia' | 'human';
   last_message_at: string;
   created_at: string;
   updated_at: string;
@@ -36,7 +37,7 @@ export const useConversations = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conversations')
-        .select('id, user_id, whatsapp_phone, whatsapp_instance_id, status, last_message_at, created_at, updated_at, metadata')
+        .select('id, user_id, whatsapp_phone, whatsapp_instance_id, status, owner_conversation, last_message_at, created_at, updated_at, metadata')
         .order('last_message_at', { ascending: false })
         .limit(100);
 
@@ -95,11 +96,79 @@ export const useConversations = () => {
     },
   });
 
+  // Update conversation owner
+  const updateConversationOwner = useMutation({
+    mutationFn: async ({ id, owner }: { id: string; owner: 'ia' | 'human' }) => {
+      const { error } = await supabase
+        .from('conversations')
+        .update({ owner_conversation: owner, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      toast({
+        title: "Responsável atualizado",
+        description: "O responsável pela conversa foi alterado.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Send message
+  const sendMessage = useMutation({
+    mutationFn: async ({ conversationId, content }: { conversationId: string; content: string }) => {
+      // Insert message
+      const { error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_type: 'system',
+          content,
+          message_type: 'text',
+        });
+
+      if (messageError) throw messageError;
+
+      // Update conversation last_message_at and owner to human
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .update({ 
+          last_message_at: new Date().toISOString(),
+          owner_conversation: 'human',
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', conversationId);
+
+      if (conversationError) throw conversationError;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao enviar mensagem",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     conversations,
     isLoadingConversations,
     conversationsError,
     updateConversationStatus: updateConversationStatus.mutate,
+    updateConversationOwner: updateConversationOwner.mutate,
+    sendMessage: sendMessage.mutate,
   };
 };
 

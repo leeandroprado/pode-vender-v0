@@ -6,15 +6,31 @@ import type { Message } from "@/hooks/useConversations";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface ConversationDetailProps {
   messages: Message[];
   conversationPhone: string;
+  conversationId: string;
+  ownerConversation: 'ia' | 'human';
+  onOwnerChange: (conversationId: string, owner: 'ia' | 'human') => void;
 }
 
-export const ConversationDetail = ({ messages, conversationPhone }: ConversationDetailProps) => {
+export const ConversationDetail = ({ 
+  messages, 
+  conversationPhone, 
+  conversationId,
+  ownerConversation,
+  onOwnerChange 
+}: ConversationDetailProps) => {
+  const handleOwnerToggle = (checked: boolean) => {
+    const newOwner = checked ? 'ia' : 'human';
+    onOwnerChange(conversationId, newOwner);
+  };
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Header */}
       <div className="border-b bg-background p-4">
         <div className="flex items-center justify-between">
@@ -30,7 +46,18 @@ export const ConversationDetail = ({ messages, conversationPhone }: Conversation
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 border-r pr-3">
+              <Label htmlFor="owner-toggle" className="text-xs cursor-pointer">
+                {ownerConversation === 'ia' ? 'IA' : 'Humano'}
+              </Label>
+              <Switch 
+                id="owner-toggle"
+                checked={ownerConversation === 'ia'}
+                onCheckedChange={handleOwnerToggle}
+              />
+            </div>
+            
             <Button variant="ghost" size="icon">
               <Search className="w-5 h-5" />
             </Button>
@@ -48,8 +75,9 @@ export const ConversationDetail = ({ messages, conversationPhone }: Conversation
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 bg-muted/10">
-        <div className="p-4 space-y-3">
+      <div className="flex-1 min-h-0 overflow-hidden bg-muted/10">
+        <ScrollArea className="h-full">
+          <div className="p-4 space-y-3">
           {messages.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <p>Nenhuma mensagem ainda</p>
@@ -112,8 +140,9 @@ export const ConversationDetail = ({ messages, conversationPhone }: Conversation
               );
             })
           )}
-        </div>
-      </ScrollArea>
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 };

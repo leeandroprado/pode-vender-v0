@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const Conversas = () => {
-  const { conversations, isLoadingConversations } = useConversations();
+  const { conversations, isLoadingConversations, sendMessage, updateConversationOwner } = useConversations();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const { messages, isLoadingMessages } = useMessages(selectedConversationId);
   const { toast } = useToast();
@@ -20,11 +20,17 @@ const Conversas = () => {
   const selectedConversation = conversations?.find((c) => c.id === selectedConversationId);
 
   const handleSendMessage = (content: string) => {
-    // TODO: Implementar envio de mensagem
+    if (!selectedConversationId) return;
+    
+    sendMessage({ conversationId: selectedConversationId, content });
     toast({
       title: "Mensagem enviada",
       description: "Sua mensagem foi enviada com sucesso.",
     });
+  };
+
+  const handleOwnerChange = (conversationId: string, owner: 'ia' | 'human') => {
+    updateConversationOwner({ id: conversationId, owner });
   };
 
   if (isLoadingConversations) {
@@ -99,6 +105,9 @@ const Conversas = () => {
                 <ConversationDetail
                   messages={messages || []}
                   conversationPhone={selectedConversation?.whatsapp_phone || ""}
+                  conversationId={selectedConversationId}
+                  ownerConversation={selectedConversation?.owner_conversation || 'ia'}
+                  onOwnerChange={handleOwnerChange}
                 />
                 <MessageInput
                   onSendMessage={handleSendMessage}
