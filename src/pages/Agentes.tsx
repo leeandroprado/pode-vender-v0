@@ -80,13 +80,30 @@ export default function Agentes() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center justify-center py-16">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-sm text-muted-foreground">Carregando agentes...</p>
+        </div>
+      ) : agents.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+          <div className="rounded-full bg-muted p-8 mb-6">
+            <Bot className="h-16 w-16 text-muted-foreground" />
+          </div>
+          <h3 className="text-2xl font-semibold mb-3">Nenhum agente criado</h3>
+          <p className="text-muted-foreground mb-8 max-w-md">
+            Comece criando seu primeiro agente de IA para automatizar o atendimento do seu negócio.
+          </p>
+          <NewAgentDialog>
+            <Button size="lg" className="gap-2">
+              <Plus className="h-5 w-5" />
+              Criar Primeiro Agente
+            </Button>
+          </NewAgentDialog>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {agents.map((agent) => (
-            <Card key={agent.id} className="transition-all hover:shadow-md">
+            <Card key={agent.id} className="transition-all hover:shadow-lg hover:scale-[1.02] duration-200">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -177,14 +194,14 @@ export default function Agentes() {
           ))}
 
           <NewAgentDialog>
-            <Card className="border-dashed transition-all hover:shadow-md hover:border-primary/50 cursor-pointer">
+            <Card className="border-2 border-dashed transition-all hover:shadow-lg hover:border-primary/50 hover:scale-[1.02] cursor-pointer duration-200 bg-muted/30">
               <CardContent className="flex flex-col items-center justify-center h-full min-h-[280px] gap-4">
-                <div className="rounded-full bg-muted p-4">
-                  <Plus className="h-8 w-8 text-muted-foreground" />
+                <div className="rounded-full bg-primary/10 p-6 transition-transform hover:scale-110 duration-200">
+                  <Plus className="h-10 w-10 text-primary" />
                 </div>
                 <div className="text-center">
-                  <h3 className="font-semibold">Criar Novo Agente</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h3 className="font-semibold text-lg mb-1">Criar Novo Agente</h3>
+                  <p className="text-sm text-muted-foreground">
                     Configure um novo agente de IA
                   </p>
                 </div>

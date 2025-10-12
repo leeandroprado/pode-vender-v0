@@ -1,6 +1,6 @@
-import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings } from "lucide-react";
+import { LayoutDashboard, Bot, Package, Users, Activity, MessageCircle, Settings, ShoppingCart, Users2, FileText } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -8,95 +8,66 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
-  SidebarFooter,
 } from "@/components/ui/sidebar";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Meus Agentes", url: "/agentes", icon: Bot },
-  { title: "Produtos", url: "/produtos", icon: Package },
+  { title: "Agentes", url: "/agentes", icon: Bot },
   { title: "Clientes", url: "/clientes", icon: Users },
-  { title: "Conversas", url: "/conversas", icon: MessageCircle },
+  { title: "Produtos", url: "/produtos", icon: Package },
+  { title: "Multi Chat", url: "/conversas", icon: MessageCircle },
+  { title: "Equipe", url: "/equipe", icon: Users2 },
   { title: "Atividades", url: "/atividades", icon: Activity },
-  { title: "Minha Conta", url: "/conta", icon: UserCircle },
 ];
 
 export function AppSidebar() {
-  const { isSuperAdmin } = useUserRole();
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
+
+  const renderMenuItem = ({ url, title, icon: Icon }: typeof menuItems[0]) => (
+    <SidebarMenuItem key={title} className="list-none p-0">
+      <NavLink to={url} end={url === "/"} className="block w-full">
+        {({ isActive }) => (
+          <div
+            className={`flex items-center gap-3 rounded-md p-3 mx-2 transition-colors ${
+              isActive
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            }`}>
+            <Icon className="h-4 w-4" />
+            <span className="text-sm font-medium">{title}</span>
+          </div>
+        )}
+      </NavLink>
+    </SidebarMenuItem>
+  );
+
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border px-6 py-4">
+    <Sidebar className="w-[240px] border-r">
+      <SidebarHeader className="px-4 py-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Bot className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <ShoppingCart className="h-5 w-5" />
           </div>
-          <div>
-            <h2 className="text-sm font-semibold text-sidebar-foreground">IA Atendimento</h2>
-            <p className="text-xs text-sidebar-foreground/60">Plataforma Inteligente</p>
-          </div>
+          <h2 className="text-base font-bold">Pode Vender</h2>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="py-2">
         <SidebarGroup>
-          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-medium uppercase tracking-wide text-muted-foreground px-4 mb-2">
+            Menu
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/"}
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      }
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              
-              {isSuperAdmin && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/settings-system"
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      }
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Configurações</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+            <SidebarMenu className="space-y-1">
+              {menuItems.map(renderMenuItem)}
+              {isAdmin && renderMenuItem({ title: "Logs", url: "/logs", icon: FileText })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3 px-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-            <UserCircle className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">Usuário Demo</p>
-            <p className="text-xs text-sidebar-foreground/60 truncate">usuario@exemplo.com</p>
-          </div>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }

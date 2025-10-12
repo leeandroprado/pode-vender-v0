@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, X } from "lucide-react";
@@ -97,8 +97,8 @@ export function ProductFilters({
       </Select>
 
       {/* Data Inicial */}
-      <Drawer open={startDateOpen} onOpenChange={setStartDateOpen}>
-        <DrawerTrigger asChild>
+      <Popover open={startDateOpen} onOpenChange={setStartDateOpen} modal={false}>
+        <PopoverTrigger asChild>
           <Button
             variant="outline"
             className={cn(
@@ -114,28 +114,23 @@ export function ProductFilters({
               <span>Data inicial</span>
             )}
           </Button>
-        </DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Selecione a data inicial</DrawerTitle>
-          </DrawerHeader>
-          <div className="p-4 flex justify-center">
-            <Calendar
-              mode="single"
-              selected={filters.startDate}
-              onSelect={(date) => {
-                onFilterChange("startDate", date);
-                setStartDateOpen(false);
-              }}
-              className="pointer-events-auto"
-            />
-          </div>
-        </DrawerContent>
-      </Drawer>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start" side="bottom">
+          <Calendar
+            mode="single"
+            selected={filters.startDate}
+            onSelect={(date) => {
+              onFilterChange("startDate", date);
+              setStartDateOpen(false);
+            }}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
 
       {/* Data Final */}
-      <Drawer open={endDateOpen} onOpenChange={setEndDateOpen}>
-        <DrawerTrigger asChild>
+      <Popover open={endDateOpen} onOpenChange={setEndDateOpen} modal={false}>
+        <PopoverTrigger asChild>
           <Button
             variant="outline"
             className={cn(
@@ -151,24 +146,19 @@ export function ProductFilters({
               <span>Data final</span>
             )}
           </Button>
-        </DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Selecione a data final</DrawerTitle>
-          </DrawerHeader>
-          <div className="p-4 flex justify-center">
-            <Calendar
-              mode="single"
-              selected={filters.endDate}
-              onSelect={(date) => {
-                onFilterChange("endDate", date);
-                setEndDateOpen(false);
-              }}
-              className="pointer-events-auto"
-            />
-          </div>
-        </DrawerContent>
-      </Drawer>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start" side="bottom">
+          <Calendar
+            mode="single"
+            selected={filters.endDate}
+            onSelect={(date) => {
+              onFilterChange("endDate", date);
+              setEndDateOpen(false);
+            }}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
 
       {hasActiveFilters && (
         <Button

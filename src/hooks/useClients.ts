@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Client {
   id: string;
-  user_id: string;
+  organization_id: string;
   name: string;
   phone: string;
   email?: string;
@@ -15,31 +16,35 @@ export interface Client {
 }
 
 export const useClients = () => {
+  const { profile } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: clients = [], isLoading } = useQuery({
-    queryKey: ["clients"],
+    queryKey: ["clients", profile?.organization_id],
     queryFn: async () => {
+      if (!profile?.organization_id) return [];
+
       const { data, error } = await supabase
         .from("clients")
         .select("*")
+        .eq("organization_id", profile.organization_id)
         .order("name", { ascending: true });
 
       if (error) throw error;
       return data as Client[];
     },
+    enabled: !!profile?.organization_id,
   });
 
   const createClient = useMutation({
-    mutationFn: async (newClient: Omit<Client, "id" | "user_id" | "created_at" | "updated_at">) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+    mutationFn: async (newClient: Omit<Client, "id" | "organization_id" | "created_at" | "updated_at">) => {
+      if (!profile?.organization_id) throw new Error("Organização não encontrada.");
 
       const { data, error } = await supabase
         .from("clients")
         .insert({
           ...newClient,
-          user_id: user.id,
+          organization_id: profile.organization_id,
         })
         .select()
         .single();

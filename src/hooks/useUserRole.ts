@@ -22,17 +22,20 @@ export function useUserRole() {
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle(); // Usar maybeSingle ao invés de single para evitar erro 406
 
         if (error) {
           console.error('Error fetching user role:', error);
-          setRole(null);
+          setRole('user'); // Fallback para 'user' se houver erro
+        } else if (data) {
+          setRole(data.role as UserRole);
         } else {
-          setRole(data?.role as UserRole);
+          // Usuário não tem role cadastrada, usar 'user' como padrão
+          setRole('user');
         }
       } catch (error) {
         console.error('Error fetching user role:', error);
-        setRole(null);
+        setRole('user'); // Fallback para 'user'
       } finally {
         setLoading(false);
       }

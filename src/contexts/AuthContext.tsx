@@ -4,9 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
+interface Profile {
+  organization_id: string | null;
+  role: 'admin' | 'member';
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
@@ -18,35 +24,63 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    let mounted = true;
+    const initializeAuth = async () => {
+      // 1. Fetch initial session
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
 
-    // Check for existing session first
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    });
-
-    // Set up auth state listener for future changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
+      // 2. Fetch profile for the initial user
+      if (currentUser) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('organization_id, role')
+          .eq('id', currentUser.id)
+          .single();
+        if (profileError) {
+          console.error('Initial profile fetch error:', profileError);
+        } else {
+          setProfile(profileData as Profile);
         }
       }
-    );
+      setLoading(false);
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
+      // 3. Set up listener for future auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+        setSession(newSession);
+        const newCurrentUser = newSession?.user ?? null;
+        setUser(newCurrentUser);
+
+        if (newCurrentUser) {
+          const { data: newProfileData, error: newProfileError } = await supabase
+            .from('profiles')
+            .select('organization_id, role')
+            .eq('id', newCurrentUser.id)
+            .single();
+          if (newProfileError) {
+            console.error('Auth change profile fetch error:', newProfileError);
+            setProfile(null);
+          } else {
+            setProfile(newProfileData as Profile);
+          }
+        } else {
+          setProfile(null);
+        }
+        setLoading(false); // Ensure loading is false after changes
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
     };
+
+    initializeAuth();
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -59,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       toast.success('Login realizado com sucesso!');
-      navigate('/');
+      // A navegação é tratada pelo onAuthStateChange
     } catch (error: any) {
       toast.error(error.message || 'Erro ao fazer login');
       throw error;
@@ -93,15 +127,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       toast.success('Logout realizado com sucesso!');
-      navigate('/login');
+      // A navegação é tratada pelo onAuthStateChange
     } catch (error: any) {
       toast.error(error.message || 'Erro ao fazer logout');
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
-      {children}
+    <AuthContext.Provider value={{ user, session, profile, loading, signIn, signUp, signOut }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 }

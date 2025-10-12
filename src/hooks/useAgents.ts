@@ -1,7 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/database.types";
+
+type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+import { useAuth } from "@/contexts/AuthContext";
 
 type Agent = Tables<"agents">;
 type WhatsappInstance = Tables<"whatsapp_instances">;
@@ -25,36 +28,43 @@ type UpdateAgentInput = {
 };
 
 export const useAgents = () => {
+  const { profile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: agents, isLoading, error } = useQuery({
-    queryKey: ["agents"],
+    queryKey: ["agents", profile?.organization_id],
     queryFn: async () => {
+      if (!profile?.organization_id) return [];
       const { data, error } = await supabase
         .from("agents")
         .select("id, name, description, model, prompt_system, status, whatsapp_connected, whatsapp_phone, conversations_count, created_at, updated_at")
+        .eq("organization_id", profile.organization_id)
         .order("created_at", { ascending: false })
         .limit(100);
 
       if (error) throw error;
       return data as Agent[];
     },
+    enabled: !!profile?.organization_id,
     staleTime: 30000, // Cache for 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const { data: whatsappInstances, refetch: fetchWhatsappInstances } = useQuery({
-    queryKey: ["whatsapp_instances"],
+    queryKey: ["whatsapp_instances", profile?.organization_id],
     queryFn: async () => {
+      if (!profile?.organization_id) return [];
       const { data, error } = await supabase
         .from("whatsapp_instances")
         .select("id, agent_id, user_id, instance_id, instance_name, status, integration, qr_code_base64, qr_code_text, hash, settings, created_at, updated_at")
+        .eq("organization_id", profile.organization_id)
         .limit(50);
 
       if (error) throw error;
       return data as WhatsappInstance[];
     },
+    enabled: !!profile?.organization_id,
     initialData: [],
     staleTime: 20000, // Cache for 20 seconds
     gcTime: 3 * 60 * 1000, // Keep in cache for 3 minutes
@@ -62,12 +72,11 @@ export const useAgents = () => {
 
   const createAgent = useMutation({
     mutationFn: async (newAgent: CreateAgentInput) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+      if (!profile?.organization_id) throw new Error("Organização não encontrada.");
 
       const { data, error } = await supabase
         .from("agents")
-        .insert([{ ...newAgent, user_id: user.id }])
+        .insert([{ ...newAgent, organization_id: profile.organization_id }])
         .select()
         .single();
 

@@ -2,50 +2,28 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Database } from "@/integrations/supabase/database.types";
 
-export type Conversation = {
-  id: string;
-  user_id: string;
-  whatsapp_phone: string;
-  whatsapp_instance_id: string | null;
-  status: 'open' | 'closed' | 'waiting';
-  owner_conversation: 'ia' | 'human';
-  last_message_at: string;
-  created_at: string;
-  updated_at: string;
-  metadata: Record<string, any>;
-  client_id?: string | null;
-  clients?: {
-    id: string;
-    name: string;
-    phone: string;
-  } | null;
-};
-
-export type Message = {
-  id: string;
-  conversation_id: string;
-  sender_type: 'client' | 'ai' | 'system';
-  sender_id: string | null;
-  content: string;
-  message_type: 'text' | 'image' | 'audio' | 'video' | 'document';
-  timestamp: string;
-  whatsapp_message_id: string | null;
-};
+type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type Conversation = Tables<'conversations'> & { clients: Tables<'clients'> | null };
+export type Message = Tables<'messages'>;
 
 export const useConversations = () => {
+  const { profile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch conversations with optimized query
   const { data: conversations, isLoading: isLoadingConversations, error: conversationsError } = useQuery({
-    queryKey: ['conversations'],
+    queryKey: ['conversations', profile?.organization_id],
     queryFn: async () => {
+      if (!profile?.organization_id) return [];
       const { data, error } = await supabase
         .from('conversations')
         .select(`
-          id, 
-          user_id, 
+          id,
+          organization_id,
           whatsapp_phone, 
           whatsapp_instance_id, 
           status, 
@@ -55,24 +33,55 @@ export const useConversations = () => {
           updated_at, 
           metadata,
           client_id,
-          clients (
-            id,
-            name,
-            phone
-          )
+          clients (*)
         `)
+        .eq('organization_id', profile.organization_id)
         .order('last_message_at', { ascending: false })
-        .limit(100);
+        .limit(50);
 
       if (error) throw error;
       return data as Conversation[];
     },
-    staleTime: 30000, // Cache for 30 seconds
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    staleTime: 30000, // Cache de 30 segundos
+    gcTime: 5 * 60 * 1000, // Manter em cache por 5 minutos
+    refetchOnWindowFocus: false, // Não re-fetch ao trocar de aba
   });
 
   // Setup realtime subscriptions
   useEffect(() => {
+    const handleRealtimeUpdate = (payload: any) => {
+      const newRecord = payload.new as Conversation;
+      const oldRecord = payload.old as Conversation;
+
+      queryClient.setQueryData<Conversation[]>(['conversations'], (oldData) => {
+        if (!oldData) return [];
+
+        let newData = [...oldData];
+
+        if (payload.eventType === 'INSERT') {
+          // Adiciona a nova conversa no início e remove a última se o limite for excedido
+          newData.unshift(newRecord);
+          if (newData.length > 50) {
+            newData.pop();
+          }
+        } else if (payload.eventType === 'UPDATE') {
+          const index = newData.findIndex(c => c.id === newRecord.id);
+          if (index !== -1) {
+            // Atualiza a conversa existente
+            newData[index] = newRecord;
+          } else {
+            // Se não encontrar, adiciona (caso raro)
+            newData.unshift(newRecord);
+          }
+        } else if (payload.eventType === 'DELETE') {
+          newData = newData.filter(c => c.id !== oldRecord.id);
+        }
+
+        // Reordena pela data da última mensagem para manter a consistência
+        return newData.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
+      });
+    };
+
     const conversationsChannel = supabase
       .channel('conversations-changes')
       .on(
@@ -82,9 +91,7 @@ export const useConversations = () => {
           schema: 'public',
           table: 'conversations'
         },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        }
+        handleRealtimeUpdate
       )
       .subscribe();
 
@@ -102,9 +109,17 @@ export const useConversations = () => {
         .eq('id', id);
 
       if (error) throw error;
+      return { id, status };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    onSuccess: (data) => {
+      queryClient.setQueryData<Conversation[]>(['conversations'], (old) => {
+        if (!old) return old;
+        return old.map(conv => 
+          conv.id === data.id 
+            ? { ...conv, status: data.status, updated_at: new Date().toISOString() }
+            : conv
+        );
+      });
       toast({
         title: "Status atualizado",
         description: "O status da conversa foi atualizado com sucesso.",
@@ -128,9 +143,19 @@ export const useConversations = () => {
         .eq('id', id);
 
       if (error) throw error;
+      return { id, owner };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    onSuccess: (data) => {
+      // Atualiza cache localmente ao invés de invalidar tudo
+      queryClient.setQueryData<Conversation[]>(['conversations'], (old) => {
+        if (!old) return old;
+        return old.map(conv => 
+          conv.id === data.id 
+            ? { ...conv, owner_conversation: data.owner, updated_at: new Date().toISOString() }
+            : conv
+        );
+      });
+      
       toast({
         title: "Responsável atualizado",
         description: "O responsável pela conversa foi alterado.",
@@ -183,12 +208,20 @@ export const useConversations = () => {
       }
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId] });
-      toast({
-        title: "Mensagem enviada",
-        description: "Sua mensagem foi enviada com sucesso.",
+      // Atualiza apenas a conversa específica no cache
+      queryClient.setQueryData<Conversation[]>(['conversations'], (old) => {
+        if (!old) return old;
+        return old.map(conv => 
+          conv.id === variables.conversationId 
+            ? { ...conv, last_message_at: new Date().toISOString(), owner_conversation: 'human' as const }
+            : conv
+        ).sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
       });
+      
+      // Invalida apenas as mensagens dessa conversa
+      queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId] });
+      
+      // Toast removido - mensagem aparece automaticamente na interface
     },
     onError: (error) => {
       toast({
@@ -218,38 +251,55 @@ export const useMessages = (conversationId: string | null) => {
     queryFn: async () => {
       if (!conversationId) return [];
       
+      // Buscar as últimas 100 mensagens (mais recentes)
       const { data, error } = await supabase
         .from('messages')
         .select('id, conversation_id, sender_type, sender_id, content, message_type, timestamp, whatsapp_message_id')
         .eq('conversation_id', conversationId)
-        .order('timestamp', { ascending: true })
-        .limit(200);
+        .order('timestamp', { ascending: false }) // Ordem decrescente para pegar as mais recentes
+        .limit(100);
 
       if (error) throw error;
-      return data as Message[];
+      
+      // Inverter a ordem para exibir cronologicamente (mais antigas primeiro)
+      return (data as Message[]).reverse();
     },
     enabled: !!conversationId,
-    staleTime: 10000, // Cache for 10 seconds
-    gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
+    staleTime: 10000, // Cache de 10 segundos
+    gcTime: 2 * 60 * 1000, // Manter em cache por 2 minutos
+    refetchOnWindowFocus: false, // Não re-fetch ao trocar de aba
   });
 
   // Setup realtime subscriptions for messages
   useEffect(() => {
     if (!conversationId) return;
 
+    const handleRealtimeMessage = (payload: any) => {
+      const newMessage = payload.new as Message;
+
+      queryClient.setQueryData<Message[]>(['messages', conversationId], (oldData) => {
+        if (!oldData) return [newMessage];
+
+        // Evita adicionar mensagens duplicadas
+        if (oldData.some(msg => msg.id === newMessage.id)) {
+          return oldData;
+        }
+
+        return [...oldData, newMessage];
+      });
+    };
+
     const messagesChannel = supabase
       .channel(`messages-${conversationId}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'messages',
           filter: `conversation_id=eq.${conversationId}`
         },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
-        }
+        handleRealtimeMessage
       )
       .subscribe();
 

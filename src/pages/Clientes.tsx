@@ -28,11 +28,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, MoreVertical, Pencil, Trash2, UserX } from "lucide-react";
+import { Plus, Search, MoreVertical, Pencil, Trash2, UserX, Users } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useClients, Client } from "@/hooks/useClients";
 import { AddClientDialog } from "@/components/AddClientDialog";
 import { EditClientDialog } from "@/components/EditClientDialog";
+import { EmptyState } from "@/components/EmptyState";
 
 export default function Clientes() {
   const isMobile = useIsMobile();
@@ -114,27 +115,23 @@ export default function Clientes() {
               ))}
             </div>
           ) : filteredClients.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <UserX className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">
-                {searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {searchTerm 
-                  ? "Tente buscar com outros termos" 
-                  : "Comece adicionando seu primeiro cliente"}
-              </p>
-              {!searchTerm && (
-                <Button onClick={() => setAddDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Cliente
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              icon={searchTerm ? UserX : Users}
+              title={searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}
+              description={
+                searchTerm 
+                  ? "Tente buscar com outros termos ou ajuste os filtros" 
+                  : "Comece adicionando seu primeiro cliente para gerenciar sua base"
+              }
+              action={!searchTerm ? {
+                label: "Adicionar Cliente",
+                onClick: () => setAddDialogOpen(true)
+              } : undefined}
+            />
           ) : isMobile ? (
             <div className="space-y-3">
               {filteredClients.map((client) => (
-                <Card key={client.id}>
+                <Card key={client.id} className="transition-all hover:shadow-md">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">

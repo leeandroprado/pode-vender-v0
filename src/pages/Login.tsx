@@ -46,14 +46,20 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-12 flex-col justify-between text-primary-foreground">
-        <div>
-          <h1 className="text-4xl font-bold mb-4">Pode Vender</h1>
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-12 flex-col justify-between text-primary-foreground relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <div className="h-10 w-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <span className="text-2xl font-bold">PV</span>
+            </div>
+            <h1 className="text-4xl font-bold">Pode Vender</h1>
+          </div>
           <p className="text-lg opacity-90">Sistema de Gestão com IA</p>
         </div>
         
-        <div className="space-y-6">
-          <h2 className="text-3xl font-semibold">
+        <div className="space-y-6 relative z-10">
+          <h2 className="text-3xl font-semibold leading-tight">
             Transforme seu atendimento com inteligência artificial
           </h2>
           <p className="text-lg opacity-90">
@@ -61,15 +67,15 @@ export default function Login() {
           </p>
         </div>
 
-        <div className="text-sm opacity-75">
+        <div className="text-sm opacity-75 relative z-10">
           © 2025 Pode Vender. Todos os direitos reservados.
         </div>
       </div>
 
       {/* Right Side - Login Form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
+        <Card className="w-full max-w-md shadow-lg border-border/50">
+          <CardHeader className="space-y-1 pb-6">
             <CardTitle className="text-2xl font-bold">Bem-vindo de volta</CardTitle>
             <CardDescription>
               Entre com suas credenciais para acessar o sistema

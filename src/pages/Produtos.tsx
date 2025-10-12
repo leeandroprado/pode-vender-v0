@@ -4,25 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Plus, Search, Upload, MoreVertical, Loader2, FolderKanban } from "lucide-react";
+import { Plus, Search, Upload, FolderKanban, Package } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { NewProductDialog } from "@/components/NewProductDialog";
 import { EditProductDialog } from "@/components/EditProductDialog";
@@ -33,6 +16,9 @@ import { CategoryManagementDialog } from "@/components/CategoryManagementDialog"
 import { ProductActionsDropdown } from "@/components/ProductActionsDropdown";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { DataTable } from "@/components/DataTable";
+import { getColumns } from "@/components/produtos-columns";
+import { EmptyState } from "@/components/EmptyState";
 
 export default function Produtos() {
   const [newProductOpen, setNewProductOpen] = useState(false);
@@ -98,6 +84,8 @@ export default function Produtos() {
     return classMap[status] || "";
   };
 
+  const columns = getColumns({ onEdit: handleEdit, onDelete: deleteProduct });
+
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -107,11 +95,11 @@ export default function Produtos() {
             Gerencie seu catálogo de produtos
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {!isMobile && <ExportDropdown products={products} />}
           <Button
             variant="outline"
-            className="gap-2 flex-1 sm:flex-none"
+            className="gap-2"
             onClick={() => setCategoryManagementOpen(true)}
             size={isMobile ? "sm" : "default"}
           >
@@ -120,7 +108,7 @@ export default function Produtos() {
           </Button>
           <Button
             variant="outline"
-            className="gap-2 flex-1 sm:flex-none"
+            className="gap-2"
             onClick={() => setImportOpen(true)}
             size={isMobile ? "sm" : "default"}
           >
@@ -128,7 +116,7 @@ export default function Produtos() {
             <span className="hidden sm:inline">Importar</span>
           </Button>
           <Button 
-            className="gap-2 flex-1 sm:flex-none" 
+            className="gap-2" 
             onClick={() => setNewProductOpen(true)}
             size={isMobile ? "sm" : "default"}
           >
@@ -139,8 +127,8 @@ export default function Produtos() {
       </div>
 
       <Card>
-        <CardContent className="p-6">
-          <div className="space-y-4 mb-6">
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -166,19 +154,19 @@ export default function Produtos() {
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">
-                Nenhum produto encontrado
-              </p>
-              <Button onClick={() => setNewProductOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Adicionar Primeiro Produto
-              </Button>
-            </div>
+            <EmptyState
+              icon={Package}
+              title="Nenhum produto cadastrado"
+              description="Comece adicionando produtos ao seu catálogo para gerenciar seu estoque e vendas"
+              action={{
+                label: "Adicionar Primeiro Produto",
+                onClick: () => setNewProductOpen(true)
+              }}
+            />
           ) : isMobile ? (
             <div className="space-y-3">
               {products.map((product) => (
-                <Card key={product.id}>
+                <Card key={product.id} className="transition-all hover:shadow-md">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
@@ -212,119 +200,7 @@ export default function Produtos() {
               ))}
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Produto</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Preço</TableHead>
-                    <TableHead>Estoque</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">
-                        {product.name}
-                      </TableCell>
-                      <TableCell>{product.category}</TableCell>
-                      <TableCell>
-                        R$ {product.price.toFixed(2).replace(".", ",")}
-                      </TableCell>
-                      <TableCell>{product.stock}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={cn(getStatusClass(product.status))}
-                        >
-                          {getStatusLabel(product.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <ProductActionsDropdown
-                          product={product}
-                          onEdit={handleEdit}
-                          onDelete={deleteProduct}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-
-          {products.length > 0 && totalPages > 0 && (
-            <div className="mt-6 space-y-4">
-              <div className="text-sm text-muted-foreground text-center">
-                Página {currentPage} de {totalPages} • Mostrando {products.length} de {totalCount}{" "}
-                {totalCount === 1 ? "produto" : "produtos"}
-              </div>
-
-              {totalPages > 1 && (
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          previousPage();
-                        }}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
-
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                      // Show first page, last page, current page, and pages around current
-                      const showPage = 
-                        page === 1 || 
-                        page === totalPages || 
-                        (page >= currentPage - 1 && page <= currentPage + 1);
-
-                      if (!showPage) {
-                        // Show ellipsis if there's a gap
-                        if (page === currentPage - 2 || page === currentPage + 2) {
-                          return (
-                            <PaginationItem key={page}>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          );
-                        }
-                        return null;
-                      }
-
-                      return (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={(e) => {
-                              e.preventDefault();
-                              goToPage(page);
-                            }}
-                            isActive={currentPage === page}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    })}
-
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          nextPage();
-                        }}
-                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              )}
-            </div>
+            <DataTable columns={columns} data={products} />
           )}
         </CardContent>
       </Card>

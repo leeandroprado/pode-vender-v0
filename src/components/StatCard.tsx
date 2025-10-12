@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MiniAreaChart } from "./MiniAreaChart";
 
 interface StatCardProps {
   title: string;
@@ -11,8 +10,6 @@ interface StatCardProps {
     value: string;
     isPositive: boolean;
   };
-  miniChart?: Array<{ value: number }>;
-  miniChartColor?: string;
   size?: "default" | "large";
   className?: string;
 }
@@ -22,8 +19,6 @@ export function StatCard({
   value, 
   icon: Icon, 
   trend, 
-  miniChart,
-  miniChartColor = "hsl(var(--primary))",
   size = "default",
   className 
 }: StatCardProps) {
@@ -66,11 +61,6 @@ export function StatCard({
             </div>
           </div>
           
-          {miniChart && miniChart.length > 0 && (
-            <div className="mt-4">
-              <MiniAreaChart data={miniChart} color={miniChartColor} />
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
