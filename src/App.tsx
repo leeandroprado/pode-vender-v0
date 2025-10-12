@@ -20,6 +20,7 @@ const Atividades = lazy(() => import("./pages/Atividades"));
 const Conta = lazy(() => import("./pages/Conta"));
 const Login = lazy(() => import("./pages/Login"));
 const SignUp = lazy(() => import("./pages/SignUp"));
+const SetPassword = lazy(() => import("./pages/SetPassword"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const SystemSettings = lazy(() => import("./pages/SystemSettings"));
 const Equipe = lazy(() => import("./pages/Equipe"));
@@ -39,6 +40,7 @@ const App = () => (
               <Routes>
                 <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
+              <Route path="/set-password" element={<SetPassword />} />
               <Route path="/" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
               <Route path="/agentes" element={<ProtectedRoute><DashboardLayout><Agentes /></DashboardLayout></ProtectedRoute>} />
               <Route path="/produtos" element={<ProtectedRoute><DashboardLayout><Produtos /></DashboardLayout></ProtectedRoute>} />
