@@ -34,19 +34,48 @@ export default function SetPassword() {
   });
 
   useEffect(() => {
-    // Verifica se há um token de recuperação/convite na URL
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
-
-    if (!accessToken || type !== 'invite') {
-      setError('Link de convite inválido ou expirado.');
+    // Adiciona um timeout de segurança
+    const timeout = setTimeout(() => {
       setVerifying(false);
-      return;
+      setError('Tempo de verificação excedido. Por favor, tente novamente.');
+    }, 5000);
+
+    try {
+      // Verifica se há um token de recuperação/convite na URL
+      console.log('Verificando URL hash:', window.location.hash);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+
+      console.log('Access token:', accessToken ? 'presente' : 'ausente');
+      console.log('Type:', type);
+
+      if (!accessToken) {
+        setError('Link de convite inválido ou expirado (token ausente).');
+        setVerifying(false);
+        clearTimeout(timeout);
+        return;
+      }
+
+      if (type !== 'invite') {
+        setError('Link de convite inválido (tipo incorreto).');
+        setVerifying(false);
+        clearTimeout(timeout);
+        return;
+      }
+
+      // Token válido
+      console.log('Token de convite válido detectado');
+      setVerifying(false);
+      clearTimeout(timeout);
+    } catch (err) {
+      console.error('Erro ao verificar convite:', err);
+      setError('Erro ao processar convite. Por favor, contate o suporte.');
+      setVerifying(false);
+      clearTimeout(timeout);
     }
 
-    // Token válido
-    setVerifying(false);
+    return () => clearTimeout(timeout);
   }, []);
 
   const onSubmit = async (data: SetPasswordForm) => {
