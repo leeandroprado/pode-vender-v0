@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +24,7 @@ type SetPasswordForm = z.infer<typeof setPasswordSchema>;
 
 export default function SetPassword() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [verifying, setVerifying] = useState(true);
@@ -36,36 +37,40 @@ export default function SetPassword() {
   useEffect(() => {
     // Adiciona um timeout de segurança
     const timeout = setTimeout(() => {
-      setVerifying(false);
-      setError('Tempo de verificação excedido. Por favor, tente novamente.');
+      if (!user) {
+        setError('Sessão expirada. Por favor, solicite um novo convite.');
+        setVerifying(false);
+      }
     }, 5000);
 
     try {
-      // Verifica se há um token de recuperação/convite na URL
-      console.log('Verificando URL hash:', window.location.hash);
+      console.log('Verificando autenticação do usuário...');
+      console.log('Usuário autenticado:', user ? 'sim' : 'não');
+      
+      // Verifica se há um hash com type=invite OU se o usuário está autenticado
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
       const type = hashParams.get('type');
+      
+      console.log('Type no hash:', type);
 
-      console.log('Access token:', accessToken ? 'presente' : 'ausente');
-      console.log('Type:', type);
-
-      if (!accessToken) {
-        setError('Link de convite inválido ou expirado (token ausente).');
+      // Se o usuário está autenticado, assume que é um convite
+      // (O Supabase autentica automaticamente ao clicar no link de convite)
+      if (user) {
+        console.log('Usuário autenticado detectado - permitindo definição de senha');
         setVerifying(false);
         clearTimeout(timeout);
         return;
       }
 
-      if (type !== 'invite') {
-        setError('Link de convite inválido (tipo incorreto).');
-        setVerifying(false);
-        clearTimeout(timeout);
+      // Se tem type=invite no hash mas não está autenticado ainda, aguarda
+      if (type === 'invite') {
+        console.log('Convite detectado no hash - aguardando autenticação');
+        // O timeout vai tratar o caso de timeout
         return;
       }
 
-      // Token válido
-      console.log('Token de convite válido detectado');
+      // Sem usuário e sem hash de convite
+      setError('Link de convite inválido ou expirado.');
       setVerifying(false);
       clearTimeout(timeout);
     } catch (err) {
@@ -76,7 +81,7 @@ export default function SetPassword() {
     }
 
     return () => clearTimeout(timeout);
-  }, []);
+  }, [user]);
 
   const onSubmit = async (data: SetPasswordForm) => {
     setIsLoading(true);
