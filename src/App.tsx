@@ -9,6 +9,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
+import { InviteRedirect } from "./components/InviteRedirect";
 
 // Lazy load pages
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -35,6 +36,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <InviteRedirect />
           <ErrorBoundary>
             <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Carregando...</div>}>
               <Routes>
