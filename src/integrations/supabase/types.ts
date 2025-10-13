@@ -16,77 +16,89 @@ export type Database = {
     Tables: {
       agents: {
         Row: {
-          created_at: string | null
+          conversations_count: number
+          created_at: string
           description: string | null
           id: string
-          max_tokens: number | null
           model: Database["public"]["Enums"]["ai_model"]
           name: string
+          prompt_system: string
+          qr_code: string | null
           status: Database["public"]["Enums"]["agent_status"]
-          system_prompt: string | null
-          temperature: number | null
-          updated_at: string | null
+          updated_at: string
           user_id: string
+          whatsapp_connected: boolean
+          whatsapp_phone: string | null
         }
         Insert: {
-          created_at?: string | null
+          conversations_count?: number
+          created_at?: string
           description?: string | null
           id?: string
-          max_tokens?: number | null
           model?: Database["public"]["Enums"]["ai_model"]
           name: string
+          prompt_system?: string
+          qr_code?: string | null
           status?: Database["public"]["Enums"]["agent_status"]
-          system_prompt?: string | null
-          temperature?: number | null
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
+          whatsapp_connected?: boolean
+          whatsapp_phone?: string | null
         }
         Update: {
-          created_at?: string | null
+          conversations_count?: number
+          created_at?: string
           description?: string | null
           id?: string
-          max_tokens?: number | null
           model?: Database["public"]["Enums"]["ai_model"]
           name?: string
+          prompt_system?: string
+          qr_code?: string | null
           status?: Database["public"]["Enums"]["agent_status"]
-          system_prompt?: string | null
-          temperature?: number | null
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
+          whatsapp_connected?: boolean
+          whatsapp_phone?: string | null
         }
         Relationships: []
       }
       cart_items: {
         Row: {
-          conversation_id: string
-          created_at: string | null
+          cart_id: string
+          created_at: string
           id: string
-          price: number
           product_id: string
           quantity: number
+          subtotal: number
+          unit_price: number
+          updated_at: string
         }
         Insert: {
-          conversation_id: string
-          created_at?: string | null
+          cart_id: string
+          created_at?: string
           id?: string
-          price: number
           product_id: string
-          quantity?: number
+          quantity: number
+          subtotal: number
+          unit_price: number
+          updated_at?: string
         }
         Update: {
-          conversation_id?: string
-          created_at?: string | null
+          cart_id?: string
+          created_at?: string
           id?: string
-          price?: number
           product_id?: string
           quantity?: number
+          subtotal?: number
+          unit_price?: number
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "cart_items_conversation_id_fkey"
-            columns: ["conversation_id"]
+            foreignKeyName: "cart_items_cart_id_fkey"
+            columns: ["cart_id"]
             isOneToOne: false
-            referencedRelation: "conversations"
+            referencedRelation: "carts"
             referencedColumns: ["id"]
           },
           {
@@ -98,62 +110,116 @@ export type Database = {
           },
         ]
       }
+      carts: {
+        Row: {
+          client_id: string | null
+          conversation_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          status: Database["public"]["Enums"]["cart_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          conversation_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["cart_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          conversation_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["cart_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: true
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
-          created_at: string | null
+          color: string | null
+          created_at: string
+          description: string | null
           id: string
-          is_active: boolean | null
+          is_active: boolean
           name: string
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
           id?: string
-          is_active?: boolean | null
+          is_active?: boolean
           name: string
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
           id?: string
-          is_active?: boolean | null
+          is_active?: boolean
           name?: string
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
       }
       clients: {
         Row: {
-          created_at: string | null
+          city: string | null
+          cpf: string | null
+          created_at: string
           email: string | null
           id: string
           name: string
-          notes: string | null
           phone: string
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          city?: string | null
+          cpf?: string | null
+          created_at?: string
           email?: string | null
           id?: string
           name: string
-          notes?: string | null
           phone: string
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          city?: string | null
+          cpf?: string | null
+          created_at?: string
           email?: string | null
           id?: string
           name?: string
-          notes?: string | null
           phone?: string
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -166,9 +232,9 @@ export type Database = {
           last_message_at: string | null
           metadata: Json | null
           owner_conversation:
-            | Database["public"]["Enums"]["conversation_owner"]
+            | Database["public"]["Enums"]["owner_conversation"]
             | null
-          status: string | null
+          status: string
           updated_at: string | null
           user_id: string
           whatsapp_instance_id: string | null
@@ -181,9 +247,9 @@ export type Database = {
           last_message_at?: string | null
           metadata?: Json | null
           owner_conversation?:
-            | Database["public"]["Enums"]["conversation_owner"]
+            | Database["public"]["Enums"]["owner_conversation"]
             | null
-          status?: string | null
+          status?: string
           updated_at?: string | null
           user_id: string
           whatsapp_instance_id?: string | null
@@ -196,9 +262,9 @@ export type Database = {
           last_message_at?: string | null
           metadata?: Json | null
           owner_conversation?:
-            | Database["public"]["Enums"]["conversation_owner"]
+            | Database["public"]["Enums"]["owner_conversation"]
             | null
-          status?: string | null
+          status?: string
           updated_at?: string | null
           user_id?: string
           whatsapp_instance_id?: string | null
@@ -264,28 +330,31 @@ export type Database = {
       }
       order_items: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           order_id: string
-          price: number
           product_id: string
           quantity: number
+          subtotal: number
+          unit_price: number
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           order_id: string
-          price: number
           product_id: string
           quantity: number
+          subtotal: number
+          unit_price: number
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           order_id?: string
-          price?: number
           product_id?: string
           quantity?: number
+          subtotal?: number
+          unit_price?: number
         }
         Relationships: [
           {
@@ -307,35 +376,44 @@ export type Database = {
       orders: {
         Row: {
           client_id: string | null
-          conversation_id: string
-          created_at: string | null
+          conversation_id: string | null
+          created_at: string
+          delivery_address: string | null
           id: string
           notes: string | null
-          status: Database["public"]["Enums"]["order_status"] | null
-          total: number
-          updated_at: string | null
+          payment_method: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          status: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at: string
           user_id: string
         }
         Insert: {
           client_id?: string | null
-          conversation_id: string
-          created_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          delivery_address?: string | null
           id?: string
           notes?: string | null
-          status?: Database["public"]["Enums"]["order_status"] | null
-          total: number
-          updated_at?: string | null
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at?: string
           user_id: string
         }
         Update: {
           client_id?: string | null
-          conversation_id?: string
-          created_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          delivery_address?: string | null
           id?: string
           notes?: string | null
-          status?: Database["public"]["Enums"]["order_status"] | null
-          total?: number
-          updated_at?: string | null
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -357,147 +435,154 @@ export type Database = {
       }
       products: {
         Row: {
-          category_id: string | null
-          created_at: string | null
+          category: string
+          created_at: string
           description: string | null
           id: string
           name: string
           price: number
-          status: string | null
+          status: string
           stock: number
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
-          category_id?: string | null
-          created_at?: string | null
+          category: string
+          created_at?: string
           description?: string | null
           id?: string
           name: string
           price: number
-          status?: string | null
+          status?: string
           stock?: number
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
-          category_id?: string | null
-          created_at?: string | null
+          category?: string
+          created_at?: string
           description?: string | null
           id?: string
           name?: string
           price?: number
-          status?: string | null
+          status?: string
           stock?: number
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "products_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       system_settings: {
         Row: {
-          created_at: string | null
+          category: string
+          created_at: string
+          created_by: string | null
           description: string | null
           id: string
           is_encrypted: boolean | null
-          setting_category: string
           setting_key: string
-          setting_value: string
-          updated_at: string | null
+          setting_value: string | null
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          category: string
+          created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           is_encrypted?: boolean | null
-          setting_category: string
           setting_key: string
-          setting_value: string
-          updated_at?: string | null
+          setting_value?: string | null
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           is_encrypted?: boolean | null
-          setting_category?: string
           setting_key?: string
-          setting_value?: string
-          updated_at?: string | null
+          setting_value?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
       user_roles: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          role?: Database["public"]["Enums"]["user_role"]
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
       }
       whatsapp_instances: {
         Row: {
-          agent_id: string | null
-          created_at: string | null
+          agent_id: string
+          created_at: string
+          hash: string | null
           id: string
           instance_id: string | null
           instance_name: string
-          phone_number: string | null
-          qr_code: string | null
-          status: string | null
-          updated_at: string | null
+          integration: string
+          qr_code_base64: string | null
+          qr_code_text: string | null
+          settings: Json | null
+          status: Database["public"]["Enums"]["whatsapp_instance_status"]
+          updated_at: string
           user_id: string
         }
         Insert: {
-          agent_id?: string | null
-          created_at?: string | null
+          agent_id: string
+          created_at?: string
+          hash?: string | null
           id?: string
           instance_id?: string | null
           instance_name: string
-          phone_number?: string | null
-          qr_code?: string | null
-          status?: string | null
-          updated_at?: string | null
+          integration?: string
+          qr_code_base64?: string | null
+          qr_code_text?: string | null
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["whatsapp_instance_status"]
+          updated_at?: string
           user_id: string
         }
         Update: {
-          agent_id?: string | null
-          created_at?: string | null
+          agent_id?: string
+          created_at?: string
+          hash?: string | null
           id?: string
           instance_id?: string | null
           instance_name?: string
-          phone_number?: string | null
-          qr_code?: string | null
-          status?: string | null
-          updated_at?: string | null
+          integration?: string
+          qr_code_base64?: string | null
+          qr_code_text?: string | null
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["whatsapp_instance_status"]
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "whatsapp_instances_agent_id_fkey"
             columns: ["agent_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "agents"
             referencedColumns: ["id"]
           },
@@ -508,31 +593,56 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["user_role"]
-          _user_id: string
-        }
+      company_has_active_subscription: {
+        Args: { company_uuid: string }
+        Returns: boolean
+      }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      get_user_company_role: {
+        Args: { company_uuid: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      is_company_admin: {
+        Args: { company_uuid: string }
+        Returns: boolean
+      }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
     }
     Enums: {
       agent_status: "active" | "inactive" | "training"
       ai_model:
-        | "gpt-4"
-        | "gpt-3.5-turbo"
-        | "claude-3-opus"
-        | "claude-3-sonnet"
-        | "gemini-pro"
-      conversation_owner: "ia" | "human"
+        | "google/gemini-2.5-pro"
+        | "google/gemini-2.5-flash"
+        | "google/gemini-2.5-flash-lite"
+        | "openai/gpt-5"
+        | "openai/gpt-5-mini"
+        | "openai/gpt-5-nano"
+        | "x-ai/grok-code-fast-1"
+        | "x-ai/grok-4-fast:free"
+        | "deepseek/deepseek-chat-v3-0324"
+      cart_status: "active" | "abandoned" | "converted"
       order_status:
         | "pending"
         | "confirmed"
-        | "processing"
+        | "preparing"
         | "shipped"
         | "delivered"
         | "cancelled"
-      user_role: "admin" | "moderator" | "user" | "super_admin"
+      owner_conversation: "ia" | "human"
+      payment_status: "pending" | "paid" | "failed"
+      plan_type: "trial" | "basic" | "professional"
+      user_role: "super_admin" | "admin" | "caixa"
+      whatsapp_instance_status:
+        | "connecting"
+        | "connected"
+        | "disconnected"
+        | "error"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -662,22 +772,35 @@ export const Constants = {
     Enums: {
       agent_status: ["active", "inactive", "training"],
       ai_model: [
-        "gpt-4",
-        "gpt-3.5-turbo",
-        "claude-3-opus",
-        "claude-3-sonnet",
-        "gemini-pro",
+        "google/gemini-2.5-pro",
+        "google/gemini-2.5-flash",
+        "google/gemini-2.5-flash-lite",
+        "openai/gpt-5",
+        "openai/gpt-5-mini",
+        "openai/gpt-5-nano",
+        "x-ai/grok-code-fast-1",
+        "x-ai/grok-4-fast:free",
+        "deepseek/deepseek-chat-v3-0324",
       ],
-      conversation_owner: ["ia", "human"],
+      cart_status: ["active", "abandoned", "converted"],
       order_status: [
         "pending",
         "confirmed",
-        "processing",
+        "preparing",
         "shipped",
         "delivered",
         "cancelled",
       ],
-      user_role: ["admin", "moderator", "user", "super_admin"],
+      owner_conversation: ["ia", "human"],
+      payment_status: ["pending", "paid", "failed"],
+      plan_type: ["trial", "basic", "professional"],
+      user_role: ["super_admin", "admin", "caixa"],
+      whatsapp_instance_status: [
+        "connecting",
+        "connected",
+        "disconnected",
+        "error",
+      ],
     },
   },
 } as const
