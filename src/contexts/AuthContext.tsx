@@ -24,7 +24,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Check for existing session first
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (mounted) {
         setSession(session);
@@ -33,13 +32,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Set up auth state listener for future changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-        }
+      (event, session) => {
+        (async () => {
+          if (mounted) {
+            setSession(session);
+            setUser(session?.user ?? null);
+            setLoading(false);
+          }
+        })();
       }
     );
 
@@ -68,19 +69,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
       if (error) throw error;
 
-      toast.success('Conta criada! Verifique seu email para confirmar.');
+      if (data.user) {
+        toast.success('Conta criada com sucesso!');
+        navigate('/');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Erro ao criar conta');
       throw error;
