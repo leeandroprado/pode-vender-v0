@@ -7,6 +7,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Download, FileText, FileSpreadsheet, Loader2 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/hooks/useProducts";
 
@@ -18,12 +21,9 @@ export function ExportDropdown({ products }: ExportDropdownProps) {
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  const exportToPDF = async () => {
+  const exportToPDF = () => {
     setIsExporting(true);
     try {
-      const { default: jsPDF } = await import("jspdf");
-      const { default: autoTable } = await import("jspdf-autotable");
-
       const doc = new jsPDF();
 
       // Add title
@@ -86,11 +86,9 @@ export function ExportDropdown({ products }: ExportDropdownProps) {
     }
   };
 
-  const exportToExcel = async () => {
+  const exportToExcel = () => {
     setIsExporting(true);
     try {
-      const XLSX = await import("xlsx");
-
       // Prepare data for Excel
       const excelData = products.map((product) => ({
         Nome: product.name,

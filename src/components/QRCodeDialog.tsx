@@ -200,7 +200,7 @@ export function QRCodeDialog({ agent, open, onOpenChange }: QRCodeDialogProps) {
                 Conectado
               </Badge>
             ) : instance?.status === 'connecting' ? (
-              <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 gap-1">
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20 gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Conectando...
               </Badge>

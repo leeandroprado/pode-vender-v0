@@ -1,17 +1,52 @@
 import { StatCard } from "@/components/StatCard";
 import { ProductStatCard } from "@/components/ProductStatCard";
 import { CategoryStatsCard } from "@/components/CategoryStatsCard";
+import { SafeChart } from "@/components/SafeChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, CheckCircle2, ShoppingCart, TrendingUp, AlertTriangle, Info } from "lucide-react";
-import { useState, lazy, Suspense } from "react";
-import { DateRange } from "react-day-picker";
-import { DateRangePicker } from "@/components/DateRangePicker";
-import { useAuth } from "@/contexts/AuthContext";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, CheckCircle2, ShoppingCart, TrendingUp, Calendar, Filter } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  LineChart,
+  Line,
+} from "recharts";
 
-const MonthlyRevenueChart = lazy(() => import("@/components/charts/MonthlyRevenueChart"));
-const DailyAttendanceChart = lazy(() => import("@/components/charts/DailyAttendanceChart"));
-const CategorySalesChart = lazy(() => import("@/components/charts/CategorySalesChart"));
+const attendanceData = [
+  { name: "Seg", ativos: 12, finalizados: 45 },
+  { name: "Ter", ativos: 19, finalizados: 52 },
+  { name: "Qua", ativos: 15, finalizados: 48 },
+  { name: "Qui", ativos: 22, finalizados: 61 },
+  { name: "Sex", ativos: 18, finalizados: 55 },
+  { name: "Sáb", ativos: 8, finalizados: 32 },
+  { name: "Dom", ativos: 5, finalizados: 28 },
+];
+
+const revenueData = [
+  { name: "Jan", valor: 4200 },
+  { name: "Fev", valor: 5100 },
+  { name: "Mar", valor: 4800 },
+  { name: "Abr", valor: 6200 },
+  { name: "Mai", valor: 7100 },
+  { name: "Jun", valor: 6800 },
+  { name: "Jul", valor: 8500 },
+];
+
+const cartStatusData = [
+  { name: "Eletrônicos", value: 156, color: "hsl(var(--chart-1))" },
+  { name: "Moda", value: 89, color: "hsl(var(--chart-2))" },
+  { name: "Casa", value: 43, color: "hsl(var(--chart-3))" },
+  { name: "Outros", value: 28, color: "hsl(var(--chart-4))" },
+];
 
 const productDonutData = [
   { name: "Produtos A", value: 45, color: "hsl(var(--chart-1))" },
@@ -32,22 +67,32 @@ const miniChartData = [
 ];
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(new Date().setDate(new Date().getDate() - 7)),
-    to: new Date(),
+  const today = new Date().toLocaleDateString('pt-BR', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
   });
 
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Olá, {user?.user_metadata.full_name || "Usuário"}!</h1>
-          <p className="mt-1 md:mt-2 text-xs md:text-sm text-muted-foreground">
-            Aqui estão as métricas mais recentes do seu negócio.
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="mt-1 md:mt-2 text-xs md:text-sm text-muted-foreground capitalize">
+            {today}
           </p>
         </div>
-        <DateRangePicker date={date} setDate={setDate} />
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Calendar className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Filtrar período</span>
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Filter className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Filtros</span>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -56,24 +101,32 @@ export default function Dashboard() {
           value={24}
           icon={MessageSquare}
           trend={{ value: "+12%", isPositive: true }}
+          miniChart={miniChartData}
+          miniChartColor="hsl(var(--chart-1))"
         />
         <StatCard
           title="Taxa de Conversão"
           value="68%"
           icon={TrendingUp}
           trend={{ value: "+8%", isPositive: true }}
+          miniChart={miniChartData}
+          miniChartColor="hsl(var(--chart-2))"
         />
         <StatCard
           title="Carrinhos em Aberto"
           value={43}
           icon={ShoppingCart}
           trend={{ value: "-5%", isPositive: false }}
+          miniChart={miniChartData}
+          miniChartColor="hsl(var(--chart-3))"
         />
         <StatCard
           title="Ticket Médio"
           value="R$ 487"
           icon={CheckCircle2}
           trend={{ value: "+23%", isPositive: true }}
+          miniChart={miniChartData}
+          miniChartColor="hsl(var(--success))"
         />
       </div>
 
@@ -84,9 +137,30 @@ export default function Dashboard() {
               <CardTitle className="text-lg md:text-xl">Receita Mensal</CardTitle>
             </CardHeader>
             <CardContent>
-              <Suspense fallback={<Skeleton className="h-[250px] w-full" />}>
-                <MonthlyRevenueChart />
-              </Suspense>
+              <SafeChart>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="valor" 
+                      stroke="hsl(var(--chart-1))" 
+                      strokeWidth={3}
+                      dot={{ fill: "hsl(var(--chart-1))", strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </SafeChart>
             </CardContent>
           </Card>
         </div>
@@ -105,9 +179,25 @@ export default function Dashboard() {
             <CardTitle>Atendimentos por Dia</CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={<Skeleton className="h-[280px] w-full" />}>
-              <DailyAttendanceChart />
-            </Suspense>
+            <SafeChart>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={attendanceData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="name" className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)",
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="ativos" fill="hsl(var(--chart-3))" name="Em Aberto" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="finalizados" fill="hsl(var(--chart-1))" name="Finalizados" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </SafeChart>
           </CardContent>
         </Card>
 
@@ -121,9 +211,33 @@ export default function Dashboard() {
             <CardTitle>Vendas por Categoria</CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={<Skeleton className="h-[280px] w-full" />}>
-              <CategorySalesChart />
-            </Suspense>
+            <SafeChart>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={cartStatusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {cartStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)",
+                    }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </SafeChart>
           </CardContent>
         </Card>
       </div>
@@ -140,20 +254,23 @@ export default function Dashboard() {
               { action: "Item adicionado ao carrinho: Mouse Gamer", time: "32 minutos atrás", type: "info" },
               { action: "Cliente cadastrado: João Silva", time: "1 hora atrás", type: "success" },
               { action: "Atendimento encaminhado para humano", time: "2 horas atrás", type: "warning" },
-            ].map((activity, index) => {
-              const Icon = activity.type === "success" ? CheckCircle2 : activity.type === "warning" ? AlertTriangle : Info;
-              const iconColor = activity.type === "success" ? "text-success" : activity.type === "warning" ? "text-warning" : "text-primary";
-
-              return (
-                <div key={index} className="flex items-start gap-3 rounded-lg border p-3">
-                  <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${iconColor}`} />
-                  <div className="flex-1 space-y-1 min-w-0">
-                    <p className="text-sm font-medium leading-snug">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{activity.time}</p>
-                  </div>
+            ].map((activity, index) => (
+              <div key={index} className="flex items-start gap-3 rounded-lg border p-3">
+                <div
+                  className={`h-2 w-2 rounded-full mt-2 flex-shrink-0 ${
+                    activity.type === "success"
+                      ? "bg-success"
+                      : activity.type === "warning"
+                      ? "bg-warning"
+                      : "bg-primary"
+                  }`}
+                />
+                <div className="flex-1 space-y-1 min-w-0">
+                  <p className="text-sm font-medium leading-snug">{activity.action}</p>
+                  <p className="text-xs text-muted-foreground">{activity.time}</p>
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

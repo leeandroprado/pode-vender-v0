@@ -1,5 +1,3 @@
-import { lazy, Suspense } from 'react';
-import ErrorBoundary from './components/ErrorBoundary';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,24 +6,18 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
+import Dashboard from "./pages/Dashboard";
+import Agentes from "./pages/Agentes";
+import Produtos from "./pages/Produtos";
+import Clientes from "./pages/Clientes";
+import Conversas from "./pages/Conversas";
+import Atividades from "./pages/Atividades";
+import Conta from "./pages/Conta";
+import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import NotFound from "./pages/NotFound";
+import SystemSettings from "./pages/SystemSettings";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
-import { InviteRedirect } from "./components/InviteRedirect";
-
-// Lazy load pages
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Agentes = lazy(() => import("./pages/Agentes"));
-const Produtos = lazy(() => import("./pages/Produtos"));
-const Clientes = lazy(() => import("./pages/Clientes"));
-const Conversas = lazy(() => import("./pages/Conversas"));
-const Atividades = lazy(() => import("./pages/Atividades"));
-const Conta = lazy(() => import("./pages/Conta"));
-const Login = lazy(() => import("./pages/Login"));
-const SignUp = lazy(() => import("./pages/SignUp"));
-const SetPassword = lazy(() => import("./pages/SetPassword"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const SystemSettings = lazy(() => import("./pages/SystemSettings"));
-const Equipe = lazy(() => import("./pages/Equipe"));
-const Logs = lazy(() => import("./pages/Logs"));
 
 const queryClient = new QueryClient();
 
@@ -36,27 +28,19 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <InviteRedirect />
-          <ErrorBoundary>
-            <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Carregando...</div>}>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/set-password" element={<SetPassword />} />
-              <Route path="/" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/agentes" element={<ProtectedRoute><DashboardLayout><Agentes /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/produtos" element={<ProtectedRoute><DashboardLayout><Produtos /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/clientes" element={<ProtectedRoute><DashboardLayout><Clientes /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/conversas" element={<ProtectedRoute><DashboardLayout><Conversas /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/atividades" element={<ProtectedRoute><DashboardLayout><Atividades /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/conta" element={<ProtectedRoute><DashboardLayout><Conta /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/equipe" element={<ProtectedRoute><DashboardLayout><Equipe /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/logs" element={<ProtectedRoute><DashboardLayout><Logs /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/settings-system" element={<ProtectedRoute><SuperAdminRoute><SystemSettings /></SuperAdminRoute></ProtectedRoute>} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </ErrorBoundary>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/agentes" element={<ProtectedRoute><DashboardLayout><Agentes /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/produtos" element={<ProtectedRoute><DashboardLayout><Produtos /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/clientes" element={<ProtectedRoute><DashboardLayout><Clientes /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/conversas" element={<ProtectedRoute><DashboardLayout><Conversas /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/atividades" element={<ProtectedRoute><DashboardLayout><Atividades /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/conta" element={<ProtectedRoute><DashboardLayout><Conta /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/settings-system" element={<ProtectedRoute><SuperAdminRoute><SystemSettings /></SuperAdminRoute></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
