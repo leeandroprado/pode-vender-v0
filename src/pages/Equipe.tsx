@@ -6,7 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InviteUserDialog } from "@/components/InviteUserDialog";
+import { WhatsAppWarningDialog } from "@/components/WhatsAppWarningDialog";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import type { UserRole } from "@/hooks/useUserRole";
 
 const roleLabels: Partial<Record<UserRole, string>> = {
@@ -27,6 +30,8 @@ const roleVariants: Partial<Record<UserRole, "default" | "secondary" | "outline"
 
 export default function Equipe() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [showWhatsAppWarning, setShowWhatsAppWarning] = useState(false);
+  
   const { 
     members, 
     pendingInvites, 
@@ -39,6 +44,32 @@ export default function Equipe() {
     isCanceling,
     isResending 
   } = useTeamMembers();
+
+  // Verificar se o usuário tem uma instância WhatsApp conectada
+  const { data: userInstance } = useQuery({
+    queryKey: ['user-whatsapp-instance'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data } = await supabase
+        .from('whatsapp_instances')
+        .select('id, instance_name, status')
+        .eq('user_id', user.id)
+        .in('status', ['open', 'connected'])
+        .maybeSingle();
+      
+      return data;
+    }
+  });
+
+  const handleInviteClick = () => {
+    if (!userInstance) {
+      setShowWhatsAppWarning(true);
+      return;
+    }
+    setInviteDialogOpen(true);
+  };
 
   const handleRoleChange = (userId: string, newRole: UserRole) => {
     updateUserRole({ userId, newRole });
@@ -59,7 +90,7 @@ export default function Equipe() {
           <h1 className="text-3xl font-bold text-foreground">Equipe</h1>
           <p className="text-muted-foreground">Gerencie os membros da sua equipe</p>
         </div>
-        <Button onClick={() => setInviteDialogOpen(true)}>
+        <Button onClick={handleInviteClick}>
           <UserPlus className="w-4 h-4 mr-2" />
           Convidar Membro
         </Button>
@@ -192,6 +223,11 @@ export default function Equipe() {
         )}
       </div>
       </div>
+
+      <WhatsAppWarningDialog 
+        open={showWhatsAppWarning} 
+        onOpenChange={setShowWhatsAppWarning} 
+      />
 
       <InviteUserDialog
         open={inviteDialogOpen}
