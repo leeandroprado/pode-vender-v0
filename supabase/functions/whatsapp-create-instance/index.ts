@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
     const { data: settingsData, error: settingsError } = await supabase
       .from('system_settings')
       .select('setting_key, setting_value')
-      .eq('category', 'apizap');
+      .eq('setting_category', 'apizap');
 
     if (settingsError) {
       console.error('Error fetching system settings:', settingsError);

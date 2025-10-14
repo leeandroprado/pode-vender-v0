@@ -93,9 +93,13 @@ export function QRCodeDialog({ agent, open, onOpenChange }: QRCodeDialogProps) {
       }
     } catch (error: any) {
       console.error('Error creating instance:', error);
+      
+      // Extract specific error message
+      const errorMessage = error?.message || error?.error || "Tente novamente em alguns instantes";
+      
       toast({
         title: "Erro ao gerar QR Code",
-        description: error.message || "Tente novamente em alguns instantes",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
