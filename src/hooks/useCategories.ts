@@ -54,7 +54,7 @@ export function useCategories() {
 
       const { data, error } = await supabase
         .from("categories")
-        .select("id, name, description, color, user_id, is_active, created_at, updated_at")
+        .select("*")
         .eq("is_active", true)
         .order("name", { ascending: true })
         .limit(100);

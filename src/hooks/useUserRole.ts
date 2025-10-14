@@ -22,17 +22,17 @@ export function useUserRole() {
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching user role:', error);
-          setRole(null);
+          setRole('user'); // Default role
         } else {
-          setRole(data?.role as UserRole);
+          setRole((data?.role as UserRole) || 'user');
         }
       } catch (error) {
         console.error('Error fetching user role:', error);
-        setRole(null);
+        setRole('user'); // Default role
       } finally {
         setLoading(false);
       }

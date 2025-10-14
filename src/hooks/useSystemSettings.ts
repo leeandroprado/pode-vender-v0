@@ -4,11 +4,13 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface SystemSetting {
   id: string;
-  category: string;
+  setting_category: string;
   setting_key: string;
   setting_value: string | null;
   description: string | null;
   is_encrypted: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export function useSystemSettings(category?: string) {
@@ -25,7 +27,7 @@ export function useSystemSettings(category?: string) {
         .order('setting_key');
 
       if (category) {
-        query = query.eq('category', category);
+        query = query.eq('setting_category', category);
       }
 
       const { data, error } = await query;

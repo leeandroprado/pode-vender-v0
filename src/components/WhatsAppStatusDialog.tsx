@@ -104,16 +104,6 @@ export const WhatsAppStatusDialog = ({ agent, open, onOpenChange }: WhatsAppStat
               <span className="text-sm text-muted-foreground">{instance.instance_name}</span>
             </div>
 
-            {agent?.whatsapp_phone && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  Telefone:
-                </span>
-                <span className="text-sm text-muted-foreground">{agent.whatsapp_phone}</span>
-              </div>
-            )}
-
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium flex items-center gap-2">
                 <Clock className="h-4 w-4" />

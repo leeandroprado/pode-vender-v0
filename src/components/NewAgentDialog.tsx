@@ -9,7 +9,7 @@ type CreateAgentInput = {
   name: string;
   description?: string;
   model: Agent["model"];
-  prompt_system: string;
+  system_prompt: string;
 };
 import {
   Dialog,
@@ -54,7 +54,7 @@ const formSchema = z.object({
     "openai/gpt-5-mini",
     "openai/gpt-5-nano",
   ]),
-  prompt_system: z.string().min(10, "Prompt deve ter pelo menos 10 caracteres"),
+  system_prompt: z.string().min(10, "Prompt deve ter pelo menos 10 caracteres"),
 });
 
 const modelOptions = [
@@ -83,7 +83,7 @@ export function NewAgentDialog({ children }: NewAgentDialogProps) {
       name: "",
       description: "",
       model: "google/gemini-2.5-flash",
-      prompt_system: "Você é um assistente de atendimento profissional e prestativo. Responda sempre em português brasileiro de forma clara e objetiva.",
+      system_prompt: "Você é um assistente de atendimento profissional e prestativo. Responda sempre em português brasileiro de forma clara e objetiva.",
     },
   });
 
@@ -167,7 +167,7 @@ export function NewAgentDialog({ children }: NewAgentDialogProps) {
 
             <FormField
               control={form.control}
-              name="prompt_system"
+              name="system_prompt"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Prompt do Sistema *</FormLabel>

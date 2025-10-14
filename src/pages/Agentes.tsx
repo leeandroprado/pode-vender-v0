@@ -131,10 +131,6 @@ export default function Agentes() {
                       {getWhatsappStatus(agent.id).label}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Conversas</span>
-                    <span className="font-medium">{agent.conversations_count}</span>
-                  </div>
                 </div>
                 <div className="flex gap-2">
                 <Button

@@ -66,9 +66,8 @@ const formSchema = z.object({
     "openai/gpt-5-mini",
     "openai/gpt-5-nano",
   ]),
-  prompt_system: z.string().min(10, "Prompt deve ter pelo menos 10 caracteres"),
+  system_prompt: z.string().min(10, "Prompt deve ter pelo menos 10 caracteres"),
   status: z.enum(["active", "inactive", "maintenance"]),
-  whatsapp_phone: z.string().optional(),
 });
 
 const modelOptions = [
@@ -99,9 +98,8 @@ export function ConfigureAgentDialog({ agent, open, onOpenChange }: ConfigureAge
       name: "",
       description: "",
       model: "google/gemini-2.5-flash",
-      prompt_system: "",
+      system_prompt: "",
       status: "active",
-      whatsapp_phone: "",
     },
   });
 
@@ -111,9 +109,8 @@ export function ConfigureAgentDialog({ agent, open, onOpenChange }: ConfigureAge
         name: agent.name,
         description: agent.description || "",
         model: agent.model as any,
-        prompt_system: agent.prompt_system,
+        system_prompt: agent.system_prompt,
         status: agent.status === "training" ? "maintenance" : agent.status,
-        whatsapp_phone: agent.whatsapp_phone || "",
       });
     }
   }, [agent, form]);
@@ -223,24 +220,7 @@ export function ConfigureAgentDialog({ agent, open, onOpenChange }: ConfigureAge
 
             <FormField
               control={form.control}
-              name="whatsapp_phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Número WhatsApp</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: +55 11 98765-4321" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Número conectado ao WhatsApp Business
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="prompt_system"
+              name="system_prompt"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Prompt do Sistema *</FormLabel>

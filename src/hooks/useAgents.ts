@@ -10,7 +10,7 @@ type CreateAgentInput = {
   name: string;
   description?: string;
   model: Agent["model"];
-  prompt_system: string;
+  system_prompt: string;
 };
 
 type UpdateAgentInput = {
@@ -18,10 +18,8 @@ type UpdateAgentInput = {
   name?: string;
   description?: string;
   model?: Agent["model"];
-  prompt_system?: string;
+  system_prompt?: string;
   status?: Agent["status"];
-  whatsapp_phone?: string;
-  whatsapp_connected?: boolean;
 };
 
 export const useAgents = () => {
@@ -33,7 +31,7 @@ export const useAgents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agents")
-        .select("id, name, description, model, prompt_system, status, whatsapp_connected, whatsapp_phone, conversations_count, created_at, updated_at")
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -49,7 +47,7 @@ export const useAgents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("whatsapp_instances")
-        .select("id, agent_id, user_id, instance_id, instance_name, status, integration, qr_code_base64, qr_code_text, hash, settings, created_at, updated_at")
+        .select("*")
         .limit(50);
 
       if (error) throw error;

@@ -177,7 +177,7 @@ export function QRCodeDialog({ agent, open, onOpenChange }: QRCodeDialogProps) {
 
   if (!agent) return null;
 
-  const isConnected = instance?.status === 'connected' || agent.whatsapp_connected;
+  const isConnected = instance?.status === 'connected';
   const isExpired = qrCodeExpiry === 0;
 
   return (
