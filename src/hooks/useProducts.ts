@@ -5,11 +5,15 @@ import { useToast } from "@/hooks/use-toast";
 export interface Product {
   id: string;
   name: string;
+  category_id: string | null;
   category: string;
   price: number;
   stock: number;
   status: string;
+  active: boolean;
   description?: string;
+  image_url?: string;
+  sku?: string;
   created_at: string;
   updated_at: string;
   user_id: string;
@@ -66,10 +70,14 @@ export function useProducts() {
           countQuery = countQuery.ilike("name", `%${filters.search}%`);
         }
         if (filters.category) {
-          countQuery = countQuery.eq("category", filters.category);
+          countQuery = countQuery.eq("category_id", filters.category);
         }
         if (filters.status) {
-          countQuery = countQuery.eq("status", filters.status);
+          if (filters.status === "ativo") {
+            countQuery = countQuery.eq("active", true);
+          } else if (filters.status === "inativo") {
+            countQuery = countQuery.eq("active", false);
+          }
         }
         if (filters.startDate) {
           countQuery = countQuery.gte("created_at", filters.startDate.toISOString());
@@ -93,7 +101,21 @@ export function useProducts() {
 
       let dataQuery = supabase
         .from("products")
-        .select("id, name, category, price, stock, status, description, user_id, created_at, updated_at")
+        .select(`
+          id,
+          name,
+          category_id,
+          categories(name),
+          price,
+          stock,
+          active,
+          description,
+          image_url,
+          sku,
+          user_id,
+          created_at,
+          updated_at
+        `)
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -102,10 +124,14 @@ export function useProducts() {
         dataQuery = dataQuery.ilike("name", `%${filters.search}%`);
       }
       if (filters.category) {
-        dataQuery = dataQuery.eq("category", filters.category);
+        dataQuery = dataQuery.eq("category_id", filters.category);
       }
       if (filters.status) {
-        dataQuery = dataQuery.eq("status", filters.status);
+        if (filters.status === "ativo") {
+          dataQuery = dataQuery.eq("active", true);
+        } else if (filters.status === "inativo") {
+          dataQuery = dataQuery.eq("active", false);
+        }
       }
       if (filters.startDate) {
         dataQuery = dataQuery.gte("created_at", filters.startDate.toISOString());
@@ -119,7 +145,16 @@ export function useProducts() {
       const { data, error } = await dataQuery;
 
       if (error) throw error;
-      setProducts(data || []);
+
+      const transformedData = data?.map((item: any) => ({
+        ...item,
+        category: item.categories?.name || "Sem categoria",
+        status: item.stock === 0 ? "esgotado" :
+                item.stock < 10 ? "baixo_estoque" :
+                item.active ? "ativo" : "inativo"
+      })) || [];
+
+      setProducts(transformedData);
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         console.error("Error fetching products:", error);
