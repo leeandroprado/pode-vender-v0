@@ -265,7 +265,7 @@ export function ConfigureAgentDialog({ agent, open, onOpenChange }: ConfigureAge
           <AlertDialogHeader>
             <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O agente "{agent?.name}" será permanentemente excluído.
+              Esta ação não pode ser desfeita. O agente "{agent?.name}" e sua instância WhatsApp serão permanentemente excluídos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

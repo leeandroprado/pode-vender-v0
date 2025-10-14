@@ -118,18 +118,23 @@ export const useAgents = () => {
 
   const deleteAgent = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("agents")
-        .delete()
-        .eq("id", id);
+      const { data, error } = await supabase.functions.invoke(
+        "whatsapp-delete-agent",
+        {
+          body: { agentId: id },
+        }
+      );
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agents"] });
+      queryClient.invalidateQueries({ queryKey: ["whatsapp_instances"] });
       toast({
         title: "Agente excluído",
-        description: "O agente foi removido com sucesso.",
+        description: "O agente e sua instância WhatsApp foram removidos com sucesso.",
       });
     },
     onError: (error) => {
