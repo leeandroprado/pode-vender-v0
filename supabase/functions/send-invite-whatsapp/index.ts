@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
     console.log('Usando instância:', instances[0].instance_name);
 
     const instance = instances[0];
-    const appUrl = Deno.env.get('APP_URL') || 'https://tefidquitahjjxpeowzt.supabase.co';
+    const appUrl = Deno.env.get('APP_URL') || 'https://podevender.apizap.tech';
     const inviteLink = `${appUrl}/aceitar-convite?token=${token}`;
 
     // Mapear roles para nomes amigáveis
