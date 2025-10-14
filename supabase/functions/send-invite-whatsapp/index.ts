@@ -73,17 +73,32 @@ Deno.serve(async (req) => {
       throw new Error('Configurações do ApiZap incompletas');
     }
 
-    // Buscar instância ativa de WhatsApp
+    // Buscar qualquer instância ativa de WhatsApp (não filtra por user_id)
+    console.log('Buscando instâncias do WhatsApp disponíveis...');
     const { data: instances } = await serviceClient
       .from('whatsapp_instances')
       .select('instance_name, hash')
-      .eq('user_id', user.id)
-      .eq('status', 'open')
+      .in('status', ['open', 'connected'])
+      .not('instance_name', 'is', null)
+      .not('hash', 'is', null)
+      .order('created_at', { ascending: false })
       .limit(1);
 
+    console.log('Instâncias encontradas:', instances?.length || 0);
+    
     if (!instances || instances.length === 0) {
-      throw new Error('Nenhuma instância do WhatsApp conectada');
+      console.error('Nenhuma instância encontrada. Verifique:');
+      console.error('1. Se existe instância criada na página de Agentes');
+      console.error('2. Se o status está como "open" ou "connected"');
+      console.error('3. Se a instância foi conectada via QR Code');
+      
+      throw new Error(
+        'Nenhuma instância do WhatsApp disponível. ' +
+        'Configure e conecte uma instância na página de Agentes.'
+      );
     }
+
+    console.log('Usando instância:', instances[0].instance_name);
 
     const instance = instances[0];
     const appUrl = Deno.env.get('APP_URL') || 'https://tefidquitahjjxpeowzt.supabase.co';
