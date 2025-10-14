@@ -25,7 +25,7 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const { isSuperAdmin } = useUserRole();
+  const { isSuperAdmin, isAdmin } = useUserRole();
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border px-6 py-4">
@@ -64,6 +64,24 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
               
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/equipe"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-primary font-medium"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      }
+                    >
+                      <Users className="h-4 w-4" />
+                      <span>Equipe</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
               {isSuperAdmin && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>

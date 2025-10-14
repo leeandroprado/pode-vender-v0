@@ -15,10 +15,16 @@ export type Conversation = {
   updated_at: string;
   metadata: Record<string, any>;
   client_id?: string | null;
+  assigned_to?: string | null;
   clients?: {
     id: string;
     name: string;
     phone: string;
+  } | null;
+  assigned_profile?: {
+    id: string;
+    full_name: string | null;
+    email: string;
   } | null;
 };
 
@@ -55,6 +61,7 @@ export const useConversations = () => {
           updated_at, 
           metadata,
           client_id,
+          assigned_to,
           clients (
             id,
             name,
@@ -65,7 +72,24 @@ export const useConversations = () => {
         .limit(100);
 
       if (error) throw error;
-      return data as Conversation[];
+      
+      // Fetch assigned profiles separately to avoid FK issues
+      const conversationsWithProfiles = await Promise.all(
+        (data || []).map(async (conv: any) => {
+          if (conv.assigned_to) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id, full_name, email')
+              .eq('id', conv.assigned_to)
+              .single();
+            
+            return { ...conv, assigned_profile: profile };
+          }
+          return conv;
+        })
+      );
+
+      return conversationsWithProfiles as Conversation[];
     },
     staleTime: 30000, // Cache for 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
@@ -199,6 +223,36 @@ export const useConversations = () => {
     },
   });
 
+  // Assign conversation to vendedor
+  const assignConversation = useMutation({
+    mutationFn: async ({ id, userId }: { id: string; userId: string | null }) => {
+      const { error } = await supabase
+        .from('conversations')
+        .update({ 
+          assigned_to: userId,
+          owner_conversation: userId ? 'human' : 'ia',
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      toast({
+        title: "Conversa atribuída",
+        description: "O vendedor foi atribuído com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atribuir conversa",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     conversations,
     isLoadingConversations,
@@ -207,6 +261,8 @@ export const useConversations = () => {
     updateConversationOwner: updateConversationOwner.mutate,
     sendMessage: sendMessage.mutate,
     isSendingMessage: sendMessage.isPending,
+    assignConversation: assignConversation.mutate,
+    isAssigning: assignConversation.isPending,
   };
 };
 

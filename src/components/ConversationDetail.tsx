@@ -9,9 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddClientDialog } from "@/components/AddClientDialog";
 import { useClients } from "@/hooks/useClients";
 import { useQueryClient } from "@tanstack/react-query";
+import { useVendedores } from "@/hooks/useVendedores";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface ConversationDetailProps {
   messages: Message[];
@@ -19,8 +22,11 @@ interface ConversationDetailProps {
   conversationId: string;
   ownerConversation: 'ia' | 'human';
   onOwnerChange: (conversationId: string, owner: 'ia' | 'human') => void;
+  onAssignVendedor: (conversationId: string, userId: string | null) => void;
   clientId?: string | null;
   clientName?: string | null;
+  assignedTo?: string | null;
+  assignedName?: string | null;
 }
 
 export const ConversationDetail = ({ 
@@ -29,12 +35,17 @@ export const ConversationDetail = ({
   conversationId,
   ownerConversation,
   onOwnerChange,
+  onAssignVendedor,
   clientId,
-  clientName
+  clientName,
+  assignedTo,
+  assignedName
 }: ConversationDetailProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showAddClientDialog, setShowAddClientDialog] = useState(false);
   const { clients } = useClients();
+  const { vendedores } = useVendedores();
+  const { isAdmin } = useUserRole();
   const queryClient = useQueryClient();
 
   const currentClient = clientId ? clients.find(c => c.id === clientId) : null;
@@ -98,6 +109,27 @@ export const ConversationDetail = ({
                 onCheckedChange={handleOwnerToggle}
               />
             </div>
+
+            {isAdmin && (
+              <Select 
+                value={assignedTo || "unassigned"}
+                onValueChange={(value) => 
+                  onAssignVendedor(conversationId, value === "unassigned" ? null : value)
+                }
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Sem vendedor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Sem vendedor</SelectItem>
+                  {vendedores.map(v => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.full_name || v.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             
             {!hasClient && (
               <Button 

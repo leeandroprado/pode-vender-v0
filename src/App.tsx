@@ -13,11 +13,13 @@ import Clientes from "./pages/Clientes";
 import Conversas from "./pages/Conversas";
 import Atividades from "./pages/Atividades";
 import Conta from "./pages/Conta";
+import Equipe from "./pages/Equipe";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import SystemSettings from "./pages/SystemSettings";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
+import { AdminRoute } from "./components/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +40,7 @@ const App = () => (
             <Route path="/conversas" element={<ProtectedRoute><DashboardLayout><Conversas /></DashboardLayout></ProtectedRoute>} />
             <Route path="/atividades" element={<ProtectedRoute><DashboardLayout><Atividades /></DashboardLayout></ProtectedRoute>} />
             <Route path="/conta" element={<ProtectedRoute><DashboardLayout><Conta /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/equipe" element={<ProtectedRoute><AdminRoute><DashboardLayout><Equipe /></DashboardLayout></AdminRoute></ProtectedRoute>} />
             <Route path="/settings-system" element={<ProtectedRoute><SuperAdminRoute><SystemSettings /></SuperAdminRoute></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

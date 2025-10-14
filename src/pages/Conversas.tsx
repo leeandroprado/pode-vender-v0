@@ -11,7 +11,14 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const Conversas = () => {
-  const { conversations, isLoadingConversations, sendMessage, updateConversationOwner, isSendingMessage } = useConversations();
+  const { 
+    conversations, 
+    isLoadingConversations, 
+    sendMessage, 
+    updateConversationOwner, 
+    assignConversation,
+    isSendingMessage 
+  } = useConversations();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const { messages, isLoadingMessages } = useMessages(selectedConversationId);
   const isMobile = useIsMobile();
@@ -25,6 +32,10 @@ const Conversas = () => {
 
   const handleOwnerChange = (conversationId: string, owner: 'ia' | 'human') => {
     updateConversationOwner({ id: conversationId, owner });
+  };
+
+  const handleAssignVendedor = (conversationId: string, userId: string | null) => {
+    assignConversation({ id: conversationId, userId });
   };
 
   if (isLoadingConversations) {
@@ -102,8 +113,11 @@ const Conversas = () => {
                   conversationId={selectedConversationId}
                   ownerConversation={selectedConversation?.owner_conversation || 'ia'}
                   onOwnerChange={handleOwnerChange}
+                  onAssignVendedor={handleAssignVendedor}
                   clientId={selectedConversation?.client_id}
                   clientName={selectedConversation?.clients?.name}
+                  assignedTo={selectedConversation?.assigned_to}
+                  assignedName={selectedConversation?.assigned_profile?.full_name}
                 />
                 <MessageInput
                   onSendMessage={handleSendMessage}

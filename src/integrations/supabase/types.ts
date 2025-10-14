@@ -166,6 +166,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          assigned_to: string | null
           client_id: string | null
           created_at: string | null
           id: string
@@ -181,6 +182,7 @@ export type Database = {
           whatsapp_phone: string
         }
         Insert: {
+          assigned_to?: string | null
           client_id?: string | null
           created_at?: string | null
           id?: string
@@ -196,6 +198,7 @@ export type Database = {
           whatsapp_phone: string
         }
         Update: {
+          assigned_to?: string | null
           client_id?: string | null
           created_at?: string | null
           id?: string
@@ -650,7 +653,7 @@ export type Database = {
         | "shipped"
         | "delivered"
         | "cancelled"
-      user_role: "admin" | "moderator" | "user" | "super_admin"
+      user_role: "admin" | "moderator" | "user" | "super_admin" | "vendedor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -802,7 +805,7 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
-      user_role: ["admin", "moderator", "user", "super_admin"],
+      user_role: ["admin", "moderator", "user", "super_admin", "vendedor"],
     },
   },
 } as const
