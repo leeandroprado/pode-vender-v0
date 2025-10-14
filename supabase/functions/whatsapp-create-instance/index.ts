@@ -38,6 +38,53 @@ interface ApizapCreateResponse {
   };
 }
 
+// Helper function to fetch existing instance from ApiZap
+async function fetchInstanceFromApizap(instanceName: string, apiKey: string, baseUrl: string): Promise<any | null> {
+  try {
+    const response = await fetch(`${baseUrl}/instance/fetchInstances?instanceName=${instanceName}`, {
+      method: 'GET',
+      headers: {
+        'apikey': apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    // ApiZap returns array of instances, find the one with matching name
+    if (Array.isArray(data) && data.length > 0) {
+      return data.find((inst: any) => inst.instance.instanceName === instanceName);
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching instance from ApiZap:', error);
+    return null;
+  }
+}
+
+// Helper function to get QR code from existing instance
+async function getQRCodeFromApizap(instanceName: string, apiKey: string, baseUrl: string): Promise<any | null> {
+  try {
+    const response = await fetch(`${baseUrl}/instance/qrcode/${instanceName}`, {
+      method: 'GET',
+      headers: {
+        'apikey': apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching QR code from ApiZap:', error);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -89,7 +136,7 @@ Deno.serve(async (req) => {
 
     console.log('Agent found:', agent.name);
 
-    // Check if instance already exists for this agent
+    // Check if instance already exists in our database for this agent
     const { data: existingInstance } = await supabase
       .from('whatsapp_instances')
       .select('*')
@@ -97,7 +144,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (existingInstance) {
-      console.log('Instance already exists, returning existing instance');
+      console.log('Instance already exists in database, returning existing instance');
       return new Response(
         JSON.stringify({
           success: true,
@@ -111,7 +158,7 @@ Deno.serve(async (req) => {
     // Generate instance name using agent ID
     const instanceName = `agent_${agentId}`;
 
-    console.log('Creating instance with name:', instanceName);
+    console.log('Checking for instance with name:', instanceName);
 
     // Get Apizap API key from environment
     const apizapApiKey = Deno.env.get('APIZAP_API_KEY');
@@ -138,7 +185,54 @@ Deno.serve(async (req) => {
       settings[setting.setting_key] = setting.setting_value || '';
     });
 
-    console.log('Creating WhatsApp instance with ApiZap...');
+    const baseUrl = settings.base_url || 'https://api.apizap.tech';
+
+    // Check if instance already exists in ApiZap
+    console.log('Checking if instance exists in ApiZap...');
+    const existingApizapInstance = await fetchInstanceFromApizap(instanceName, apizapApiKey, baseUrl);
+
+    if (existingApizapInstance) {
+      console.log('Instance found in ApiZap, recovering it...');
+      
+      // Get QR code from existing instance
+      const qrCodeData = await getQRCodeFromApizap(instanceName, apizapApiKey, baseUrl);
+      
+      // Save the recovered instance to our database
+      const { data: recoveredInstance, error: insertError } = await supabase
+        .from('whatsapp_instances')
+        .insert({
+          user_id: user.id,
+          agent_id: agentId,
+          instance_name: instanceName,
+          instance_id: existingApizapInstance.instance.instanceId,
+          hash: existingApizapInstance.hash,
+          status: existingApizapInstance.instance.status || 'connecting',
+          qr_code_base64: qrCodeData?.qrcode?.base64 || existingApizapInstance.qrcode?.base64,
+          qr_code_text: qrCodeData?.qrcode?.code || existingApizapInstance.qrcode?.code,
+          integration: existingApizapInstance.instance.integration,
+          settings: existingApizapInstance.settings,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Database insert error while recovering:', insertError);
+        throw new Error(`Failed to save recovered instance: ${insertError.message}`);
+      }
+
+      console.log('Recovered instance saved to database:', recoveredInstance.id);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          instance: recoveredInstance,
+          message: 'Instance recovered from ApiZap'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Creating new WhatsApp instance with ApiZap...');
 
     // Generate unique token for this instance
     const tokenPrefix = settings.token_prefix || 'apizap_token_';
@@ -189,7 +283,6 @@ Deno.serve(async (req) => {
       console.log('Webhook is disabled in system settings');
     }
 
-    const baseUrl = settings.base_url || 'https://api.apizap.tech';
     const createEndpoint = settings.create_instance_endpoint || '/instance/create';
 
     // Log complete request body for debugging (excluding sensitive token)
