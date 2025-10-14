@@ -19,6 +19,18 @@ export interface Product {
   user_id: string;
 }
 
+export interface CreateProductInput {
+  name: string;
+  category_id: string;
+  price: number;
+  stock: number;
+  status: string;
+  active: boolean;
+  description?: string;
+  image_url?: string;
+  sku?: string;
+}
+
 export interface ProductFilters {
   search: string;
   category: string;
@@ -170,7 +182,7 @@ export function useProducts() {
     }
   }, [filters, currentPage, pageSize, toast]);
 
-  const createProduct = async (product: Omit<Product, "id" | "created_at" | "updated_at" | "user_id">) => {
+  const createProduct = async (product: CreateProductInput) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");

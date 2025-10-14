@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
+import type { CreateProductInput } from "@/hooks/useProducts";
 
 const productSchema = z.object({
   name: z.string().trim().min(1, "Nome é obrigatório").max(200, "Nome muito longo"),
@@ -44,7 +45,7 @@ type ProductFormValues = z.infer<typeof productSchema>;
 interface NewProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: CreateProductInput) => Promise<void>;
 }
 
 const statuses = [
@@ -81,7 +82,6 @@ export function NewProductDialog({ open, onOpenChange, onSubmit }: NewProductDia
         status: data.status,
         description: data.description,
         active: data.status === "ativo",
-        category: "", // Will be populated by the backend join
       });
       form.reset();
       onOpenChange(false);
