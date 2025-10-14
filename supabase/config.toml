@@ -14,3 +14,9 @@ verify_jwt = true
 
 [functions.get-system-settings]
 verify_jwt = false
+
+[functions.send-invite-whatsapp]
+verify_jwt = true
+
+[functions.update-role-from-invite]
+verify_jwt = false

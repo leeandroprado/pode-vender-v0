@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, UserPlus } from "lucide-react";
+import { Users, UserPlus, Mail, Clock, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,7 +27,18 @@ const roleVariants: Partial<Record<UserRole, "default" | "secondary" | "outline"
 
 export default function Equipe() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
-  const { members, isLoading, inviteUser, updateUserRole, isInviting } = useTeamMembers();
+  const { 
+    members, 
+    pendingInvites, 
+    isLoading, 
+    inviteUser, 
+    updateUserRole, 
+    cancelInvite, 
+    resendInvite, 
+    isInviting,
+    isCanceling,
+    isResending 
+  } = useTeamMembers();
 
   const handleRoleChange = (userId: string, newRole: UserRole) => {
     updateUserRole({ userId, newRole });
@@ -53,6 +64,78 @@ export default function Equipe() {
           Convidar Membro
         </Button>
       </div>
+
+      {/* Convites Pendentes */}
+      {pendingInvites.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Mail className="w-5 h-5 text-muted-foreground" />
+            <h2 className="text-xl font-semibold">Convites Pendentes</h2>
+            <Badge variant="secondary">{pendingInvites.length}</Badge>
+          </div>
+          
+          <div className="grid gap-4">
+            {pendingInvites.map((invite) => (
+              <Card key={invite.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                        <Mail className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{invite.email}</CardTitle>
+                        <CardDescription className="flex items-center gap-2">
+                          {invite.phone && (
+                            <span>{invite.phone}</span>
+                          )}
+                          <span>•</span>
+                          <Clock className="w-3 h-3" />
+                          <span>
+                            Expira em{" "}
+                            {new Date(invite.expires_at).toLocaleDateString()}
+                          </span>
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant={roleVariants[invite.role] || "outline"}>
+                        {roleLabels[invite.role] || invite.role}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => resendInvite(invite)}
+                        disabled={isResending}
+                        title="Reenviar convite"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => cancelInvite(invite.id)}
+                        disabled={isCanceling}
+                        title="Cancelar convite"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Membros Ativos */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Membros Ativos</h2>
+          <Badge variant="secondary">{members.length}</Badge>
+        </div>
 
       <div className="grid gap-4">
         {members.length === 0 ? (
@@ -107,6 +190,7 @@ export default function Equipe() {
             </Card>
           ))
         )}
+      </div>
       </div>
 
       <InviteUserDialog

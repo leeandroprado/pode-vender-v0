@@ -239,6 +239,7 @@ export type Database = {
           id: string
           invited_by: string
           organization_id: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           status: Database["public"]["Enums"]["invite_status"]
           token: string
@@ -252,9 +253,10 @@ export type Database = {
           id?: string
           invited_by: string
           organization_id?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["invite_status"]
-          token: string
+          token?: string
           updated_at?: string
         }
         Update: {
@@ -265,6 +267,7 @@ export type Database = {
           id?: string
           invited_by?: string
           organization_id?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["invite_status"]
           token?: string

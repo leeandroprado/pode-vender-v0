@@ -16,6 +16,7 @@ import Conta from "./pages/Conta";
 import Equipe from "./pages/Equipe";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
+import AceitarConvite from "./pages/AceitarConvite";
 import NotFound from "./pages/NotFound";
 import SystemSettings from "./pages/SystemSettings";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
@@ -33,6 +34,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/aceitar-convite" element={<AceitarConvite />} />
             <Route path="/" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
             <Route path="/agentes" element={<ProtectedRoute><DashboardLayout><Agentes /></DashboardLayout></ProtectedRoute>} />
             <Route path="/produtos" element={<ProtectedRoute><DashboardLayout><Produtos /></DashboardLayout></ProtectedRoute>} />

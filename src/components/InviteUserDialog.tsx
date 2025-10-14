@@ -9,19 +9,21 @@ import type { UserRole } from "@/hooks/useUserRole";
 interface InviteUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onInvite: (data: { email: string; role: UserRole }) => void;
+  onInvite: (data: { email: string; phone: string; role: UserRole }) => void;
   isInviting: boolean;
 }
 
 export function InviteUserDialog({ open, onOpenChange, onInvite, isInviting }: InviteUserDialogProps) {
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState<UserRole>("user");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && role) {
-      onInvite({ email, role });
+    if (email && phone && role) {
+      onInvite({ email, phone, role });
       setEmail("");
+      setPhone("");
       setRole("user");
       onOpenChange(false);
     }
@@ -46,6 +48,18 @@ export function InviteUserDialog({ open, onOpenChange, onInvite, isInviting }: I
               placeholder="usuario@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Telefone (WhatsApp)</Label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="+55 11 99999-9999"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               required
             />
           </div>

@@ -12,6 +12,16 @@ export type TeamMember = {
   created_at: string;
 };
 
+export type PendingInvite = {
+  id: string;
+  email: string;
+  phone: string | null;
+  role: UserRole;
+  created_at: string;
+  expires_at: string;
+  token: string;
+};
+
 export const useTeamMembers = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -46,8 +56,23 @@ export const useTeamMembers = () => {
     staleTime: 30000,
   });
 
+  const { data: pendingInvites, isLoading: isLoadingInvites } = useQuery({
+    queryKey: ['pending-invites'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invites')
+        .select('id, email, phone, role, created_at, expires_at, token')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as PendingInvite[];
+    },
+    staleTime: 30000,
+  });
+
   const inviteUser = useMutation({
-    mutationFn: async ({ email, role }: { email: string; role: UserRole }) => {
+    mutationFn: async ({ email, phone, role }: { email: string; phone: string; role: UserRole }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
@@ -57,6 +82,7 @@ export const useTeamMembers = () => {
         .from('invites')
         .insert({
           email,
+          phone,
           role,
           token,
           invited_by: user.id,
@@ -64,10 +90,21 @@ export const useTeamMembers = () => {
 
       if (error) throw error;
       
-      return { email, token };
+      // Chamar edge function para enviar WhatsApp
+      const { error: sendError } = await supabase.functions.invoke('send-invite-whatsapp', {
+        body: { email, phone, role, token },
+      });
+
+      if (sendError) {
+        console.error('Erro ao enviar WhatsApp:', sendError);
+        throw new Error('Convite criado, mas falha ao enviar WhatsApp: ' + sendError.message);
+      }
+      
+      return { email, phone, token };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-invites'] });
       toast({
         title: "Convite enviado",
         description: "O usuário foi convidado com sucesso.",
@@ -107,12 +144,70 @@ export const useTeamMembers = () => {
     },
   });
 
+  const cancelInvite = useMutation({
+    mutationFn: async (inviteId: string) => {
+      const { error } = await supabase
+        .from('invites')
+        .update({ status: 'expired' })
+        .eq('id', inviteId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-invites'] });
+      toast({
+        title: "Convite cancelado",
+        description: "O convite foi cancelado com sucesso.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao cancelar convite",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resendInvite = useMutation({
+    mutationFn: async (invite: PendingInvite) => {
+      const { error } = await supabase.functions.invoke('send-invite-whatsapp', {
+        body: { 
+          email: invite.email, 
+          phone: invite.phone, 
+          role: invite.role, 
+          token: invite.token 
+        },
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Convite reenviado",
+        description: "O convite foi reenviado com sucesso.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao reenviar convite",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     members: members || [],
-    isLoading,
+    pendingInvites: pendingInvites || [],
+    isLoading: isLoading || isLoadingInvites,
     inviteUser: inviteUser.mutate,
     updateUserRole: updateUserRole.mutate,
+    cancelInvite: cancelInvite.mutate,
+    resendInvite: resendInvite.mutate,
     isInviting: inviteUser.isPending,
     isUpdating: updateUserRole.isPending,
+    isCanceling: cancelInvite.isPending,
+    isResending: resendInvite.isPending,
   };
 };
