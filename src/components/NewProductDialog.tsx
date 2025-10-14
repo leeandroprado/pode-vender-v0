@@ -31,12 +31,12 @@ import { Loader2 } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 
 const productSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório").max(200, "Nome muito longo"),
-  category: z.string().min(1, "Categoria é obrigatória"),
-  price: z.string().min(1, "Preço é obrigatório"),
-  stock: z.string().min(0, "Estoque deve ser positivo"),
+  name: z.string().trim().min(1, "Nome é obrigatório").max(200, "Nome muito longo"),
+  category_id: z.string().uuid("Categoria inválida"),
+  price: z.coerce.number().min(0.01, "Preço deve ser maior que zero"),
+  stock: z.coerce.number().int().min(0, "Estoque deve ser positivo"),
   status: z.string().min(1, "Status é obrigatório"),
-  description: z.string().optional(),
+  description: z.string().trim().max(1000, "Descrição muito longa").optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -62,9 +62,9 @@ export function NewProductDialog({ open, onOpenChange, onSubmit }: NewProductDia
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
-      category: "",
-      price: "",
-      stock: "0",
+      category_id: "",
+      price: 0,
+      stock: 0,
       status: "ativo",
       description: "",
     },
@@ -75,11 +75,13 @@ export function NewProductDialog({ open, onOpenChange, onSubmit }: NewProductDia
     try {
       await onSubmit({
         name: data.name,
-        category: data.category,
-        price: parseFloat(data.price),
-        stock: parseInt(data.stock),
+        category_id: data.category_id,
+        price: data.price,
+        stock: data.stock,
         status: data.status,
         description: data.description,
+        active: data.status === "ativo",
+        category: "", // Will be populated by the backend join
       });
       form.reset();
       onOpenChange(false);
@@ -119,7 +121,7 @@ export function NewProductDialog({ open, onOpenChange, onSubmit }: NewProductDia
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="category"
+                name="category_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Categoria *</FormLabel>
@@ -131,7 +133,7 @@ export function NewProductDialog({ open, onOpenChange, onSubmit }: NewProductDia
                       </FormControl>
                       <SelectContent>
                         {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.name}>
+                          <SelectItem key={category.id} value={category.id}>
                             {category.name}
                           </SelectItem>
                         ))}
@@ -179,8 +181,10 @@ export function NewProductDialog({ open, onOpenChange, onSubmit }: NewProductDia
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -195,7 +199,13 @@ export function NewProductDialog({ open, onOpenChange, onSubmit }: NewProductDia
                   <FormItem>
                     <FormLabel>Estoque *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
+                      <Input 
+                        type="number" 
+                        min="0"
+                        placeholder="0" 
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

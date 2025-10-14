@@ -34,11 +34,11 @@ import type { Product } from "@/hooks/useProducts";
 
 const productSchema = z.object({
   name: z.string().trim().min(1, "Nome é obrigatório").max(200, "Nome muito longo"),
-  category: z.string().min(1, "Categoria é obrigatória"),
-  price: z.number().min(0, "Preço deve ser maior ou igual a 0"),
-  stock: z.number().int().min(0, "Estoque deve ser maior ou igual a 0"),
+  category_id: z.string().uuid("Categoria inválida"),
+  price: z.coerce.number().min(0.01, "Preço deve ser maior que zero"),
+  stock: z.coerce.number().int().min(0, "Estoque deve ser positivo"),
   status: z.string().min(1, "Status é obrigatório"),
-  description: z.string().max(1000, "Descrição muito longa").optional(),
+  description: z.string().trim().max(1000, "Descrição muito longa").optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -63,7 +63,7 @@ export function EditProductDialog({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
-      category: "",
+      category_id: "",
       price: 0,
       stock: 0,
       status: "ativo",
@@ -75,7 +75,7 @@ export function EditProductDialog({
     if (product) {
       form.reset({
         name: product.name,
-        category: product.category,
+        category_id: product.category_id || "",
         price: product.price,
         stock: product.stock,
         status: product.status,
@@ -89,7 +89,10 @@ export function EditProductDialog({
 
     try {
       setIsSubmitting(true);
-      await onSubmit(product.id, data);
+      await onSubmit(product.id, {
+        ...data,
+        active: data.status === "ativo",
+      });
       onOpenChange(false);
     } catch (error) {
       console.error("Error updating product:", error);
@@ -126,7 +129,7 @@ export function EditProductDialog({
 
             <FormField
               control={form.control}
-              name="category"
+              name="category_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Categoria</FormLabel>
@@ -143,7 +146,7 @@ export function EditProductDialog({
                     </FormControl>
                     <SelectContent>
                       {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.name}>
+                        <SelectItem key={category.id} value={category.id}>
                           {category.name}
                         </SelectItem>
                       ))}
@@ -165,11 +168,10 @@ export function EditProductDialog({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -186,11 +188,10 @@ export function EditProductDialog({
                     <FormControl>
                       <Input
                         type="number"
+                        min="0"
                         placeholder="0"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || 0)
-                        }
+                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
                       />
                     </FormControl>
                     <FormMessage />
