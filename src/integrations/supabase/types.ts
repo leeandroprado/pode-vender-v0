@@ -541,11 +541,16 @@ export type Database = {
         Row: {
           agent_id: string | null
           created_at: string | null
+          hash: string | null
           id: string
           instance_id: string | null
           instance_name: string
+          integration: string | null
           phone_number: string | null
           qr_code: string | null
+          qr_code_base64: string | null
+          qr_code_text: string | null
+          settings: Json | null
           status: string | null
           updated_at: string | null
           user_id: string
@@ -553,11 +558,16 @@ export type Database = {
         Insert: {
           agent_id?: string | null
           created_at?: string | null
+          hash?: string | null
           id?: string
           instance_id?: string | null
           instance_name: string
+          integration?: string | null
           phone_number?: string | null
           qr_code?: string | null
+          qr_code_base64?: string | null
+          qr_code_text?: string | null
+          settings?: Json | null
           status?: string | null
           updated_at?: string | null
           user_id: string
@@ -565,11 +575,16 @@ export type Database = {
         Update: {
           agent_id?: string | null
           created_at?: string | null
+          hash?: string | null
           id?: string
           instance_id?: string | null
           instance_name?: string
+          integration?: string | null
           phone_number?: string | null
           qr_code?: string | null
+          qr_code_base64?: string | null
+          qr_code_text?: string | null
+          settings?: Json | null
           status?: string | null
           updated_at?: string | null
           user_id?: string
