@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Parameters:', { agendaId, date, duration });
+    console.log('Parameters:', { agendaId, date, duration: `${duration} (will be ignored, using agenda slot_duration)` });
 
     // 4. Buscar agenda
     const supabase = createClient(
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     }
 
     // 5. Calcular slots disponíveis
-    const slots = await calculateAvailableSlots(supabase, agenda, date, duration);
+    const slots = await calculateAvailableSlots(supabase, agenda, date);
     console.log(`Found ${slots.length} available slots`);
 
     return new Response(JSON.stringify({ slots }), {
@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
   }
 });
 
-async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: string, duration: number) {
+async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: string) {
   const date = new Date(dateStr);
   const dayOfWeek = date.getDay();
   const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -121,6 +121,12 @@ async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: stri
     .lte('start_time', endOfDay.toISOString());
 
   console.log(`Found ${appointments?.length || 0} existing appointments`);
+  if (appointments && appointments.length > 0) {
+    console.log('Appointments details:', appointments.map((apt: any) => ({
+      start: apt.start_time,
+      end: apt.end_time
+    })));
+  }
 
   // Gerar slots e filtrar ocupados
   const slots = [];
@@ -131,7 +137,7 @@ async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: stri
   const endTime = new Date(dateStr + `T${workingHours.end}:00Z`);
 
   while (currentTime < endTime) {
-    const slotEnd = new Date(currentTime.getTime() + duration * 60000);
+    const slotEnd = new Date(currentTime.getTime() + agenda.slot_duration * 60000);
     
     // Verificar se não conflita com agendamentos
     const hasConflict = appointments?.some((apt: any) => {
@@ -139,6 +145,10 @@ async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: stri
       const aptEnd = new Date(apt.end_time);
       return (currentTime < aptEnd && slotEnd > aptStart);
     });
+
+    if (hasConflict) {
+      console.log(`Slot ${currentTime.toISOString()} - ${slotEnd.toISOString()} BLOCKED by appointment`);
+    }
 
     // Verificar se não conflita com breaks
     const isInBreak = agenda.breaks?.some((brk: any) => {
@@ -148,6 +158,10 @@ async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: stri
       const breakEnd = new Date(dateStr + `T${brk.end}:00Z`);
       return (currentTime < breakEnd && slotEnd > breakStart);
     });
+
+    if (isInBreak) {
+      console.log(`Slot ${currentTime.toISOString()} - ${slotEnd.toISOString()} BLOCKED by break`);
+    }
 
     if (!hasConflict && !isInBreak && slotEnd <= endTime) {
       slots.push({
