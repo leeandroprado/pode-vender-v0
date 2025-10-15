@@ -63,8 +63,8 @@ serve(async (req) => {
     const { data: settings, error: settingsError } = await supabase
       .from('system_settings')
       .select('setting_key, setting_value')
-      .in('setting_key', ['base_url', 'send_text_endpoint'])
-      .eq('setting_category', 'whatsapp_api');
+      .in('setting_key', ['base_url'])
+      .eq('setting_category', 'apizap');
 
     if (settingsError || !settings || settings.length === 0) {
       console.error("Settings error:", settingsError);
