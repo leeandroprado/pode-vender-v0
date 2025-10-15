@@ -135,16 +135,18 @@ export const useTeamMembers = () => {
         return { message: 'Role já está configurado', unchanged: true };
       }
 
-      // Fazer o update
+      // Usar UPSERT para garantir que sempre funciona (mais robusto)
       const { data, error } = await supabase
         .from('user_roles')
-        .update({ role: newRole })
-        .eq('user_id', userId)
+        .upsert(
+          { user_id: userId, role: newRole },
+          { onConflict: 'user_id' }
+        )
         .select();
 
       if (error) throw error;
       
-      // Agora sim, se data estiver vazio após tentar mudar, é erro de permissão
+      // Se data estiver vazio, é erro de permissão
       if (!data || data.length === 0) {
         throw new Error('Não foi possível atualizar o role. Verifique suas permissões.');
       }
