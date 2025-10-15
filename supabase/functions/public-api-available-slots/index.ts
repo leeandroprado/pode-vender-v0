@@ -180,9 +180,13 @@ async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: stri
     }
 
     if (!hasConflict && !isInBreak && slotEnd <= endTime) {
+      // Converter UTC para horário de São Paulo
+      const localStart = toZonedTime(currentTime, TIMEZONE);
+      const localEnd = toZonedTime(slotEnd, TIMEZONE);
+      
       slots.push({
-        start: currentTime.toISOString(),
-        end: slotEnd.toISOString(),
+        start: localStart.toISOString().replace('Z', '-03:00'),
+        end: localEnd.toISOString().replace('Z', '-03:00'),
       });
     }
 
