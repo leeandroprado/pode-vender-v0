@@ -46,6 +46,11 @@ export function AppSidebar() {
   const { isSuperAdmin, isAdmin } = useUserRole();
   const { user, signOut } = useAuth();
 
+  const getNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+    isActive
+      ? "bg-white/10 text-white font-medium rounded-lg"
+      : "text-white/80 hover:bg-white/5 hover:text-white rounded-lg";
+
   const renderMenuItems = (items: typeof overviewItems) => (
     <SidebarMenu>
       {items.map((item) => (
@@ -54,11 +59,7 @@ export function AppSidebar() {
             <NavLink
               to={item.url}
               end={item.url === "/"}
-              className={({ isActive }) =>
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary font-medium shadow-sm border-l-2 border-primary transition-all duration-200"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 hover:translate-x-1"
-              }
+              className={getNavLinkClass}
             >
               <item.icon className="h-4 w-4" />
               <span>{item.title}</span>
@@ -71,23 +72,20 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border px-6 py-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Bot className="h-5 w-5 text-primary-foreground" />
+      <SidebarHeader className="border-b border-white/10 px-4 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+            <Bot className="h-5 w-5 text-white" />
           </div>
-          <div>
-            <h2 className="text-base font-semibold text-sidebar-foreground">IA Atendimento</h2>
-          </div>
+          <h2 className="text-base font-semibold text-white">IA Atendimento</h2>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="pt-4">
+      <SidebarContent className="px-3 py-4">
         {/* Visão Geral */}
-        <SidebarGroup className="mb-4">
-          <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
-            <BarChart className="h-4 w-4" />
-            <span>VISÃO GERAL</span>
+        <SidebarGroup className="mb-1">
+          <SidebarGroupLabel className="px-2 py-1 text-[10px] font-semibold text-white/50 uppercase tracking-wider">
+            VISÃO GERAL
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderMenuItems(overviewItems)}
@@ -95,10 +93,9 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Automação */}
-        <SidebarGroup className="mb-4">
-          <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
-            <Bot className="h-4 w-4" />
-            <span>AUTOMAÇÃO</span>
+        <SidebarGroup className="mb-1">
+          <SidebarGroupLabel className="px-2 py-1 text-[10px] font-semibold text-white/50 uppercase tracking-wider">
+            AUTOMAÇÃO
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderMenuItems(automationItems)}
@@ -106,10 +103,9 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Gestão */}
-        <SidebarGroup className="mb-4">
-          <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
-            <Briefcase className="h-4 w-4" />
-            <span>GESTÃO</span>
+        <SidebarGroup className="mb-1">
+          <SidebarGroupLabel className="px-2 py-1 text-[10px] font-semibold text-white/50 uppercase tracking-wider">
+            GESTÃO
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderMenuItems(managementItems)}
@@ -118,23 +114,15 @@ export function AppSidebar() {
 
         {/* Administração (apenas admin) */}
         {isAdmin && (
-          <SidebarGroup className="mb-4">
-            <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              <span>ADMINISTRAÇÃO</span>
+          <SidebarGroup className="mb-1">
+            <SidebarGroupLabel className="px-2 py-1 text-[10px] font-semibold text-white/50 uppercase tracking-wider">
+              ADMINISTRAÇÃO
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/equipe"
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-primary font-medium shadow-sm border-l-2 border-primary transition-all duration-200"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 hover:translate-x-1"
-                      }
-                    >
+                    <NavLink to="/equipe" className={getNavLinkClass}>
                       <Users className="h-4 w-4" />
                       <span>Equipe</span>
                     </NavLink>
@@ -142,14 +130,7 @@ export function AppSidebar() {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/api-tokens"
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-primary font-medium shadow-sm border-l-2 border-primary transition-all duration-200"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 hover:translate-x-1"
-                      }
-                    >
+                    <NavLink to="/api-tokens" className={getNavLinkClass}>
                       <Key className="h-4 w-4" />
                       <span>API Tokens</span>
                     </NavLink>
@@ -162,23 +143,15 @@ export function AppSidebar() {
 
         {/* Sistema (apenas super admin) */}
         {isSuperAdmin && (
-          <SidebarGroup className="mb-4">
-            <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              <span>SISTEMA</span>
+          <SidebarGroup className="mb-1">
+            <SidebarGroupLabel className="px-2 py-1 text-[10px] font-semibold text-white/50 uppercase tracking-wider">
+              SISTEMA
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/settings-system"
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-primary font-medium shadow-sm border-l-2 border-primary transition-all duration-200"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 hover:translate-x-1"
-                      }
-                    >
+                    <NavLink to="/settings-system" className={getNavLinkClass}>
                       <Settings className="h-4 w-4" />
                       <span>Configurações</span>
                     </NavLink>
@@ -190,10 +163,9 @@ export function AppSidebar() {
         )}
 
         {/* Recursos */}
-        <SidebarGroup className="mb-4">
-          <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
-            <Library className="h-4 w-4" />
-            <span>RECURSOS</span>
+        <SidebarGroup className="mb-1">
+          <SidebarGroupLabel className="px-2 py-1 text-[10px] font-semibold text-white/50 uppercase tracking-wider">
+            RECURSOS
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderMenuItems(resourceItems)}
@@ -201,33 +173,26 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4">
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 px-2">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={user?.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {user?.user_metadata?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Usuário"}
-              </p>
-              <p className="text-xs text-sidebar-foreground/60 truncate">
-                {user?.email || "usuario@exemplo.com"}
-              </p>
-            </div>
+      <SidebarFooter className="border-t border-white/10 p-4">
+        <div className="flex items-center gap-3 px-2">
+          <Avatar className="h-10 w-10 ring-2 ring-white/20">
+            <AvatarImage src={user?.user_metadata?.avatar_url} />
+            <AvatarFallback className="bg-white/20 text-white font-semibold">
+              {user?.user_metadata?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-sm font-medium text-white truncate">
+              {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Usuário"}
+            </p>
           </div>
-          
           <Button 
             variant="ghost" 
-            size="sm" 
+            size="icon"
             onClick={signOut}
-            className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200"
+            className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
           >
             <LogOut className="h-4 w-4" />
-            Sair
           </Button>
         </div>
       </SidebarFooter>
