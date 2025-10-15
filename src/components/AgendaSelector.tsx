@@ -61,7 +61,7 @@ export const AgendaSelector = ({ selectedAgendaId, onSelectAgenda }: AgendaSelec
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: agenda.color }}
                   />
-                  {agenda.name}
+                  #{agenda.id.slice(0, 8)} {agenda.name}
                 </div>
               </SelectItem>
             ))}
