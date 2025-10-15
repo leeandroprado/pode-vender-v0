@@ -206,7 +206,9 @@ export default function Equipe() {
                       onValueChange={(value) => handleRoleChange(member.id, value as UserRole)}
                     >
                       <SelectTrigger className="w-[180px]">
-                        <SelectValue />
+                        <SelectValue>
+                          {roleLabels[member.role] || member.role}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="user">Usuário</SelectItem>
