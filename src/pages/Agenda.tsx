@@ -89,7 +89,7 @@ export default function Agenda() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-20 md:pb-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -99,7 +99,11 @@ export default function Agenda() {
           </p>
         </div>
 
-        <Button onClick={() => setDialogOpen(true)} className="shrink-0">
+        {/* Mobile FAB and Desktop Button */}
+        <Button 
+          onClick={() => setDialogOpen(true)} 
+          className="hidden md:flex shrink-0"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Novo Agendamento
         </Button>
@@ -215,6 +219,15 @@ export default function Agenda() {
         onSubmit={(data) => createAppointment.mutate(data)}
         defaultDate={selectedDate}
       />
+
+      {/* Mobile FAB */}
+      <Button
+        onClick={() => setDialogOpen(true)}
+        size="lg"
+        className="fixed bottom-6 right-6 md:hidden h-14 w-14 rounded-full shadow-lg z-50"
+      >
+        <Plus className="w-6 h-6" />
+      </Button>
     </div>
   );
 }

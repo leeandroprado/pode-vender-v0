@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Filter, X } from "lucide-react";
+import { CalendarIcon, Filter, X, Search } from "lucide-react";
+import { AppointmentQuickFilters } from "./AppointmentQuickFilters";
+import { AppointmentFilterChips } from "./AppointmentFilterChips";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -41,29 +43,47 @@ export function AppointmentFilters({ filters, onFiltersChange }: AppointmentFilt
     onFiltersChange({});
   };
 
+  const removeFilter = (key: keyof Filters) => {
+    onFiltersChange({ ...filters, [key]: undefined });
+  };
+
   return (
     <div className="space-y-4">
+      {/* Quick Filters */}
+      <AppointmentQuickFilters filters={filters} onFilterChange={onFiltersChange} />
+
+      {/* Active Filter Chips */}
+      <AppointmentFilterChips
+        filters={filters}
+        onRemoveFilter={removeFilter}
+        onClearAll={clearFilters}
+      />
+
+      {/* Search and Advanced Filters */}
       <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por título, cliente..."
+            value={filters.search || ''}
+            onChange={(e) => onFiltersChange({ ...filters, search: e.target.value || undefined })}
+            className="pl-9"
+          />
+        </div>
+
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowFilters(!showFilters)}
         >
           <Filter className="w-4 h-4 mr-2" />
-          Filtros
+          Mais Filtros
           {hasActiveFilters && (
             <span className="ml-2 bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">
-              {[filters.status?.length, filters.client_id, filters.start_date, filters.end_date, filters.search].filter(Boolean).length}
+              {[filters.status?.length, filters.client_id, filters.start_date, filters.end_date].filter(Boolean).length}
             </span>
           )}
         </Button>
-
-        {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            <X className="w-4 h-4 mr-2" />
-            Limpar
-          </Button>
-        )}
       </div>
 
       {showFilters && (
