@@ -1,9 +1,9 @@
-import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar, Key, BookOpen, LogOut, Shield, BarChart } from "lucide-react";
+import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar, Key, BookOpen, LogOut, Shield, BarChart, Briefcase, Library } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/contexts/AuthContext";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sidebar,
   SidebarContent,
@@ -77,44 +77,39 @@ export function AppSidebar() {
             <Bot className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-sidebar-foreground">IA Atendimento</h2>
-            <p className="text-xs text-sidebar-foreground/60">Plataforma Inteligente</p>
+            <h2 className="text-base font-semibold text-sidebar-foreground">IA Atendimento</h2>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="pt-4">
         {/* Visão Geral */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider px-2">
-            <BarChart className="h-3 w-3 inline mr-1.5" />
-            Visão Geral
+        <SidebarGroup className="mb-4">
+          <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
+            <BarChart className="h-4 w-4" />
+            <span>VISÃO GERAL</span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderMenuItems(overviewItems)}
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <Separator className="my-2" />
-
         {/* Automação */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider px-2">
-            <Bot className="h-3 w-3 inline mr-1.5" />
-            Automação
+        <SidebarGroup className="mb-4">
+          <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
+            <Bot className="h-4 w-4" />
+            <span>AUTOMAÇÃO</span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderMenuItems(automationItems)}
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <Separator className="my-2" />
-
         {/* Gestão */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider px-2">
-            <Package className="h-3 w-3 inline mr-1.5" />
-            Gestão
+        <SidebarGroup className="mb-4">
+          <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
+            <Briefcase className="h-4 w-4" />
+            <span>GESTÃO</span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderMenuItems(managementItems)}
@@ -123,90 +118,82 @@ export function AppSidebar() {
 
         {/* Administração (apenas admin) */}
         {isAdmin && (
-          <>
-            <Separator className="my-2" />
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider px-2 flex items-center gap-1.5">
-                <Shield className="h-3 w-3" />
-                Administração
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to="/equipe"
-                        className={({ isActive }) =>
-                          isActive
-                            ? "bg-sidebar-accent text-sidebar-primary font-medium shadow-sm border-l-2 border-primary transition-all duration-200"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 hover:translate-x-1"
-                        }
-                      >
-                        <Users className="h-4 w-4" />
-                        <span>Equipe</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to="/api-tokens"
-                        className={({ isActive }) =>
-                          isActive
-                            ? "bg-sidebar-accent text-sidebar-primary font-medium shadow-sm border-l-2 border-primary transition-all duration-200"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 hover:translate-x-1"
-                        }
-                      >
-                        <Key className="h-4 w-4" />
-                        <span>API Tokens</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
+          <SidebarGroup className="mb-4">
+            <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              <span>ADMINISTRAÇÃO</span>
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/equipe"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-primary font-medium shadow-sm border-l-2 border-primary transition-all duration-200"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 hover:translate-x-1"
+                      }
+                    >
+                      <Users className="h-4 w-4" />
+                      <span>Equipe</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/api-tokens"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-primary font-medium shadow-sm border-l-2 border-primary transition-all duration-200"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 hover:translate-x-1"
+                      }
+                    >
+                      <Key className="h-4 w-4" />
+                      <span>API Tokens</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         )}
 
         {/* Sistema (apenas super admin) */}
         {isSuperAdmin && (
-          <>
-            <Separator className="my-2" />
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider px-2 flex items-center gap-1.5">
-                <Settings className="h-3 w-3" />
-                Sistema
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to="/settings-system"
-                        className={({ isActive }) =>
-                          isActive
-                            ? "bg-sidebar-accent text-sidebar-primary font-medium shadow-sm border-l-2 border-primary transition-all duration-200"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 hover:translate-x-1"
-                        }
-                      >
-                        <Settings className="h-4 w-4" />
-                        <span>Configurações</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
+          <SidebarGroup className="mb-4">
+            <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              <span>SISTEMA</span>
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/settings-system"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-primary font-medium shadow-sm border-l-2 border-primary transition-all duration-200"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 hover:translate-x-1"
+                      }
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Configurações</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         )}
 
-        <Separator className="my-2" />
-
         {/* Recursos */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider px-2">
-            <BookOpen className="h-3 w-3 inline mr-1.5" />
-            Recursos
+        <SidebarGroup className="mb-4">
+          <SidebarGroupLabel className="px-2 py-2 text-xs font-medium text-sidebar-foreground/50 flex items-center gap-2">
+            <Library className="h-4 w-4" />
+            <span>RECURSOS</span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderMenuItems(resourceItems)}
@@ -217,9 +204,12 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-4">
         <div className="space-y-3">
           <div className="flex items-center gap-3 px-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-              <UserCircle className="h-5 w-5 text-primary" />
-            </div>
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user?.user_metadata?.avatar_url} />
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {user?.user_metadata?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 overflow-hidden">
               <p className="text-sm font-medium text-sidebar-foreground truncate">
                 {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Usuário"}
