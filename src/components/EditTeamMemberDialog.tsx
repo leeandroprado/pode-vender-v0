@@ -20,6 +20,8 @@ interface EditTeamMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   member: TeamMember;
+  currentUserId: string | null;
+  currentUserRole: UserRole | null;
   onUpdate: (args: { 
     userId: string; 
     updates: { full_name?: string; email?: string; avatar_url?: string };
@@ -32,6 +34,8 @@ export function EditTeamMemberDialog({
   open,
   onOpenChange,
   member,
+  currentUserId,
+  currentUserRole,
   onUpdate,
   isUpdating,
 }: EditTeamMemberDialogProps) {
@@ -40,6 +44,10 @@ export function EditTeamMemberDialog({
   const [email, setEmail] = useState(member.email);
   const [avatarUrl, setAvatarUrl] = useState(member.avatar_url || "");
   const [selectedRole, setSelectedRole] = useState<UserRole>(member.role);
+
+  const isEditingSelf = currentUserId === member.id;
+  const isSuperAdmin = currentUserRole === 'super_admin';
+  const shouldDisableRoleChange = isEditingSelf && isSuperAdmin;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +67,7 @@ export function EditTeamMemberDialog({
           email: validatedData.email,
           avatar_url: validatedData.avatar_url,
         },
-        role: validatedData.role,
+        role: shouldDisableRoleChange ? undefined : validatedData.role,
       });
       onOpenChange(false);
     } catch (error) {
@@ -119,6 +127,7 @@ export function EditTeamMemberDialog({
             <Select
               value={selectedRole}
               onValueChange={(value) => setSelectedRole(value as UserRole)}
+              disabled={shouldDisableRoleChange}
             >
               <SelectTrigger id="role" className="w-full">
                 <SelectValue placeholder="Selecione uma função" />
@@ -128,8 +137,14 @@ export function EditTeamMemberDialog({
                 <SelectItem value="vendedor">Vendedor</SelectItem>
                 <SelectItem value="moderator">Moderador</SelectItem>
                 <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="super_admin">Super Admin</SelectItem>
               </SelectContent>
             </Select>
+            {shouldDisableRoleChange && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Você não pode alterar sua própria função
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2">

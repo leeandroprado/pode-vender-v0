@@ -12,7 +12,7 @@ import { DeleteTeamMemberDialog } from "@/components/DeleteTeamMemberDialog";
 import { useTeamMembers, type TeamMember } from "@/hooks/useTeamMembers";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { UserRole } from "@/hooks/useUserRole";
+import { useUserRole, type UserRole } from "@/hooks/useUserRole";
 
 const roleLabels: Partial<Record<UserRole, string>> = {
   user: "Usuário",
@@ -38,6 +38,8 @@ export default function Equipe() {
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  const { role: currentUserRole } = useUserRole();
   
   const { 
     members, 
@@ -284,6 +286,8 @@ export default function Equipe() {
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         member={editingMember}
+        currentUserId={currentUserId}
+        currentUserRole={currentUserRole}
         onUpdate={handleUpdateMember}
         isUpdating={isUpdatingMember || isUpdating}
       />

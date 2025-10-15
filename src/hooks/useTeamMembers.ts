@@ -121,6 +121,22 @@ export const useTeamMembers = () => {
 
   const updateUserRole = useMutation({
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: UserRole }) => {
+      // Validação extra: Prevenir que super_admin altere a própria role
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user && user.id === userId) {
+        // Verificar se o usuário atual é super_admin
+        const { data: currentRoleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (currentRoleData?.role === 'super_admin') {
+          throw new Error('Super admins não podem alterar a própria função');
+        }
+      }
+      
       // Primeiro, verificar o role atual
       const { data: currentData, error: fetchError } = await supabase
         .from('user_roles')
