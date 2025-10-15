@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -6,6 +7,7 @@ import { User, Bell, Pin, Settings, X, Mail, MapPin, CreditCard, Calendar, Edit2
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useClients } from "@/hooks/useClients";
+import { EditClientDialog } from "@/components/EditClientDialog";
 
 interface ContactInfoProps {
   conversationPhone: string;
@@ -20,7 +22,8 @@ export const ContactInfo = ({
   clientId,
   onClose 
 }: ContactInfoProps) => {
-  const { clients } = useClients();
+  const { clients, updateClient } = useClients();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const displayName = clientName || conversationPhone;
   
   // Buscar dados completos do cliente
@@ -138,7 +141,7 @@ export const ContactInfo = ({
                     variant="outline" 
                     size="sm" 
                     className="w-full mt-2"
-                    onClick={() => {/* TODO: Sprint 3 - abrir modal de edição */}}
+                    onClick={() => setIsEditDialogOpen(true)}
                   >
                     <Edit2 className="w-4 h-4 mr-2" />
                     Editar Dados
@@ -155,6 +158,18 @@ export const ContactInfo = ({
           </div>
         )}
       </div>
+
+      {/* Dialog de edição */}
+      {clientData && (
+        <EditClientDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          client={clientData}
+          onUpdate={async (id, data) => {
+            await updateClient.mutateAsync({ id, ...data });
+          }}
+        />
+      )}
     </div>
   );
 };
