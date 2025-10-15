@@ -56,6 +56,74 @@ export type Database = {
         }
         Relationships: []
       }
+      appointments: {
+        Row: {
+          appointment_type: string | null
+          client_id: string | null
+          created_at: string | null
+          description: string | null
+          end_time: string
+          id: string
+          internal_notes: string | null
+          location: string | null
+          metadata: Json | null
+          organization_id: string | null
+          reminder_sent: boolean | null
+          reminder_sent_at: string | null
+          start_time: string
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          appointment_type?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          internal_notes?: string | null
+          location?: string | null
+          metadata?: Json | null
+          organization_id?: string | null
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          start_time: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          appointment_type?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          internal_notes?: string | null
+          location?: string | null
+          metadata?: Json | null
+          organization_id?: string | null
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          start_time?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cart_items: {
         Row: {
           conversation_id: string
