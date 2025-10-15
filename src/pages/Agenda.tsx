@@ -107,7 +107,9 @@ export default function Agenda() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Agenda</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Agenda {selectedAgendaId && `#${selectedAgendaId.slice(0, 8)}`}
+          </h1>
           <p className="text-muted-foreground">
             Gerencie seus agendamentos e consultas
           </p>
