@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, List, Clock } from "lucide-react";
 import { AppointmentDialog } from "@/components/AppointmentDialog";
 import { AppointmentFilters } from "@/components/AppointmentFilters";
@@ -8,6 +9,7 @@ import { AppointmentListView } from "@/components/AppointmentListView";
 import { AppointmentCalendar } from "@/components/AppointmentCalendar";
 import { AppointmentWeekView } from "@/components/AppointmentWeekView";
 import { AppointmentDayView } from "@/components/AppointmentDayView";
+import { AppointmentDashboard } from "@/components/AppointmentDashboard";
 import { useAppointments } from "@/hooks/useAppointments";
 import type { AppointmentFilters as Filters } from "@/types/appointments";
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
@@ -103,6 +105,17 @@ export default function Agenda() {
         </Button>
       </div>
 
+      {/* Dashboard */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+      ) : (
+        <AppointmentDashboard appointments={appointments} />
+      )}
+
       {/* Filters */}
       <AppointmentFilters filters={filters} onFiltersChange={setFilters} />
 
@@ -147,8 +160,10 @@ export default function Agenda() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
         </div>
       ) : (
         <div className="animate-fade-in">

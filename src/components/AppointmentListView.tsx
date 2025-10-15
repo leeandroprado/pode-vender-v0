@@ -1,9 +1,12 @@
 import { AppointmentCard } from "./AppointmentCard";
 import { AppointmentDialog } from "./AppointmentDialog";
+import { AppointmentEmptyState } from "./AppointmentEmptyState";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import type { Appointment } from "@/types/appointments";
 import { useAppointments } from "@/hooks/useAppointments";
+import { format, isToday, isTomorrow, isThisWeek } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface AppointmentListViewProps {
   appointments: Appointment[];
@@ -36,28 +39,67 @@ export function AppointmentListView({ appointments }: AppointmentListViewProps) 
     }
   };
 
+  // Group appointments by date
+  const groupAppointmentsByDate = () => {
+    const groups: { [key: string]: { label: string; appointments: Appointment[] } } = {};
+    
+    appointments.forEach(apt => {
+      const date = new Date(apt.start_time);
+      let groupKey: string;
+      let groupLabel: string;
+      
+      if (isToday(date)) {
+        groupKey = 'today';
+        groupLabel = 'Hoje';
+      } else if (isTomorrow(date)) {
+        groupKey = 'tomorrow';
+        groupLabel = 'Amanhã';
+      } else if (isThisWeek(date)) {
+        groupKey = 'this-week';
+        groupLabel = 'Esta Semana';
+      } else {
+        groupKey = format(date, 'yyyy-MM-dd');
+        groupLabel = format(date, "d 'de' MMMM, yyyy", { locale: ptBR });
+      }
+      
+      if (!groups[groupKey]) {
+        groups[groupKey] = { label: groupLabel, appointments: [] };
+      }
+      groups[groupKey].appointments.push(apt);
+    });
+    
+    return Object.values(groups);
+  };
+
   if (appointments.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="text-muted-foreground">Nenhum agendamento encontrado</p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Crie um novo agendamento para começar
-        </p>
-      </div>
-    );
+    return <AppointmentEmptyState />;
   }
+
+  const groupedAppointments = groupAppointmentsByDate();
 
   return (
     <>
-      <div className="space-y-4">
-        {appointments.map((appointment) => (
-          <AppointmentCard
-            key={appointment.id}
-            appointment={appointment}
-            onEdit={() => handleEdit(appointment)}
-            onDelete={() => handleDelete(appointment.id)}
-            onStatusChange={(status) => handleStatusChange(appointment, status)}
-          />
+      <div className="space-y-6">
+        {groupedAppointments.map((group, index) => (
+          <div key={index} className="space-y-3">
+            <div className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-2 border-b">
+              <h3 className="font-semibold text-lg">{group.label}</h3>
+              <p className="text-sm text-muted-foreground">
+                {group.appointments.length} agendamento{group.appointments.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div className="space-y-3">
+              {group.appointments.map((appointment) => (
+                <AppointmentCard
+                  key={appointment.id}
+                  appointment={appointment}
+                  onEdit={() => handleEdit(appointment)}
+                  onDelete={() => handleDelete(appointment.id)}
+                  onStatusChange={(status) => handleStatusChange(appointment, status)}
+                />
+              ))}
+            </div>
+          </div>
         ))}
       </div>
 
