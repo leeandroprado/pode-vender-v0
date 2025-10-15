@@ -24,6 +24,7 @@ export function useAppointments(filters?: AppointmentFilters) {
             email
           )
         `)
+        .not('agenda_id', 'is', null)
         .order('start_time', { ascending: true });
 
       // Apply filters

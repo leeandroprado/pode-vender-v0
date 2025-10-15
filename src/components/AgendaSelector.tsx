@@ -21,14 +21,17 @@ export const AgendaSelector = ({ selectedAgendaId, onSelectAgenda }: AgendaSelec
   if (agendas.length === 0) {
     return (
       <>
-        <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
-          <div className="flex-1">
-            <h3 className="font-medium">Nenhuma agenda configurada</h3>
-            <p className="text-sm text-muted-foreground">
-              Crie sua primeira agenda para começar a gerenciar agendamentos
+        <div className="flex flex-col items-center gap-4 p-8 rounded-lg border-2 border-dashed bg-muted/20">
+          <div className="rounded-full bg-primary/10 p-4">
+            <Calendar className="h-10 w-10 text-primary" />
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="font-semibold text-xl">Nenhuma agenda configurada</h3>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Crie sua primeira agenda para começar a gerenciar agendamentos, definir horários de trabalho e muito mais.
             </p>
           </div>
-          <Button onClick={() => setCreateDialogOpen(true)}>
+          <Button onClick={() => setCreateDialogOpen(true)} size="lg">
             <Plus className="h-4 w-4 mr-2" />
             Criar Primeira Agenda
           </Button>
