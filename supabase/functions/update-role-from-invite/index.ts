@@ -63,6 +63,26 @@ Deno.serve(async (req) => {
 
     console.log('Role definido com sucesso via UPSERT:', invite.role);
 
+    // Copiar organization_id do convidador para o novo usuário
+    const { data: inviterProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', invite.invited_by)
+      .single();
+
+    if (inviterProfile?.organization_id) {
+      const { error: orgError } = await supabaseAdmin
+        .from('profiles')
+        .update({ organization_id: inviterProfile.organization_id })
+        .eq('id', userId);
+
+      if (orgError) {
+        console.error('Erro ao atualizar organization_id:', orgError);
+      } else {
+        console.log('Organization_id copiado com sucesso:', inviterProfile.organization_id);
+      }
+    }
+
     // Marcar convite como aceito
     const { error: updateError } = await supabaseAdmin
       .from('invites')
