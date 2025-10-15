@@ -140,6 +140,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          organization_id: string | null
           phone: string
           updated_at: string | null
           user_id: string
@@ -152,6 +153,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          organization_id?: string | null
           phone: string
           updated_at?: string | null
           user_id: string
@@ -164,6 +166,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          organization_id?: string | null
           phone?: string
           updated_at?: string | null
           user_id?: string
@@ -178,6 +181,7 @@ export type Database = {
           id: string
           last_message_at: string | null
           metadata: Json | null
+          organization_id: string | null
           owner_conversation:
             | Database["public"]["Enums"]["conversation_owner"]
             | null
@@ -194,6 +198,7 @@ export type Database = {
           id?: string
           last_message_at?: string | null
           metadata?: Json | null
+          organization_id?: string | null
           owner_conversation?:
             | Database["public"]["Enums"]["conversation_owner"]
             | null
@@ -210,6 +215,7 @@ export type Database = {
           id?: string
           last_message_at?: string | null
           metadata?: Json | null
+          organization_id?: string | null
           owner_conversation?:
             | Database["public"]["Enums"]["conversation_owner"]
             | null
@@ -424,6 +430,7 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          organization_id: string | null
           price: number
           sku: string | null
           status: string | null
@@ -439,6 +446,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          organization_id?: string | null
           price: number
           sku?: string | null
           status?: string | null
@@ -454,6 +462,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          organization_id?: string | null
           price?: number
           sku?: string | null
           status?: string | null
@@ -622,6 +631,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_organization: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
@@ -631,6 +644,10 @@ export type Database = {
       }
       is_super_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      same_organization: {
+        Args: { _owner_id: string; _user_id: string }
         Returns: boolean
       }
     }
