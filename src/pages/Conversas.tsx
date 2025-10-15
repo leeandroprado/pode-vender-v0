@@ -134,13 +134,20 @@ const Conversas = () => {
       </div>
 
       {/* Coluna 3: Painel de Informações do Contato */}
-      {!isMobile && selectedConversationId && showContactInfo && (
-        <div className="w-80 border-l flex-shrink-0 animate-slide-in-right">
-          <ContactInfo
-            conversationPhone={selectedConversation?.whatsapp_phone || ""}
-            clientName={selectedConversation?.clients?.name || null}
-            onClose={() => setShowContactInfo(false)}
-          />
+      {!isMobile && selectedConversationId && (
+        <div 
+          className={cn(
+            "border-l flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
+            showContactInfo ? "w-80 opacity-100" : "w-0 opacity-0"
+          )}
+        >
+          <div className="w-80 h-full">
+            <ContactInfo
+              conversationPhone={selectedConversation?.whatsapp_phone || ""}
+              clientName={selectedConversation?.clients?.name || null}
+              onClose={() => setShowContactInfo(false)}
+            />
+          </div>
         </div>
       )}
     </div>
