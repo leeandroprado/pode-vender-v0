@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, User, MoreVertical, Search, UserPlus, UserCheck, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { Bot, User, MoreVertical, Search, UserPlus, UserCheck, PanelRightClose, PanelRightOpen, AlertCircle, Check, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Message } from "@/hooks/useConversations";
@@ -219,13 +219,28 @@ export const ConversationDetail = ({
                       <p className="text-sm whitespace-pre-wrap break-words">
                         {message.content}
                       </p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          isClient ? "text-muted-foreground" : "opacity-70"
-                        }`}
-                      >
-                        {format(new Date(message.timestamp), "HH:mm", { locale: ptBR })}
-                      </p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <p
+                          className={`text-xs ${
+                            isClient ? "text-muted-foreground" : "opacity-70"
+                          }`}
+                        >
+                          {format(new Date(message.timestamp), "HH:mm", { locale: ptBR })}
+                        </p>
+                        {!isClient && message.status && (
+                          <>
+                            {message.status === 'sending' && (
+                              <Clock className="w-3 h-3 opacity-70" />
+                            )}
+                            {message.status === 'sent' && (
+                              <Check className="w-3 h-3 opacity-70" />
+                            )}
+                            {message.status === 'failed' && (
+                              <AlertCircle className="w-4 h-4 text-destructive" />
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
 

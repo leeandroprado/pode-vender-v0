@@ -37,6 +37,7 @@ export type Message = {
   message_type: 'text' | 'image' | 'audio' | 'video' | 'document';
   timestamp: string;
   whatsapp_message_id: string | null;
+  status?: 'sending' | 'sent' | 'failed';
 };
 
 export const useConversations = () => {
@@ -217,7 +218,7 @@ export const useConversations = () => {
       // Snapshot do estado anterior
       const previousMessages = queryClient.getQueryData(['messages', conversationId]);
       
-      // Adicionar mensagem otimista
+      // Adicionar mensagem otimista com status 'sending'
       const optimisticMessage = {
         id: `temp-${Date.now()}`,
         conversation_id: conversationId,
@@ -227,6 +228,7 @@ export const useConversations = () => {
         message_type: 'text' as const,
         timestamp: new Date().toISOString(),
         whatsapp_message_id: null,
+        status: 'sending' as const,
       };
       
       queryClient.setQueryData(['messages', conversationId], (old: any) => 
@@ -239,22 +241,17 @@ export const useConversations = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId] });
-      toast({
-        title: "Mensagem enviada",
-        description: "Sua mensagem foi enviada via WhatsApp com sucesso.",
-      });
     },
     
     onError: (error, variables, context) => {
-      // Reverter mensagem otimista em caso de erro
-      if (context?.previousMessages) {
-        queryClient.setQueryData(['messages', variables.conversationId], context.previousMessages);
-      }
-      
-      toast({
-        title: "Erro ao enviar mensagem",
-        description: "A mensagem não foi enviada via WhatsApp. Tente novamente.",
-        variant: "destructive",
+      // Atualizar mensagem com status 'failed' em vez de remover
+      queryClient.setQueryData(['messages', variables.conversationId], (old: any) => {
+        if (!old) return old;
+        return old.map((msg: Message) => 
+          msg.id.startsWith('temp-') 
+            ? { ...msg, status: 'failed' as const }
+            : msg
+        );
       });
     },
   });
