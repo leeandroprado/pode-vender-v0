@@ -4,6 +4,7 @@ export interface Appointment {
   id: string;
   user_id: string;
   organization_id: string | null;
+  agenda_id?: string | null;
   title: string;
   description: string | null;
   start_time: string;
@@ -31,6 +32,7 @@ export interface CreateAppointmentInput {
   description?: string;
   start_time: string;
   end_time: string;
+  agenda_id?: string | null;
   client_id?: string | null;
   status?: AppointmentStatus;
   appointment_type?: string;
@@ -49,4 +51,5 @@ export interface AppointmentFilters {
   start_date?: Date;
   end_date?: Date;
   search?: string;
+  agendaId?: string;
 }

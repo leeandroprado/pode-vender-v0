@@ -24,6 +24,7 @@ interface AppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   appointment?: Appointment;
+  agendaId?: string;
   onSubmit: (data: CreateAppointmentInput) => void;
   defaultDate?: Date;
 }
@@ -41,6 +42,7 @@ export function AppointmentDialog({
   open,
   onOpenChange,
   appointment,
+  agendaId,
   onSubmit,
   defaultDate,
 }: AppointmentDialogProps) {
@@ -107,6 +109,7 @@ export function AppointmentDialog({
 
     onSubmit({
       ...formData,
+      agenda_id: agendaId,
       start_time: start.toISOString(),
       end_time: end.toISOString(),
     });

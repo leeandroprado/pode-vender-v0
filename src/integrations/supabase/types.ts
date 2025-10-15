@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendas: {
+        Row: {
+          breaks: Json | null
+          buffer_time: number | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          max_advance_days: number | null
+          metadata: Json | null
+          min_advance_hours: number | null
+          name: string
+          organization_id: string
+          reminder_hours_before: number | null
+          send_confirmation: boolean | null
+          slot_duration: number
+          updated_at: string | null
+          user_id: string
+          working_hours: Json
+        }
+        Insert: {
+          breaks?: Json | null
+          buffer_time?: number | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_advance_days?: number | null
+          metadata?: Json | null
+          min_advance_hours?: number | null
+          name: string
+          organization_id: string
+          reminder_hours_before?: number | null
+          send_confirmation?: boolean | null
+          slot_duration?: number
+          updated_at?: string | null
+          user_id: string
+          working_hours?: Json
+        }
+        Update: {
+          breaks?: Json | null
+          buffer_time?: number | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_advance_days?: number | null
+          metadata?: Json | null
+          min_advance_hours?: number | null
+          name?: string
+          organization_id?: string
+          reminder_hours_before?: number | null
+          send_confirmation?: boolean | null
+          slot_duration?: number
+          updated_at?: string | null
+          user_id?: string
+          working_hours?: Json
+        }
+        Relationships: []
+      }
       agents: {
         Row: {
           created_at: string | null
@@ -58,6 +121,7 @@ export type Database = {
       }
       appointments: {
         Row: {
+          agenda_id: string | null
           appointment_type: string | null
           client_id: string | null
           created_at: string | null
@@ -77,6 +141,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          agenda_id?: string | null
           appointment_type?: string | null
           client_id?: string | null
           created_at?: string | null
@@ -96,6 +161,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          agenda_id?: string | null
           appointment_type?: string | null
           client_id?: string | null
           created_at?: string | null
@@ -115,6 +181,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_agenda_id_fkey"
+            columns: ["agenda_id"]
+            isOneToOne: false
+            referencedRelation: "agendas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_client_id_fkey"
             columns: ["client_id"]

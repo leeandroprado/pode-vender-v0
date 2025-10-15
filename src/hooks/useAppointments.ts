@@ -51,6 +51,10 @@ export function useAppointments(filters?: AppointmentFilters) {
         query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
       }
 
+      if (filters?.agendaId) {
+        query = query.eq('agenda_id', filters.agendaId);
+      }
+
       const { data, error } = await query;
 
       if (error) throw error;

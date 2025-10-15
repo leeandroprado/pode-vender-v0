@@ -10,6 +10,7 @@ import { AppointmentCalendar } from "@/components/AppointmentCalendar";
 import { AppointmentWeekView } from "@/components/AppointmentWeekView";
 import { AppointmentDayView } from "@/components/AppointmentDayView";
 import { AppointmentDashboard } from "@/components/AppointmentDashboard";
+import { AgendaSelector } from "@/components/AgendaSelector";
 import { useAppointments } from "@/hooks/useAppointments";
 import type { AppointmentFilters as Filters } from "@/types/appointments";
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
@@ -19,6 +20,7 @@ export default function Agenda() {
   const [view, setView] = useState<'month' | 'week' | 'day' | 'list'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedAgendaId, setSelectedAgendaId] = useState<string>();
   const [filters, setFilters] = useState<Filters>({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<any>();
@@ -48,6 +50,7 @@ export default function Agenda() {
   const { appointments, isLoading, createAppointment, updateAppointment } = useAppointments({
     ...filters,
     ...getDateRange(),
+    agendaId: selectedAgendaId,
   });
 
   const navigatePrevious = () => {
@@ -114,6 +117,12 @@ export default function Agenda() {
           Novo Agendamento
         </Button>
       </div>
+
+      {/* Agenda Selector */}
+      <AgendaSelector 
+        selectedAgendaId={selectedAgendaId}
+        onSelectAgenda={setSelectedAgendaId}
+      />
 
       {/* Dashboard */}
       {isLoading ? (
@@ -232,6 +241,7 @@ export default function Agenda() {
           if (!open) setEditingAppointment(undefined);
         }}
         appointment={editingAppointment}
+        agendaId={selectedAgendaId}
         onSubmit={(data) => {
           if (editingAppointment) {
             updateAppointment.mutate({ id: editingAppointment.id, ...data });
