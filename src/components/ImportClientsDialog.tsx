@@ -26,7 +26,7 @@ export function ImportClientsDialog({ open, onOpenChange, onImportComplete }: Im
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewData, setPreviewData] = useState<ImportContact[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>("");
-  const [importResult, setImportResult] = useState<{ success: number; errors: string[] } | null>(null);
+  const [importResult, setImportResult] = useState<{ success: number; errors: string[]; stats?: { fetched: number; valid: number; invalid: number } } | null>(null);
 
   const { importClientsFromSpreadsheet, importClientsFromWhatsApp } = useClients();
   const { agents } = useAgents();
@@ -135,9 +135,18 @@ export function ImportClientsDialog({ open, onOpenChange, onImportComplete }: Im
 
     setIsProcessing(true);
     try {
-      const contacts = await importClientsFromWhatsApp.mutateAsync(selectedAgentId);
-      setPreviewData(contacts);
-      toast.success(`${contacts.length} contatos encontrados do WhatsApp!`);
+      const result = await importClientsFromWhatsApp.mutateAsync(selectedAgentId);
+      setPreviewData(result.contacts);
+      
+      // Mostrar estatísticas se disponíveis
+      if (result.stats) {
+        toast.success(`${result.stats.valid} contatos válidos encontrados!`);
+        if (result.stats.invalid > 0) {
+          toast.warning(`${result.stats.invalid} contatos ignorados (sem telefone válido)`);
+        }
+      } else {
+        toast.success(`${result.contacts.length} contatos encontrados do WhatsApp!`);
+      }
     } catch (error) {
       toast.error("Erro ao buscar contatos do WhatsApp");
       setPreviewData([]);
@@ -155,7 +164,10 @@ export function ImportClientsDialog({ open, onOpenChange, onImportComplete }: Im
     setIsProcessing(true);
     try {
       const result = await importClientsFromSpreadsheet.mutateAsync(previewData);
-      setImportResult(result);
+      setImportResult({
+        success: result.success,
+        errors: result.errors,
+      });
       
       if (result.success > 0) {
         toast.success(`${result.success} contatos importados com sucesso!`);
@@ -364,6 +376,12 @@ export function ImportClientsDialog({ open, onOpenChange, onImportComplete }: Im
                       {importResult.success} contatos importados com sucesso!
                     </p>
                   </div>
+                  {importResult.errors && importResult.errors.length > 0 && (
+                    <div className="mt-2 text-sm text-orange-600">
+                      <AlertCircle className="h-4 w-4 inline mr-1" />
+                      {importResult.errors.length} contatos com erros
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

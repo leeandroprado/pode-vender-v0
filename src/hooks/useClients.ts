@@ -163,7 +163,10 @@ export const useClients = () => {
       if (error) throw error;
       if (!data?.contacts) throw new Error("Nenhum contato encontrado");
 
-      return data.contacts as Omit<Client, "id" | "user_id" | "created_at" | "updated_at">[];
+      return {
+        contacts: data.contacts as Omit<Client, "id" | "user_id" | "created_at" | "updated_at">[],
+        stats: data.stats as { fetched: number; valid: number; invalid: number } | undefined
+      };
     },
   });
 

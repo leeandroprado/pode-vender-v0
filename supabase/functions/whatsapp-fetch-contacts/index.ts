@@ -108,28 +108,57 @@ serve(async (req) => {
     }
 
     const contactsData = await response.json();
-    console.log("Contacts fetched:", contactsData.length || 0);
+    const totalFetched = Array.isArray(contactsData) ? contactsData.length : 0;
+    console.log("Contacts fetched:", totalFetched);
+
+    // Debug: mostrar estrutura do primeiro contato
+    if (contactsData && contactsData.length > 0) {
+      console.log("📱 Sample contact structure:", JSON.stringify(contactsData[0], null, 2));
+    }
 
     // Formatar contatos para o padrão do sistema
     const formattedContacts = (Array.isArray(contactsData) ? contactsData : []).map((contact: any) => {
-      // Extrair telefone do ID (remove @s.whatsapp.net)
-      const phone = contact.id?.replace('@s.whatsapp.net', '').replace('@c.us', '') || '';
+      // ✅ Priorizar remoteJid (contém o número real)
+      let phone = '';
+      
+      if (contact.remoteJid) {
+        phone = contact.remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '');
+      } else if (contact.id && contact.id.includes('@')) {
+        phone = contact.id.replace('@s.whatsapp.net', '').replace('@c.us', '');
+      }
+      
+      // Remover caracteres não-numéricos e validar
+      phone = phone.replace(/\D/g, '');
+      const isValidPhone = phone.length >= 10; // Mínimo 10 dígitos
+      
+      if (!isValidPhone) {
+        console.warn(`⚠️ Contato sem telefone válido:`, contact.pushName || contact.name, 'ID:', contact.id);
+        return null;
+      }
       
       return {
-        name: contact.name || contact.pushName || 'Contato sem nome',
+        name: contact.pushName || contact.name || 'Contato sem nome',
         phone: phone,
         email: null,
         cpf: null,
         city: null,
       };
-    }).filter(c => c.phone); // Apenas contatos com telefone válido
+    }).filter(c => c !== null);
 
-    console.log("Formatted contacts:", formattedContacts.length);
+    const validContacts = formattedContacts.length;
+    const invalidContacts = totalFetched - validContacts;
+
+    console.log(`📊 Stats: ${validContacts} válidos, ${invalidContacts} ignorados (sem telefone)`);
 
     return new Response(
       JSON.stringify({ 
         contacts: formattedContacts,
-        total: formattedContacts.length 
+        total: validContacts,
+        stats: {
+          fetched: totalFetched,
+          valid: validContacts,
+          invalid: invalidContacts
+        }
       }), 
       { 
         status: 200, 
