@@ -71,7 +71,8 @@ export function useAppointments(filters?: AppointmentFilters) {
       // Check for conflicts
       const hasConflict = await checkConflict(
         new Date(input.start_time),
-        new Date(input.end_time)
+        new Date(input.end_time),
+        input.agenda_id
       );
 
       if (hasConflict) {
@@ -109,8 +110,9 @@ export function useAppointments(filters?: AppointmentFilters) {
         if (appointment) {
           const newStart = input.start_time ? new Date(input.start_time) : new Date(appointment.start_time);
           const newEnd = input.end_time ? new Date(input.end_time) : new Date(appointment.end_time);
+          const agendaId = input.agenda_id || appointment.agenda_id;
           
-          const hasConflict = await checkConflict(newStart, newEnd, id);
+          const hasConflict = await checkConflict(newStart, newEnd, agendaId, id);
           if (hasConflict) {
             throw new Error('Existe um conflito de horário com outro agendamento');
           }
@@ -157,15 +159,20 @@ export function useAppointments(filters?: AppointmentFilters) {
   const checkConflict = async (
     start: Date,
     end: Date,
+    agendaId?: string,
     excludeId?: string
   ): Promise<boolean> => {
     if (!user) return false;
 
     let query = supabase
       .from('appointments')
-      .select('id, start_time, end_time')
+      .select('id, start_time, end_time, agenda_id')
       .eq('user_id', user.id)
       .neq('status', 'cancelled');
+
+    if (agendaId) {
+      query = query.eq('agenda_id', agendaId);
+    }
 
     if (excludeId) {
       query = query.neq('id', excludeId);
