@@ -21,6 +21,7 @@ import AceitarConvite from "./pages/AceitarConvite";
 import NotFound from "./pages/NotFound";
 import SystemSettings from "./pages/SystemSettings";
 import ApiTokens from "./pages/ApiTokens";
+import ApiDocs from "./pages/ApiDocs";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import { AdminRoute } from "./components/AdminRoute";
 
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/conta" element={<ProtectedRoute><DashboardLayout><Conta /></DashboardLayout></ProtectedRoute>} />
             <Route path="/equipe" element={<ProtectedRoute><AdminRoute><DashboardLayout><Equipe /></DashboardLayout></AdminRoute></ProtectedRoute>} />
             <Route path="/api-tokens" element={<ProtectedRoute><AdminRoute><ApiTokens /></AdminRoute></ProtectedRoute>} />
+            <Route path="/api-docs" element={<ProtectedRoute><DashboardLayout><ApiDocs /></DashboardLayout></ProtectedRoute>} />
             <Route path="/settings-system" element={<ProtectedRoute><SuperAdminRoute><SystemSettings /></SuperAdminRoute></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
