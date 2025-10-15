@@ -145,6 +145,7 @@ const Conversas = () => {
             <ContactInfo
               conversationPhone={selectedConversation?.whatsapp_phone || ""}
               clientName={selectedConversation?.clients?.name || null}
+              clientId={selectedConversation?.client_id || null}
               onClose={() => setShowContactInfo(false)}
             />
           </div>
