@@ -37,7 +37,7 @@ export type Message = {
   message_type: 'text' | 'image' | 'audio' | 'video' | 'document';
   timestamp: string;
   whatsapp_message_id: string | null;
-  status?: 'sending' | 'sent' | 'failed';
+  status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 };
 
 export const useConversations = () => {
@@ -238,7 +238,17 @@ export const useConversations = () => {
       return { previousMessages };
     },
     
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
+      // Atualizar status para 'sent' quando API retornar sucesso
+      queryClient.setQueryData(['messages', variables.conversationId], (old: any) => {
+        if (!old) return old;
+        return old.map((msg: Message) => 
+          msg.id.startsWith('temp-') && msg.content === variables.content
+            ? { ...msg, status: 'sent' as const, id: data?.messageId || msg.id }
+            : msg
+        );
+      });
+      
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId] });
     },

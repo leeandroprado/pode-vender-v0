@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, User, MoreVertical, Search, UserPlus, UserCheck, PanelRightClose, PanelRightOpen, AlertCircle, Check, Clock } from "lucide-react";
+import { Bot, User, MoreVertical, Search, UserPlus, UserCheck, PanelRightClose, PanelRightOpen, AlertCircle, Check, Clock, CheckCheck } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Message } from "@/hooks/useConversations";
@@ -234,6 +234,12 @@ export const ConversationDetail = ({
                             )}
                             {message.status === 'sent' && (
                               <Check className="w-3 h-3 opacity-70" />
+                            )}
+                            {message.status === 'delivered' && (
+                              <CheckCheck className="w-3 h-3 opacity-70" />
+                            )}
+                            {message.status === 'read' && (
+                              <CheckCheck className="w-3 h-3 text-blue-500" />
                             )}
                             {message.status === 'failed' && (
                               <AlertCircle className="w-4 h-4 text-destructive" />
