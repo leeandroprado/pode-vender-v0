@@ -50,6 +50,7 @@ export default function Equipe() {
     updateTeamMember,
     deleteTeamMember,
     isInviting,
+    isUpdating,
     isCanceling,
     isResending,
     isUpdatingMember,
@@ -90,8 +91,22 @@ export default function Equipe() {
     setInviteDialogOpen(true);
   };
 
-  const handleRoleChange = (userId: string, newRole: UserRole) => {
-    updateUserRole({ userId, newRole });
+  const handleUpdateMember = async (args: { 
+    userId: string; 
+    updates: { full_name?: string; email?: string; avatar_url?: string };
+    role?: UserRole;
+  }) => {
+    try {
+      // Atualizar perfil
+      await updateTeamMember(args);
+      
+      // Se o role foi alterado, atualizar também
+      if (args.role) {
+        await updateUserRole({ userId: args.userId, newRole: args.role });
+      }
+    } catch (error) {
+      console.error('Error updating member:', error);
+    }
   };
 
   if (isLoading) {
@@ -220,22 +235,6 @@ export default function Equipe() {
                     <Badge variant={roleVariants[member.role] || "outline"}>
                       {roleLabels[member.role] || member.role}
                     </Badge>
-                    <Select
-                      value={member.role}
-                      onValueChange={(value) => handleRoleChange(member.id, value as UserRole)}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue>
-                          {roleLabels[member.role] || member.role}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">Usuário</SelectItem>
-                        <SelectItem value="vendedor">Vendedor</SelectItem>
-                        <SelectItem value="moderator">Moderador</SelectItem>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -281,13 +280,13 @@ export default function Equipe() {
       />
 
       {editingMember && (
-        <EditTeamMemberDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          member={editingMember}
-          onUpdate={updateTeamMember}
-          isUpdating={isUpdatingMember}
-        />
+      <EditTeamMemberDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        member={editingMember}
+        onUpdate={handleUpdateMember}
+        isUpdating={isUpdatingMember || isUpdating}
+      />
       )}
 
       {deletingMember && (

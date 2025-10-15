@@ -3,7 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TeamMember } from "@/hooks/useTeamMembers";
+import { UserRole } from "@/hooks/useUserRole";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 
@@ -11,13 +13,18 @@ const memberSchema = z.object({
   full_name: z.string().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),
   email: z.string().email("Email inválido"),
   avatar_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  role: z.enum(["user", "vendedor", "moderator", "admin", "super_admin"]),
 });
 
 interface EditTeamMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   member: TeamMember;
-  onUpdate: (args: { userId: string; updates: { full_name?: string; email?: string; avatar_url?: string } }) => void;
+  onUpdate: (args: { 
+    userId: string; 
+    updates: { full_name?: string; email?: string; avatar_url?: string };
+    role?: UserRole;
+  }) => void;
   isUpdating: boolean;
 }
 
@@ -32,6 +39,7 @@ export function EditTeamMemberDialog({
   const [fullName, setFullName] = useState(member.full_name || "");
   const [email, setEmail] = useState(member.email);
   const [avatarUrl, setAvatarUrl] = useState(member.avatar_url || "");
+  const [selectedRole, setSelectedRole] = useState<UserRole>(member.role);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,9 +49,18 @@ export function EditTeamMemberDialog({
         full_name: fullName,
         email,
         avatar_url: avatarUrl,
+        role: selectedRole,
       });
 
-      onUpdate({ userId: member.id, updates: validatedData });
+      onUpdate({ 
+        userId: member.id, 
+        updates: {
+          full_name: validatedData.full_name,
+          email: validatedData.email,
+          avatar_url: validatedData.avatar_url,
+        },
+        role: validatedData.role,
+      });
       onOpenChange(false);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -95,6 +112,24 @@ export function EditTeamMemberDialog({
               onChange={(e) => setAvatarUrl(e.target.value)}
               placeholder="https://exemplo.com/avatar.jpg"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="role">Função</Label>
+            <Select
+              value={selectedRole}
+              onValueChange={(value) => setSelectedRole(value as UserRole)}
+            >
+              <SelectTrigger id="role" className="w-full">
+                <SelectValue placeholder="Selecione uma função" />
+              </SelectTrigger>
+              <SelectContent className="bg-background">
+                <SelectItem value="user">Usuário</SelectItem>
+                <SelectItem value="vendedor">Vendedor</SelectItem>
+                <SelectItem value="moderator">Moderador</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end gap-2">
