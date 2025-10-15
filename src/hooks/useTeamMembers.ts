@@ -223,6 +223,80 @@ export const useTeamMembers = () => {
     },
   });
 
+  const updateTeamMember = useMutation({
+    mutationFn: async ({ 
+      userId, 
+      updates 
+    }: { 
+      userId: string; 
+      updates: { full_name?: string; email?: string; avatar_url?: string } 
+    }) => {
+      const currentEmail = members?.find(m => m.id === userId)?.email;
+      
+      // Atualizar profiles
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      // Se mudou email, chamar edge function para atualizar auth.users
+      if (updates.email && updates.email !== currentEmail) {
+        const { error: emailError } = await supabase.functions.invoke(
+          'update-user-email',
+          { body: { userId, newEmail: updates.email } }
+        );
+        
+        if (emailError) {
+          throw new Error('Perfil atualizado, mas falha ao atualizar email de login: ' + emailError.message);
+        }
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team-members'] });
+      toast({
+        title: "Usuário atualizado",
+        description: "As informações foram atualizadas com sucesso.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao atualizar usuário",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteTeamMember = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team-members'] });
+      toast({
+        title: "Usuário removido",
+        description: "O usuário foi removido com sucesso.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao remover usuário",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     members: members || [],
     pendingInvites: pendingInvites || [],
@@ -231,9 +305,13 @@ export const useTeamMembers = () => {
     updateUserRole: updateUserRole.mutate,
     cancelInvite: cancelInvite.mutate,
     resendInvite: resendInvite.mutate,
+    updateTeamMember: updateTeamMember.mutate,
+    deleteTeamMember: deleteTeamMember.mutate,
     isInviting: inviteUser.isPending,
     isUpdating: updateUserRole.isPending,
     isCanceling: cancelInvite.isPending,
     isResending: resendInvite.isPending,
+    isUpdatingMember: updateTeamMember.isPending,
+    isDeletingMember: deleteTeamMember.isPending,
   };
 };

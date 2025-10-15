@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Users, UserPlus, Mail, Clock, X, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Users, UserPlus, Mail, Clock, X, RefreshCw, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InviteUserDialog } from "@/components/InviteUserDialog";
 import { WhatsAppWarningDialog } from "@/components/WhatsAppWarningDialog";
-import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { EditTeamMemberDialog } from "@/components/EditTeamMemberDialog";
+import { DeleteTeamMemberDialog } from "@/components/DeleteTeamMemberDialog";
+import { useTeamMembers, type TeamMember } from "@/hooks/useTeamMembers";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { UserRole } from "@/hooks/useUserRole";
@@ -31,6 +33,11 @@ const roleVariants: Partial<Record<UserRole, "default" | "secondary" | "outline"
 export default function Equipe() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [showWhatsAppWarning, setShowWhatsAppWarning] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
   const { 
     members, 
@@ -40,10 +47,22 @@ export default function Equipe() {
     updateUserRole, 
     cancelInvite, 
     resendInvite, 
+    updateTeamMember,
+    deleteTeamMember,
     isInviting,
     isCanceling,
-    isResending 
+    isResending,
+    isUpdatingMember,
+    isDeletingMember 
   } = useTeamMembers();
+
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getCurrentUser();
+  }, []);
 
   // Verificar se o usuário tem uma instância WhatsApp conectada
   const { data: userInstance } = useQuery({
@@ -217,6 +236,29 @@ export default function Equipe() {
                         <SelectItem value="admin">Administrador</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setEditingMember(member);
+                        setEditDialogOpen(true);
+                      }}
+                      title="Editar usuário"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setDeletingMember(member);
+                        setDeleteDialogOpen(true);
+                      }}
+                      disabled={member.id === currentUserId}
+                      title={member.id === currentUserId ? "Você não pode deletar sua própria conta" : "Deletar usuário"}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -237,6 +279,26 @@ export default function Equipe() {
         onInvite={inviteUser}
         isInviting={isInviting}
       />
+
+      {editingMember && (
+        <EditTeamMemberDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          member={editingMember}
+          onUpdate={updateTeamMember}
+          isUpdating={isUpdatingMember}
+        />
+      )}
+
+      {deletingMember && (
+        <DeleteTeamMemberDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          member={deletingMember}
+          onDelete={deleteTeamMember}
+          isDeleting={isDeletingMember}
+        />
+      )}
     </div>
   );
 }
