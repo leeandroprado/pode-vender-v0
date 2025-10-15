@@ -121,12 +121,19 @@ export const useTeamMembers = () => {
 
   const updateUserRole = useMutation({
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: UserRole }) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('user_roles')
         .update({ role: newRole })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select();
 
       if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        throw new Error('Não foi possível atualizar o role. Verifique suas permissões.');
+      }
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
