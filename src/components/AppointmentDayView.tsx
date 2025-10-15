@@ -17,6 +17,7 @@ interface AppointmentDayViewProps {
   selectedDate: Date;
   onSelectDate?: (date: Date) => void;
   onCreateAppointment?: (date: Date) => void;
+  onEditAppointment?: (appointment: Appointment) => void;
 }
 
 const timeSlots = Array.from({ length: 14 }, (_, i) => i + 7); // 7h às 20h
@@ -25,7 +26,8 @@ export function AppointmentDayView({
   appointments, 
   selectedDate,
   onSelectDate,
-  onCreateAppointment 
+  onCreateAppointment,
+  onEditAppointment 
 }: AppointmentDayViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -172,6 +174,7 @@ export function AppointmentDayView({
                               "p-4 hover:shadow-lg transition-all cursor-pointer border-l-4 relative overflow-hidden",
                               conflicts.length > 0 && "ring-2 ring-red-500/50"
                             )}
+                            onClick={() => onEditAppointment?.(apt)}
                             style={{ 
                               borderLeftColor: apt.status === 'completed' ? '#22c55e' : 
                                               apt.status === 'cancelled' ? '#ef4444' :

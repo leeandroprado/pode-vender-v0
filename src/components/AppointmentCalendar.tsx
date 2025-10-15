@@ -16,13 +16,15 @@ interface AppointmentCalendarProps {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
   onCreateAppointment?: (date: Date) => void;
+  onEditAppointment?: (appointment: Appointment) => void;
 }
 
 export function AppointmentCalendar({ 
   appointments, 
   selectedDate, 
   onSelectDate,
-  onCreateAppointment 
+  onCreateAppointment,
+  onEditAppointment 
 }: AppointmentCalendarProps) {
   const getAppointmentsForDate = (date: Date) => {
     return appointments.filter(apt => 
@@ -149,7 +151,9 @@ export function AppointmentCalendar({
                   
                   return (
                     <AppointmentHoverCard key={apt.id} appointment={apt}>
-                      <Card className="p-3 cursor-pointer hover:shadow-md transition-all border-l-4" 
+                      <Card 
+                        className="p-3 cursor-pointer hover:shadow-md transition-all border-l-4" 
+                        onClick={() => onEditAppointment?.(apt)}
                         style={{ borderLeftColor: `var(--${apt.status})` }}>
                         <div className="space-y-2">
                           <div className="flex items-start justify-between gap-2">

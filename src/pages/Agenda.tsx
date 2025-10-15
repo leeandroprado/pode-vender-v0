@@ -21,6 +21,7 @@ export default function Agenda() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [filters, setFilters] = useState<Filters>({});
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState<any>();
 
   // Calculate date range based on view
   const getDateRange = () => {
@@ -44,7 +45,7 @@ export default function Agenda() {
     return {};
   };
 
-  const { appointments, isLoading, createAppointment } = useAppointments({
+  const { appointments, isLoading, createAppointment, updateAppointment } = useAppointments({
     ...filters,
     ...getDateRange(),
   });
@@ -86,6 +87,11 @@ export default function Agenda() {
       return format(selectedDate, "d 'de' MMMM, yyyy", { locale: ptBR });
     }
     return '';
+  };
+
+  const handleEditAppointment = (appointment: any) => {
+    setEditingAppointment(appointment);
+    setDialogOpen(true);
   };
 
   return (
@@ -177,9 +183,11 @@ export default function Agenda() {
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
               onCreateAppointment={(date) => {
+                setEditingAppointment(undefined);
                 setSelectedDate(date);
                 setDialogOpen(true);
               }}
+              onEditAppointment={handleEditAppointment}
             />
           )}
 
@@ -188,9 +196,11 @@ export default function Agenda() {
               appointments={appointments}
               currentDate={currentDate}
               onCreateAppointment={(date) => {
+                setEditingAppointment(undefined);
                 setSelectedDate(date);
                 setDialogOpen(true);
               }}
+              onEditAppointment={handleEditAppointment}
             />
           )}
 
@@ -200,9 +210,11 @@ export default function Agenda() {
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
               onCreateAppointment={(date) => {
+                setEditingAppointment(undefined);
                 setSelectedDate(date);
                 setDialogOpen(true);
               }}
+              onEditAppointment={handleEditAppointment}
             />
           )}
 
@@ -215,8 +227,18 @@ export default function Agenda() {
       {/* Create/Edit Dialog */}
       <AppointmentDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSubmit={(data) => createAppointment.mutate(data)}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditingAppointment(undefined);
+        }}
+        appointment={editingAppointment}
+        onSubmit={(data) => {
+          if (editingAppointment) {
+            updateAppointment.mutate({ id: editingAppointment.id, ...data });
+          } else {
+            createAppointment.mutate(data);
+          }
+        }}
         defaultDate={selectedDate}
       />
 

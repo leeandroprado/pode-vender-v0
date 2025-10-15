@@ -14,11 +14,12 @@ interface AppointmentWeekViewProps {
   appointments: Appointment[];
   currentDate: Date;
   onCreateAppointment?: (date: Date) => void;
+  onEditAppointment?: (appointment: Appointment) => void;
 }
 
 const timeSlots = Array.from({ length: 14 }, (_, i) => i + 7); // 7h às 20h
 
-export function AppointmentWeekView({ appointments, currentDate, onCreateAppointment }: AppointmentWeekViewProps) {
+export function AppointmentWeekView({ appointments, currentDate, onCreateAppointment, onEditAppointment }: AppointmentWeekViewProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -132,7 +133,9 @@ export function AppointmentWeekView({ appointments, currentDate, onCreateAppoint
                         
                         return (
                           <AppointmentHoverCard key={apt.id} appointment={apt}>
-                            <Card className="p-2 cursor-pointer hover:shadow-lg transition-all border-l-2"
+                            <Card 
+                              className="p-2 cursor-pointer hover:shadow-lg transition-all border-l-2"
+                              onClick={() => onEditAppointment?.(apt)}
                               style={{ 
                                 borderLeftColor: apt.status === 'completed' ? '#22c55e' : 
                                                 apt.status === 'cancelled' ? '#ef4444' :
