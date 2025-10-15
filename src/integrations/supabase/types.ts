@@ -119,6 +119,113 @@ export type Database = {
         }
         Relationships: []
       }
+      api_request_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          method: string
+          organization_id: string
+          request_body: Json | null
+          response_body: Json | null
+          status_code: number | null
+          token_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          method: string
+          organization_id: string
+          request_body?: Json | null
+          response_body?: Json | null
+          status_code?: number | null
+          token_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          method?: string
+          organization_id?: string
+          request_body?: Json | null
+          response_body?: Json | null
+          status_code?: number | null
+          token_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_request_logs_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "api_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_tokens: {
+        Row: {
+          allowed_ips: string[] | null
+          created_at: string
+          created_by: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          last_used_at: string | null
+          name: string
+          organization_id: string
+          rate_limit_per_minute: number | null
+          scopes: Database["public"]["Enums"]["api_scope"][]
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_ips?: string[] | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          name: string
+          organization_id: string
+          rate_limit_per_minute?: number | null
+          scopes?: Database["public"]["Enums"]["api_scope"][]
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_ips?: string[] | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          name?: string
+          organization_id?: string
+          rate_limit_per_minute?: number | null
+          scopes?: Database["public"]["Enums"]["api_scope"][]
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           agenda_id: string | null
@@ -806,6 +913,16 @@ export type Database = {
         | "openai/gpt-5"
         | "openai/gpt-5-mini"
         | "openai/gpt-5-nano"
+      api_scope:
+        | "read:appointments"
+        | "write:appointments"
+        | "read:clients"
+        | "write:clients"
+        | "read:products"
+        | "write:products"
+        | "read:agendas"
+        | "write:agendas"
+        | "admin:all"
       conversation_owner: "ia" | "human"
       invite_status: "pending" | "accepted" | "expired"
       order_status:
@@ -956,6 +1073,17 @@ export const Constants = {
         "openai/gpt-5",
         "openai/gpt-5-mini",
         "openai/gpt-5-nano",
+      ],
+      api_scope: [
+        "read:appointments",
+        "write:appointments",
+        "read:clients",
+        "write:clients",
+        "read:products",
+        "write:products",
+        "read:agendas",
+        "write:agendas",
+        "admin:all",
       ],
       conversation_owner: ["ia", "human"],
       invite_status: ["pending", "accepted", "expired"],

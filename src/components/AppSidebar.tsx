@@ -1,4 +1,4 @@
-import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar } from "lucide-react";
+import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar, Key } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import {
@@ -66,21 +66,38 @@ export function AppSidebar() {
               ))}
               
               {isAdmin && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/equipe"
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      }
-                    >
-                      <Users className="h-4 w-4" />
-                      <span>Equipe</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to="/equipe"
+                        className={({ isActive }) =>
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-primary font-medium"
+                            : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                        }
+                      >
+                        <Users className="h-4 w-4" />
+                        <span>Equipe</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to="/api-tokens"
+                        className={({ isActive }) =>
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-primary font-medium"
+                            : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                        }
+                      >
+                        <Key className="h-4 w-4" />
+                        <span>API Tokens</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
               )}
 
               {isSuperAdmin && (

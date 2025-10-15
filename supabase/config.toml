@@ -23,3 +23,12 @@ verify_jwt = true
 
 [functions.update-role-from-invite]
 verify_jwt = false
+
+[functions.validate-api-token]
+verify_jwt = false
+
+[functions.public-api-available-slots]
+verify_jwt = false
+
+[functions.public-api-create-appointment]
+verify_jwt = false
