@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,9 +45,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, MoreVertical, Pencil, Trash2, UserX, Upload } from "lucide-react";
+import { Plus, Search, MoreVertical, Pencil, Trash2, UserX, Upload, MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useClients, Client } from "@/hooks/useClients";
+import { useConversations } from "@/hooks/useConversations";
 import { AddClientDialog } from "@/components/AddClientDialog";
 import { EditClientDialog } from "@/components/EditClientDialog";
 import { ImportClientsDialog } from "@/components/ImportClientsDialog";
@@ -56,7 +58,9 @@ import { useQueryClient } from "@tanstack/react-query";
 export default function Clientes() {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { clients, isLoading, createClient, updateClient, deleteClient } = useClients();
+  const { createConversation, isCreatingConversation } = useConversations();
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -65,6 +69,19 @@ export default function Clientes() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
+
+  const handleStartConversation = async (client: Client) => {
+    try {
+      const result = await createConversation({
+        clientId: client.id,
+        clientPhone: client.phone,
+      });
+      
+      navigate(`/conversas?id=${result.conversationId}`);
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+    }
+  };
 
   const filteredClients = clients.filter((client) => {
     const search = searchTerm.toLowerCase();
@@ -194,24 +211,28 @@ export default function Clientes() {
                         </div>
                       </div>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(client)}>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteClick(client)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isCreatingConversation}>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleStartConversation(client)}>
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Iniciar Conversa
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEdit(client)}>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleDeleteClick(client)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
                     <div className="space-y-2 text-sm">
@@ -267,11 +288,15 @@ export default function Clientes() {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" disabled={isCreatingConversation}>
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleStartConversation(client)}>
+                              <MessageCircle className="h-4 w-4 mr-2" />
+                              Iniciar Conversa
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleEdit(client)}>
                               <Pencil className="h-4 w-4 mr-2" />
                               Editar

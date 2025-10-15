@@ -296,6 +296,85 @@ export const useConversations = () => {
     },
   });
 
+  // Create new conversation
+  const createConversation = useMutation({
+    mutationFn: async ({ 
+      clientId, 
+      clientPhone 
+    }: { 
+      clientId: string; 
+      clientPhone: string;
+    }) => {
+      // 1. Get user and check WhatsApp instance
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const { data: instance, error: instanceError } = await supabase
+        .from('whatsapp_instances')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .eq('status', 'connected')
+        .maybeSingle();
+
+      if (instanceError) throw instanceError;
+      if (!instance) {
+        throw new Error('Nenhuma instância de WhatsApp conectada encontrada. Configure uma instância primeiro.');
+      }
+
+      // 2. Check if conversation already exists
+      const { data: existingConv, error: checkError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('client_id', clientId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      // 3. Return existing conversation
+      if (existingConv) {
+        return { conversationId: existingConv.id, isNew: false };
+      }
+
+      // 4. Create new conversation
+      const { data: newConv, error: createError } = await supabase
+        .from('conversations')
+        .insert({
+          user_id: user.id,
+          client_id: clientId,
+          whatsapp_phone: clientPhone,
+          whatsapp_instance_id: instance.id,
+          status: 'open',
+          owner_conversation: 'human',
+          last_message_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+
+      if (createError) throw createError;
+
+      return { conversationId: newConv.id, isNew: true };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      toast({
+        title: data.isNew ? "Conversa criada" : "Conversa encontrada",
+        description: data.isNew 
+          ? "Uma nova conversa foi iniciada com o cliente." 
+          : "Você já tem uma conversa aberta com este cliente.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar conversa",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     conversations,
     isLoadingConversations,
@@ -306,6 +385,8 @@ export const useConversations = () => {
     isSendingMessage: sendMessage.isPending,
     assignConversation: assignConversation.mutate,
     isAssigning: assignConversation.isPending,
+    createConversation: createConversation.mutateAsync,
+    isCreatingConversation: createConversation.isPending,
   };
 };
 

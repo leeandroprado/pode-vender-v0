@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useConversations, useMessages } from "@/hooks/useConversations";
 import { ConversationList } from "@/components/ConversationList";
 import { ConversationDetail } from "@/components/ConversationDetail";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "react-router-dom";
 
 const Conversas = () => {
   const { 
@@ -24,6 +25,19 @@ const Conversas = () => {
   const [showContactInfo, setShowContactInfo] = useState(true);
   const { messages, isLoadingMessages } = useMessages(selectedConversationId);
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-select conversation from URL parameter
+  useEffect(() => {
+    const conversationId = searchParams.get('id');
+    if (conversationId && conversations) {
+      const exists = conversations.find(c => c.id === conversationId);
+      if (exists) {
+        setSelectedConversationId(conversationId);
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, conversations, setSearchParams]);
 
   const selectedConversation = conversations?.find((c) => c.id === selectedConversationId);
 
