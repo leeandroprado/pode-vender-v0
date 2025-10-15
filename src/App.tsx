@@ -39,11 +39,11 @@ const App = () => (
             <Route path="/signup" element={<SignUp />} />
             <Route path="/aceitar-convite" element={<AceitarConvite />} />
             <Route path="/" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/agentes" element={<ProtectedRoute><DashboardLayout><Agentes /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/agentes" element={<ProtectedRoute><AdminRoute><DashboardLayout><Agentes /></DashboardLayout></AdminRoute></ProtectedRoute>} />
             <Route path="/produtos" element={<ProtectedRoute><DashboardLayout><Produtos /></DashboardLayout></ProtectedRoute>} />
             <Route path="/clientes" element={<ProtectedRoute><DashboardLayout><Clientes /></DashboardLayout></ProtectedRoute>} />
             <Route path="/conversas" element={<ProtectedRoute><DashboardLayout><Conversas /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/atividades" element={<ProtectedRoute><DashboardLayout><Atividades /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/atividades" element={<ProtectedRoute><AdminRoute><DashboardLayout><Atividades /></DashboardLayout></AdminRoute></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><DashboardLayout><Agenda /></DashboardLayout></ProtectedRoute>} />
             <Route path="/conta" element={<ProtectedRoute><DashboardLayout><Conta /></DashboardLayout></ProtectedRoute>} />
             <Route path="/equipe" element={<ProtectedRoute><AdminRoute><DashboardLayout><Equipe /></DashboardLayout></AdminRoute></ProtectedRoute>} />

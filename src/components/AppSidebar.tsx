@@ -98,7 +98,26 @@ export function AppSidebar() {
             AUTOMAÇÃO
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            {renderMenuItems(automationItems)}
+            <SidebarMenu>
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/agentes" className={getNavLinkClass}>
+                      <Bot className="h-4 w-4" />
+                      <span>Meus Agentes</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/conversas" className={getNavLinkClass}>
+                    <MessageCircle className="h-4 w-4" />
+                    <span>Conversas</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -108,7 +127,42 @@ export function AppSidebar() {
             GESTÃO
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            {renderMenuItems(managementItems)}
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/produtos" className={getNavLinkClass}>
+                    <Package className="h-4 w-4" />
+                    <span>Produtos</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/clientes" className={getNavLinkClass}>
+                    <Users className="h-4 w-4" />
+                    <span>Clientes</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/agenda" className={getNavLinkClass}>
+                    <Calendar className="h-4 w-4" />
+                    <span>Agenda</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/atividades" className={getNavLinkClass}>
+                      <Activity className="h-4 w-4" />
+                      <span>Atividades</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
