@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WorkingHoursEditor } from './WorkingHoursEditor';
 import { BreaksEditor } from './BreaksEditor';
 import { useAgendas, WorkingHours, Break, Agenda } from '@/hooks/useAgendas';
+import { Copy } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AgendaDialogProps {
   open: boolean;
@@ -114,6 +116,34 @@ export const AgendaDialog = ({ open, onOpenChange, agenda }: AgendaDialogProps) 
           </TabsList>
 
           <TabsContent value="basic" className="space-y-4">
+            {agenda && (
+              <div className="space-y-2 p-3 bg-muted/50 rounded-md border">
+                <Label htmlFor="agenda-id">ID da Agenda (para API)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="agenda-id"
+                    value={agenda.id}
+                    readOnly
+                    className="font-mono text-xs bg-background"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText(agenda.id);
+                      toast.success('ID copiado para área de transferência!');
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Use este ID nas requisições da API pública de agendamentos
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="name">Nome da Agenda *</Label>
               <Input

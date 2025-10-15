@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Calendar, Settings } from 'lucide-react';
+import { Plus, Calendar, Settings, Copy, Check } from 'lucide-react';
 import { useAgendas, Agenda } from '@/hooks/useAgendas';
 import { AgendaDialog } from './AgendaDialog';
+import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AgendaSelectorProps {
   selectedAgendaId?: string;
@@ -14,8 +16,16 @@ export const AgendaSelector = ({ selectedAgendaId, onSelectAgenda }: AgendaSelec
   const { agendas, isLoading } = useAgendas();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingAgenda, setEditingAgenda] = useState<Agenda | undefined>();
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const selectedAgenda = agendas.find(a => a.id === selectedAgendaId);
+
+  const copyAgendaId = (id: string, name: string) => {
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    toast.success(`ID da agenda "${name}" copiado!`);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   if (isLoading) {
     return <div className="h-10 bg-muted animate-pulse rounded-md" />;
@@ -56,26 +66,53 @@ export const AgendaSelector = ({ selectedAgendaId, onSelectAgenda }: AgendaSelec
             <SelectItem value="all">Todas as Agendas</SelectItem>
             {agendas.map((agenda) => (
               <SelectItem key={agenda.id} value={agenda.id}>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: agenda.color }}
-                  />
-                  {agenda.name}
-                </div>
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: agenda.color }}
+                        />
+                        <span className="truncate">{agenda.name}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-mono text-xs max-w-xs break-all">
+                      <p className="font-semibold mb-1">{agenda.name}</p>
+                      <p className="text-muted-foreground">ID: {agenda.id}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         {selectedAgendaId && selectedAgenda && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setEditingAgenda(selectedAgenda)}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Editar
-          </Button>
+          <>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => copyAgendaId(selectedAgenda.id, selectedAgenda.name)}
+              className="gap-2"
+            >
+              {copiedId === selectedAgenda.id ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              <span className="font-mono text-xs">
+                {selectedAgenda.id.slice(0, 8)}...
+              </span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setEditingAgenda(selectedAgenda)}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+          </>
         )}
         <Button variant="outline" size="sm" onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
