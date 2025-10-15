@@ -68,9 +68,14 @@ export const useAgendas = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
+      const agendaData = {
+        ...agenda,
+        user_id: user.id,
+      };
+
       const { data, error } = await supabase
         .from('agendas')
-        .insert([agenda as any])
+        .insert([agendaData as any])
         .select()
         .single();
 
