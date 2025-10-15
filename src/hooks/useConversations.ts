@@ -172,7 +172,17 @@ export const useConversations = () => {
   // Send message
   const sendMessage = useMutation({
     mutationFn: async ({ conversationId, content }: { conversationId: string; content: string }) => {
-      // Insert message
+      // 1. PRIMEIRO: Enviar via WhatsApp API
+      const { data: apiData, error: apiError } = await supabase.functions.invoke('whatsapp-send-message', {
+        body: { conversationId, content }
+      });
+
+      if (apiError) {
+        console.error('Error sending WhatsApp message:', apiError);
+        throw new Error('Falha ao enviar mensagem via WhatsApp');
+      }
+
+      // 2. DEPOIS: Salvar no banco (apenas se API funcionou)
       const { error: messageError } = await supabase
         .from('messages')
         .insert({
@@ -180,11 +190,12 @@ export const useConversations = () => {
           sender_type: 'system',
           content,
           message_type: 'text',
+          whatsapp_message_id: apiData?.data?.key?.id || null,
         });
 
       if (messageError) throw messageError;
 
-      // Update conversation last_message_at and owner to human
+      // 3. Atualizar conversa
       const { error: conversationError } = await supabase
         .from('conversations')
         .update({ 
@@ -196,28 +207,53 @@ export const useConversations = () => {
 
       if (conversationError) throw conversationError;
 
-      // Send message via WhatsApp API
-      const { error: apiError } = await supabase.functions.invoke('whatsapp-send-message', {
-        body: { conversationId, content }
-      });
-
-      if (apiError) {
-        console.error('Error sending WhatsApp message:', apiError);
-        throw new Error('Falha ao enviar mensagem via WhatsApp');
-      }
+      return apiData;
     },
+    
+    onMutate: async ({ conversationId, content }) => {
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: ['messages', conversationId] });
+      
+      // Snapshot do estado anterior
+      const previousMessages = queryClient.getQueryData(['messages', conversationId]);
+      
+      // Adicionar mensagem otimista
+      const optimisticMessage = {
+        id: `temp-${Date.now()}`,
+        conversation_id: conversationId,
+        sender_type: 'system' as const,
+        sender_id: null,
+        content,
+        message_type: 'text' as const,
+        timestamp: new Date().toISOString(),
+        whatsapp_message_id: null,
+      };
+      
+      queryClient.setQueryData(['messages', conversationId], (old: any) => 
+        [...(old || []), optimisticMessage]
+      );
+      
+      return { previousMessages };
+    },
+    
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId] });
       toast({
         title: "Mensagem enviada",
-        description: "Sua mensagem foi enviada com sucesso.",
+        description: "Sua mensagem foi enviada via WhatsApp com sucesso.",
       });
     },
-    onError: (error) => {
+    
+    onError: (error, variables, context) => {
+      // Reverter mensagem otimista em caso de erro
+      if (context?.previousMessages) {
+        queryClient.setQueryData(['messages', variables.conversationId], context.previousMessages);
+      }
+      
       toast({
         title: "Erro ao enviar mensagem",
-        description: error.message,
+        description: "A mensagem não foi enviada via WhatsApp. Tente novamente.",
         variant: "destructive",
       });
     },

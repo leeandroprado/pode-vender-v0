@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
     const { data: settings, error: settingsError } = await serviceRoleClient
       .from('system_settings')
       .select('setting_key, setting_value')
-      .eq('category', 'apizap')
+      .eq('setting_category', 'apizap')
       .in('setting_key', ['base_url', 'send_text_endpoint']);
 
     console.log('Settings query result:', { settings, error: settingsError });
