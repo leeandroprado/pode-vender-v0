@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { toZonedTime, fromZonedTime } from 'https://esm.sh/date-fns-tz@3.2.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -95,6 +96,8 @@ Deno.serve(async (req) => {
 });
 
 async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: string) {
+  const TIMEZONE = 'America/Sao_Paulo';
+  
   const date = new Date(dateStr);
   const dayOfWeek = date.getDay();
   const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -107,6 +110,18 @@ async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: stri
   }
 
   console.log('Working hours for', dayName, ':', workingHours);
+
+  // Converter working_hours (horário local) para UTC
+  const localStartDate = new Date(`${dateStr}T${workingHours.start}:00`);
+  const localEndDate = new Date(`${dateStr}T${workingHours.end}:00`);
+  
+  const startTimeUTC = fromZonedTime(localStartDate, TIMEZONE);
+  const endTimeUTC = fromZonedTime(localEndDate, TIMEZONE);
+
+  console.log('Working hours in UTC:', {
+    start: startTimeUTC.toISOString(),
+    end: endTimeUTC.toISOString()
+  });
 
   // Buscar agendamentos existentes
   const startOfDay = new Date(dateStr + 'T00:00:00Z');
@@ -128,13 +143,10 @@ async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: stri
     })));
   }
 
-  // Gerar slots e filtrar ocupados
+  // Gerar slots em UTC
   const slots = [];
-  const [startHour, startMin] = workingHours.start.split(':');
-  const [endHour, endMin] = workingHours.end.split(':');
-  
-  let currentTime = new Date(dateStr + `T${workingHours.start}:00Z`);
-  const endTime = new Date(dateStr + `T${workingHours.end}:00Z`);
+  let currentTime = new Date(startTimeUTC);
+  const endTime = new Date(endTimeUTC);
 
   while (currentTime < endTime) {
     const slotEnd = new Date(currentTime.getTime() + agenda.slot_duration * 60000);
@@ -150,13 +162,17 @@ async function calculateAvailableSlots(supabase: any, agenda: any, dateStr: stri
       console.log(`Slot ${currentTime.toISOString()} - ${slotEnd.toISOString()} BLOCKED by appointment`);
     }
 
-    // Verificar se não conflita com breaks
+    // Verificar se não conflita com breaks (converter horário local para UTC)
     const isInBreak = agenda.breaks?.some((brk: any) => {
       if (!brk.days.includes(dayOfWeek)) return false;
       
-      const breakStart = new Date(dateStr + `T${brk.start}:00Z`);
-      const breakEnd = new Date(dateStr + `T${brk.end}:00Z`);
-      return (currentTime < breakEnd && slotEnd > breakStart);
+      const localBreakStart = new Date(`${dateStr}T${brk.start}:00`);
+      const localBreakEnd = new Date(`${dateStr}T${brk.end}:00`);
+      
+      const breakStartUTC = fromZonedTime(localBreakStart, TIMEZONE);
+      const breakEndUTC = fromZonedTime(localBreakEnd, TIMEZONE);
+      
+      return (currentTime < breakEndUTC && slotEnd > breakStartUTC);
     });
 
     if (isInBreak) {
