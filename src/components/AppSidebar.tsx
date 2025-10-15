@@ -1,4 +1,4 @@
-import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings } from "lucide-react";
+import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import {
@@ -20,6 +20,7 @@ const menuItems = [
   { title: "Produtos", url: "/produtos", icon: Package },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Conversas", url: "/conversas", icon: MessageCircle },
+  { title: "Agenda", url: "/agenda", icon: Calendar },
   { title: "Atividades", url: "/atividades", icon: Activity },
   { title: "Minha Conta", url: "/conta", icon: UserCircle },
 ];
