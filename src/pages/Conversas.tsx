@@ -146,6 +146,10 @@ const Conversas = () => {
               conversationPhone={selectedConversation?.whatsapp_phone || ""}
               clientName={selectedConversation?.clients?.name || null}
               clientId={selectedConversation?.client_id || null}
+              conversationId={selectedConversationId}
+              assignedTo={selectedConversation?.assigned_to || null}
+              assignedName={selectedConversation?.assigned_profile?.full_name || null}
+              onAssignVendedor={handleAssignVendedor}
               onClose={() => setShowContactInfo(false)}
             />
           </div>

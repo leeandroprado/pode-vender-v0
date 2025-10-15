@@ -3,16 +3,24 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { User, Bell, Pin, Settings, X, Mail, MapPin, CreditCard, Calendar, Edit2 } from "lucide-react";
+import { User, Bell, Pin, Settings, X, Mail, MapPin, CreditCard, Calendar, Edit2, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useClients } from "@/hooks/useClients";
 import { EditClientDialog } from "@/components/EditClientDialog";
+import { useVendedores } from "@/hooks/useVendedores";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface ContactInfoProps {
   conversationPhone: string;
   clientName: string | null;
   clientId: string | null;
+  conversationId: string;
+  assignedTo: string | null;
+  assignedName: string | null;
+  onAssignVendedor: (conversationId: string, userId: string | null) => void;
   onClose: () => void;
 }
 
@@ -20,9 +28,15 @@ export const ContactInfo = ({
   conversationPhone, 
   clientName,
   clientId,
+  conversationId,
+  assignedTo,
+  assignedName,
+  onAssignVendedor,
   onClose 
 }: ContactInfoProps) => {
   const { clients, updateClient } = useClients();
+  const { vendedores, isLoading: isLoadingVendedores } = useVendedores();
+  const { isAdmin } = useUserRole();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const displayName = clientName || conversationPhone;
   
@@ -69,6 +83,74 @@ export const ContactInfo = ({
       </div>
 
       <Separator />
+
+      {/* Seção de Atribuição de Vendedor - Apenas para admins */}
+      {isAdmin && (
+        <>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="vendedor-assignment" className="border-0">
+              <AccordionTrigger className="px-4 py-3 hover:bg-muted/50">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span className="font-medium">Vendedor Responsável</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-3">
+                  {/* Badge do vendedor atual */}
+                  {assignedTo && assignedName && (
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground">Atribuído para</p>
+                        <Badge variant="secondary" className="mt-1">
+                          {assignedName}
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Select de vendedores */}
+                  <div className="space-y-2">
+                    <label className="text-xs text-muted-foreground">
+                      Alterar vendedor responsável
+                    </label>
+                    <Select
+                      value={assignedTo || "unassigned"}
+                      onValueChange={(value) =>
+                        onAssignVendedor(conversationId, value === "unassigned" ? null : value)
+                      }
+                      disabled={isLoadingVendedores}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione um vendedor" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="unassigned">
+                          Sem vendedor
+                        </SelectItem>
+                        {vendedores.map((v) => (
+                          <SelectItem key={v.id} value={v.id}>
+                            {v.full_name || v.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Informação adicional */}
+                  {!assignedTo && (
+                    <p className="text-xs text-muted-foreground">
+                      Esta conversa não está atribuída a nenhum vendedor
+                    </p>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+          <Separator />
+        </>
+      )}
 
       {/* Área de dados do cliente */}
       <div className="flex-1 overflow-y-auto">
