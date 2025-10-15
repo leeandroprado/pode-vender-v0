@@ -7,7 +7,10 @@ import { ApiResponseExample } from "@/components/api-docs/ApiResponseExample";
 import { CodeBlock } from "@/components/api-docs/CodeBlock";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Info, Globe, Tag, CheckCircle2, AlertTriangle, XCircle, Key, Calendar, BarChart } from "lucide-react";
 
 const BASE_URL = "https://tefidquitahjjxpeowzt.supabase.co/functions/v1";
 
@@ -35,8 +38,11 @@ export default function ApiDocs() {
   return (
     <div className="flex min-h-screen">
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r bg-card p-6 hidden lg:block">
-        <h2 className="text-lg font-semibold mb-4">API Documentation</h2>
+      <aside className="w-64 border-r bg-card p-6 hidden lg:block sticky top-0 h-screen">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-1">📚 Documentação API</h2>
+          <p className="text-xs text-muted-foreground">Pode Vender v1</p>
+        </div>
         <ApiDocsNavigation
           sections={navSections}
           activeSection={activeSection}
@@ -47,29 +53,44 @@ export default function ApiDocs() {
       {/* Main Content */}
       <main className="flex-1 p-6 lg:p-8 max-w-4xl">
         {/* Introduction */}
-        <section id="introduction" className="mb-12">
+        <section id="introduction" className="mb-16 animate-fade-in">
           <h1 className="text-4xl font-bold mb-4">API Pode Vender</h1>
-          <p className="text-lg text-muted-foreground mb-6">
+          <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
             API RESTful para integração com o sistema de agendamentos Pode Vender. Permite consultar
             horários disponíveis e criar agendamentos programaticamente.
           </p>
 
-          <div className="grid gap-4 mb-6">
-            <div>
-              <h3 className="font-semibold mb-2">Base URL</h3>
-              <code className="block bg-muted p-3 rounded-md text-sm">{BASE_URL}</code>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Versão</h3>
-              <Badge>v1</Badge>
-            </div>
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  Base URL
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <code className="block bg-muted p-2 rounded text-xs break-all">{BASE_URL}</code>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Versão
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Badge variant="outline" className="font-mono">v1</Badge>
+                <span className="ml-2 text-xs text-muted-foreground">stable</span>
+              </CardContent>
+            </Card>
           </div>
 
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
               Todos os endpoints requerem autenticação via Bearer Token. Você pode gerar tokens na página{" "}
-              <a href="/api-tokens" className="underline">
+              <a href="/api-tokens" className="underline hover:text-primary transition-colors">
                 API Tokens
               </a>
               .
@@ -77,53 +98,73 @@ export default function ApiDocs() {
           </Alert>
         </section>
 
+        <Separator className="mb-16" />
+
         {/* Authentication */}
-        <section id="authentication" className="mb-12">
-          <h2 className="text-3xl font-bold mb-4">Autenticação</h2>
-          <p className="text-muted-foreground mb-6">
+        <section id="authentication" className="mb-16 animate-fade-in">
+          <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
+            <Key className="h-7 w-7" />
+            Autenticação
+          </h2>
+          <p className="text-muted-foreground mb-8 leading-relaxed">
             A API utiliza Bearer Token para autenticação. Inclua o token no header Authorization de
             todas as requisições.
           </p>
 
           <div className="space-y-6">
-            <div>
-              <h3 className="font-semibold mb-3">Formato do Header</h3>
-              <CodeBlock
-                code="Authorization: Bearer YOUR_API_TOKEN_HERE"
-                language="bash"
-              />
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Formato do Header</CardTitle>
+                <CardDescription>Inclua este header em todas as suas requisições</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CodeBlock
+                  code="Authorization: Bearer YOUR_API_TOKEN_HERE"
+                  language="bash"
+                />
+              </CardContent>
+            </Card>
 
-            <div>
-              <h3 className="font-semibold mb-3">Escopos Disponíveis</h3>
-              <div className="grid gap-2">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">read:appointments</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    Permite consultar horários disponíveis
-                  </span>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Escopos Disponíveis</CardTitle>
+                <CardDescription>Permissões que podem ser atribuídas aos tokens</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <Badge variant="outline" className="font-mono shrink-0">read:appointments</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Permite consultar horários disponíveis
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <Badge variant="outline" className="font-mono shrink-0">write:appointments</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Permite criar agendamentos
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <Badge variant="outline" className="font-mono shrink-0">admin:all</Badge>
+                    <span className="text-sm text-muted-foreground">Acesso completo à API</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">write:appointments</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    Permite criar agendamentos
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">admin:all</Badge>
-                  <span className="text-sm text-muted-foreground">Acesso completo à API</span>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
+        <Separator className="mb-16" />
+
         {/* Appointments Section */}
-        <section id="appointments" className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Agendamentos</h2>
+        <section id="appointments" className="mb-16 animate-fade-in">
+          <h2 className="text-3xl font-bold mb-8 flex items-center gap-2">
+            <Calendar className="h-7 w-7" />
+            Agendamentos
+          </h2>
 
           {/* Available Slots Endpoint */}
-          <div id="available-slots" className="mb-12">
+          <div id="available-slots" className="mb-10">
             <ApiEndpointCard
               method="GET"
               path="/public-api-available-slots"
@@ -248,8 +289,10 @@ print(data)`}
             </ApiEndpointCard>
           </div>
 
+          <Separator className="my-10" />
+
           {/* Create Appointment Endpoint */}
-          <div id="create-appointment" className="mb-12">
+          <div id="create-appointment" className="mb-10">
             <ApiEndpointCard
               method="POST"
               path="/public-api-create-appointment"
@@ -437,69 +480,99 @@ print(data)`}
           </div>
         </section>
 
+        <Separator className="mb-16" />
+
         {/* Status Codes */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">Códigos de Status HTTP</h2>
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="text-left p-3 font-semibold">Código</th>
-                  <th className="text-left p-3 font-semibold">Descrição</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                <tr>
-                  <td className="p-3">
-                    <Badge className="bg-green-500">200</Badge>
-                  </td>
-                  <td className="p-3 text-sm text-muted-foreground">Requisição bem-sucedida</td>
-                </tr>
-                <tr>
-                  <td className="p-3">
-                    <Badge className="bg-green-500">201</Badge>
-                  </td>
-                  <td className="p-3 text-sm text-muted-foreground">Recurso criado com sucesso</td>
-                </tr>
-                <tr>
-                  <td className="p-3">
-                    <Badge className="bg-yellow-500">400</Badge>
-                  </td>
-                  <td className="p-3 text-sm text-muted-foreground">
-                    Requisição inválida (parâmetros faltando ou incorretos)
-                  </td>
-                </tr>
-                <tr>
-                  <td className="p-3">
-                    <Badge className="bg-yellow-500">401</Badge>
-                  </td>
-                  <td className="p-3 text-sm text-muted-foreground">
-                    Não autenticado (token inválido ou ausente)
-                  </td>
-                </tr>
-                <tr>
-                  <td className="p-3">
-                    <Badge className="bg-yellow-500">403</Badge>
-                  </td>
-                  <td className="p-3 text-sm text-muted-foreground">
-                    Sem permissão (escopo insuficiente)
-                  </td>
-                </tr>
-                <tr>
-                  <td className="p-3">
-                    <Badge className="bg-yellow-500">404</Badge>
-                  </td>
-                  <td className="p-3 text-sm text-muted-foreground">Recurso não encontrado</td>
-                </tr>
-                <tr>
-                  <td className="p-3">
-                    <Badge className="bg-red-500">500</Badge>
-                  </td>
-                  <td className="p-3 text-sm text-muted-foreground">Erro interno do servidor</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <section className="mb-16 animate-fade-in">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <BarChart className="h-6 w-6" />
+            Códigos de Status HTTP
+          </h2>
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-4 font-semibold">Código</th>
+                      <th className="text-left p-4 font-semibold">Descrição</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          <Badge className="bg-green-500 hover:bg-green-600">200</Badge>
+                        </div>
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">Requisição bem-sucedida</td>
+                    </tr>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          <Badge className="bg-green-500 hover:bg-green-600">201</Badge>
+                        </div>
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">Recurso criado com sucesso</td>
+                    </tr>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                          <Badge className="bg-yellow-500 hover:bg-yellow-600">400</Badge>
+                        </div>
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">
+                        Requisição inválida (parâmetros faltando ou incorretos)
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                          <Badge className="bg-yellow-500 hover:bg-yellow-600">401</Badge>
+                        </div>
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">
+                        Não autenticado (token inválido ou ausente)
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                          <Badge className="bg-yellow-500 hover:bg-yellow-600">403</Badge>
+                        </div>
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">
+                        Sem permissão (escopo insuficiente)
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                          <Badge className="bg-yellow-500 hover:bg-yellow-600">404</Badge>
+                        </div>
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">Recurso não encontrado</td>
+                    </tr>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <XCircle className="h-4 w-4 text-red-500" />
+                          <Badge className="bg-red-500 hover:bg-red-600">500</Badge>
+                        </div>
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">Erro interno do servidor</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </section>
       </main>
     </div>
