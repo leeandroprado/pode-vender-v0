@@ -16,7 +16,7 @@ import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, sta
 import { ptBR } from "date-fns/locale";
 
 export default function Agenda() {
-  const [view, setView] = useState<'month' | 'week' | 'day' | 'list'>('month');
+  const [view, setView] = useState<'month' | 'week' | 'day' | 'list'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [filters, setFilters] = useState<Filters>({});
