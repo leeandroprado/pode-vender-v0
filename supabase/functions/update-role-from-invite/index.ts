@@ -34,6 +34,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (inviteError || !invite) {
+      console.error('Erro ao buscar convite:', inviteError);
       throw new Error('Convite não encontrado ou já utilizado');
     }
 
@@ -43,29 +44,24 @@ Deno.serve(async (req) => {
       throw new Error('Convite expirado');
     }
 
-    // Atualizar role do usuário
-    // Primeiro, deletar role padrão criada pelo trigger
-    const { error: deleteError } = await supabaseAdmin
-      .from('user_roles')
-      .delete()
-      .eq('user_id', userId);
+    console.log('Convite encontrado, role a definir:', invite.role);
 
-    if (deleteError) {
-      console.error('Erro ao deletar role padrão:', deleteError);
-    }
-
-    // Inserir role do convite
-    const { error: insertError } = await supabaseAdmin
+    // Usar UPSERT para definir o role (cria se não existe, atualiza se existe)
+    const { error: upsertError } = await supabaseAdmin
       .from('user_roles')
-      .insert({
+      .upsert({
         user_id: userId,
         role: invite.role,
+      }, {
+        onConflict: 'user_id',
       });
 
-    if (insertError) {
-      console.error('Erro ao inserir role:', insertError);
-      throw insertError;
+    if (upsertError) {
+      console.error('Erro ao fazer upsert do role:', upsertError);
+      throw new Error(`Falha ao definir role: ${upsertError.message}`);
     }
+
+    console.log('Role definido com sucesso via UPSERT:', invite.role);
 
     // Marcar convite como aceito
     const { error: updateError } = await supabaseAdmin

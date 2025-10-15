@@ -122,13 +122,25 @@ export default function AceitarConvite() {
       }
 
       // Atualizar role do usuário (usando service role via edge function)
-      const { error: roleError } = await supabase.functions.invoke('update-role-from-invite', {
+      const { data: roleData, error: roleError } = await supabase.functions.invoke('update-role-from-invite', {
         body: { token, userId: signUpData.user.id },
       });
 
+      console.log('Role update response:', roleData);
+
       if (roleError) {
         console.error('Erro ao atualizar role:', roleError);
-        // Não lançar erro aqui, pois a conta já foi criada
+        toast({
+          title: "Atenção",
+          description: "Conta criada, mas houve um problema ao definir suas permissões. Entre em contato com o administrador.",
+          variant: "destructive",
+        });
+        
+        // Ainda redirecionar para login, mas com aviso
+        setTimeout(() => {
+          navigate("/login");
+        }, 3000);
+        return;
       }
 
       // Aguardar um momento para o processo completar
