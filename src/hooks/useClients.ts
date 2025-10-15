@@ -120,6 +120,53 @@ export const useClients = () => {
     },
   });
 
+  const importClientsFromSpreadsheet = useMutation({
+    mutationFn: async (contacts: Omit<Client, "id" | "user_id" | "created_at" | "updated_at">[]) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const errors: string[] = [];
+      let successCount = 0;
+
+      for (const contact of contacts) {
+        try {
+          const { error } = await supabase
+            .from("clients")
+            .upsert({
+              ...contact,
+              user_id: user.id,
+            }, {
+              onConflict: 'phone,user_id',
+              ignoreDuplicates: false,
+            });
+
+          if (error) throw error;
+          successCount++;
+        } catch (err: any) {
+          errors.push(`${contact.name}: ${err.message}`);
+        }
+      }
+
+      return { success: successCount, errors };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    },
+  });
+
+  const importClientsFromWhatsApp = useMutation({
+    mutationFn: async (agentId: string) => {
+      const { data, error } = await supabase.functions.invoke('whatsapp-fetch-contacts', {
+        body: { agentId },
+      });
+
+      if (error) throw error;
+      if (!data?.contacts) throw new Error("Nenhum contato encontrado");
+
+      return data.contacts as Omit<Client, "id" | "user_id" | "created_at" | "updated_at">[];
+    },
+  });
+
   return {
     clients,
     isLoading,
@@ -127,5 +174,7 @@ export const useClients = () => {
     updateClient,
     deleteClient,
     linkClientToConversation,
+    importClientsFromSpreadsheet,
+    importClientsFromWhatsApp,
   };
 };

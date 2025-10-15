@@ -12,6 +12,9 @@ verify_jwt = true
 [functions.whatsapp-send-message]
 verify_jwt = true
 
+[functions.whatsapp-fetch-contacts]
+verify_jwt = true
+
 [functions.get-system-settings]
 verify_jwt = false
 

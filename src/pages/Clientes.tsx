@@ -28,19 +28,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, MoreVertical, Pencil, Trash2, UserX } from "lucide-react";
+import { Plus, Search, MoreVertical, Pencil, Trash2, UserX, Upload } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useClients, Client } from "@/hooks/useClients";
 import { AddClientDialog } from "@/components/AddClientDialog";
 import { EditClientDialog } from "@/components/EditClientDialog";
+import { ImportClientsDialog } from "@/components/ImportClientsDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Clientes() {
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { clients, isLoading, createClient, updateClient, deleteClient } = useClients();
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const filteredClients = clients.filter((client) => {
@@ -84,13 +88,23 @@ export default function Clientes() {
             Gerencie sua base de clientes
           </p>
         </div>
-        <Button 
-          className="gap-2 w-full sm:w-auto"
-          onClick={() => setAddDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          Novo Cliente
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button 
+            variant="outline"
+            className="gap-2 flex-1 sm:flex-initial"
+            onClick={() => setImportDialogOpen(true)}
+          >
+            <Upload className="h-4 w-4" />
+            Importar
+          </Button>
+          <Button 
+            className="gap-2 flex-1 sm:flex-initial"
+            onClick={() => setAddDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Novo Cliente
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -264,6 +278,15 @@ export default function Clientes() {
           onUpdate={handleUpdate}
         />
       )}
+
+      <ImportClientsDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImportComplete={() => {
+          setImportDialogOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["clients"] });
+        }}
+      />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
