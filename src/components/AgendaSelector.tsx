@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Calendar } from 'lucide-react';
-import { useAgendas } from '@/hooks/useAgendas';
-import { CreateAgendaDialog } from './CreateAgendaDialog';
+import { Plus, Calendar, Settings } from 'lucide-react';
+import { useAgendas, Agenda } from '@/hooks/useAgendas';
+import { AgendaDialog } from './AgendaDialog';
 
 interface AgendaSelectorProps {
   selectedAgendaId?: string;
@@ -13,6 +13,9 @@ interface AgendaSelectorProps {
 export const AgendaSelector = ({ selectedAgendaId, onSelectAgenda }: AgendaSelectorProps) => {
   const { agendas, isLoading } = useAgendas();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editingAgenda, setEditingAgenda] = useState<Agenda | undefined>();
+
+  const selectedAgenda = agendas.find(a => a.id === selectedAgendaId);
 
   if (isLoading) {
     return <div className="h-10 bg-muted animate-pulse rounded-md" />;
@@ -36,7 +39,7 @@ export const AgendaSelector = ({ selectedAgendaId, onSelectAgenda }: AgendaSelec
             Criar Primeira Agenda
           </Button>
         </div>
-        <CreateAgendaDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+        <AgendaDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
       </>
     );
   }
@@ -64,12 +67,29 @@ export const AgendaSelector = ({ selectedAgendaId, onSelectAgenda }: AgendaSelec
             ))}
           </SelectContent>
         </Select>
+        {selectedAgendaId && selectedAgenda && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setEditingAgenda(selectedAgenda)}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Editar
+          </Button>
+        )}
         <Button variant="outline" size="sm" onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nova Agenda
         </Button>
       </div>
-      <CreateAgendaDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+      <AgendaDialog 
+        open={createDialogOpen || !!editingAgenda} 
+        onOpenChange={(open) => {
+          setCreateDialogOpen(open);
+          if (!open) setEditingAgenda(undefined);
+        }}
+        agenda={editingAgenda}
+      />
     </>
   );
 };

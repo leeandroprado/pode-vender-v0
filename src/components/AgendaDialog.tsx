@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,11 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WorkingHoursEditor } from './WorkingHoursEditor';
 import { BreaksEditor } from './BreaksEditor';
-import { useAgendas, WorkingHours, Break } from '@/hooks/useAgendas';
+import { useAgendas, WorkingHours, Break, Agenda } from '@/hooks/useAgendas';
 
-interface CreateAgendaDialogProps {
+interface AgendaDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  agenda?: Agenda;
 }
 
 const defaultWorkingHours: WorkingHours = {
@@ -24,8 +25,22 @@ const defaultWorkingHours: WorkingHours = {
   sunday: { start: '08:00', end: '12:00', enabled: false },
 };
 
-export const CreateAgendaDialog = ({ open, onOpenChange }: CreateAgendaDialogProps) => {
-  const { createAgenda } = useAgendas();
+const defaultFormData = {
+  name: '',
+  description: '',
+  color: '#3b82f6',
+  working_hours: defaultWorkingHours,
+  slot_duration: 30,
+  breaks: [] as Break[],
+  min_advance_hours: 2,
+  max_advance_days: 90,
+  buffer_time: 0,
+  reminder_hours_before: 24,
+  send_confirmation: true,
+};
+
+export const AgendaDialog = ({ open, onOpenChange, agenda }: AgendaDialogProps) => {
+  const { createAgenda, updateAgenda } = useAgendas();
   const [currentTab, setCurrentTab] = useState('basic');
   
   const [formData, setFormData] = useState({
@@ -42,33 +57,51 @@ export const CreateAgendaDialog = ({ open, onOpenChange }: CreateAgendaDialogPro
     send_confirmation: true,
   });
 
+  useEffect(() => {
+    if (agenda) {
+      setFormData({
+        name: agenda.name,
+        description: agenda.description || '',
+        color: agenda.color,
+        working_hours: agenda.working_hours,
+        slot_duration: agenda.slot_duration,
+        breaks: agenda.breaks,
+        min_advance_hours: agenda.min_advance_hours,
+        max_advance_days: agenda.max_advance_days,
+        buffer_time: agenda.buffer_time,
+        reminder_hours_before: agenda.reminder_hours_before,
+        send_confirmation: agenda.send_confirmation,
+      });
+    } else {
+      setFormData(defaultFormData);
+    }
+  }, [agenda, open]);
+
   const handleSubmit = () => {
-    createAgenda.mutate(formData, {
-      onSuccess: () => {
-        onOpenChange(false);
-        setFormData({
-          name: '',
-          description: '',
-          color: '#3b82f6',
-          working_hours: defaultWorkingHours,
-          slot_duration: 30,
-          breaks: [],
-          min_advance_hours: 2,
-          max_advance_days: 90,
-          buffer_time: 0,
-          reminder_hours_before: 24,
-          send_confirmation: true,
-        });
-        setCurrentTab('basic');
-      },
-    });
+    if (agenda) {
+      updateAgenda.mutate({ id: agenda.id, ...formData }, {
+        onSuccess: () => {
+          onOpenChange(false);
+          setFormData(defaultFormData);
+          setCurrentTab('basic');
+        },
+      });
+    } else {
+      createAgenda.mutate(formData, {
+        onSuccess: () => {
+          onOpenChange(false);
+          setFormData(defaultFormData);
+          setCurrentTab('basic');
+        },
+      });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Criar Nova Agenda</DialogTitle>
+          <DialogTitle>{agenda ? 'Editar Agenda' : 'Criar Nova Agenda'}</DialogTitle>
         </DialogHeader>
 
         <Tabs value={currentTab} onValueChange={setCurrentTab}>
@@ -201,9 +234,12 @@ export const CreateAgendaDialog = ({ open, onOpenChange }: CreateAgendaDialogPro
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={!formData.name || createAgenda.isPending}
+            disabled={!formData.name || createAgenda.isPending || updateAgenda.isPending}
           >
-            {createAgenda.isPending ? 'Criando...' : 'Criar Agenda'}
+            {agenda 
+              ? (updateAgenda.isPending ? 'Salvando...' : 'Salvar Alterações')
+              : (createAgenda.isPending ? 'Criando...' : 'Criar Agenda')
+            }
           </Button>
         </div>
       </DialogContent>
