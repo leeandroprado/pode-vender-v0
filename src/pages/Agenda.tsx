@@ -172,6 +172,10 @@ export default function Agenda() {
               appointments={appointments}
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
+              onCreateAppointment={(date) => {
+                setSelectedDate(date);
+                setDialogOpen(true);
+              }}
             />
           )}
 
@@ -179,6 +183,10 @@ export default function Agenda() {
             <AppointmentWeekView
               appointments={appointments}
               currentDate={currentDate}
+              onCreateAppointment={(date) => {
+                setSelectedDate(date);
+                setDialogOpen(true);
+              }}
             />
           )}
 
@@ -186,6 +194,11 @@ export default function Agenda() {
             <AppointmentDayView
               appointments={appointments}
               selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+              onCreateAppointment={(date) => {
+                setSelectedDate(date);
+                setDialogOpen(true);
+              }}
             />
           )}
 
