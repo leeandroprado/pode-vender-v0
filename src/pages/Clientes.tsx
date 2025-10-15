@@ -50,6 +50,7 @@ import { useClients, Client } from "@/hooks/useClients";
 import { AddClientDialog } from "@/components/AddClientDialog";
 import { EditClientDialog } from "@/components/EditClientDialog";
 import { ImportClientsDialog } from "@/components/ImportClientsDialog";
+import { ExportClientsDropdown } from "@/components/ExportClientsDropdown";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function Clientes() {
@@ -126,6 +127,7 @@ export default function Clientes() {
             <Upload className="h-4 w-4" />
             Importar
           </Button>
+          <ExportClientsDropdown clients={filteredClients} />
           <Button 
             className="gap-2 flex-1 sm:flex-initial"
             onClick={() => setAddDialogOpen(true)}
