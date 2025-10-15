@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, User, MoreVertical, Search, UserPlus, UserCheck } from "lucide-react";
+import { Bot, User, MoreVertical, Search, UserPlus, UserCheck, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Message } from "@/hooks/useConversations";
@@ -15,6 +15,7 @@ import { useClients } from "@/hooks/useClients";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVendedores } from "@/hooks/useVendedores";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ConversationDetailProps {
   messages: Message[];
@@ -27,6 +28,8 @@ interface ConversationDetailProps {
   clientName?: string | null;
   assignedTo?: string | null;
   assignedName?: string | null;
+  showContactInfo?: boolean;
+  onToggleContactInfo?: () => void;
 }
 
 export const ConversationDetail = ({ 
@@ -39,7 +42,9 @@ export const ConversationDetail = ({
   clientId,
   clientName,
   assignedTo,
-  assignedName
+  assignedName,
+  showContactInfo,
+  onToggleContactInfo
 }: ConversationDetailProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showAddClientDialog, setShowAddClientDialog] = useState(false);
@@ -47,6 +52,7 @@ export const ConversationDetail = ({
   const { vendedores } = useVendedores();
   const { isAdmin } = useUserRole();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const currentClient = clientId ? clients.find(c => c.id === clientId) : null;
   const displayName = currentClient?.name || clientName || conversationPhone;
@@ -145,6 +151,22 @@ export const ConversationDetail = ({
             <Button variant="ghost" size="icon">
               <Search className="w-5 h-5" />
             </Button>
+            
+            {!isMobile && onToggleContactInfo && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={onToggleContactInfo}
+                className="transition-transform hover:scale-110"
+              >
+                {showContactInfo ? (
+                  <PanelRightClose className="w-5 h-5" />
+                ) : (
+                  <PanelRightOpen className="w-5 h-5" />
+                )}
+              </Button>
+            )}
+            
             <Button variant="ghost" size="icon">
               <MoreVertical className="w-5 h-5" />
             </Button>

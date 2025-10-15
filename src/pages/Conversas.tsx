@@ -3,6 +3,7 @@ import { useConversations, useMessages } from "@/hooks/useConversations";
 import { ConversationList } from "@/components/ConversationList";
 import { ConversationDetail } from "@/components/ConversationDetail";
 import { MessageInput } from "@/components/MessageInput";
+import { ContactInfo } from "@/components/ContactInfo";
 import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ const Conversas = () => {
     isSendingMessage 
   } = useConversations();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [showContactInfo, setShowContactInfo] = useState(true);
   const { messages, isLoadingMessages } = useMessages(selectedConversationId);
   const isMobile = useIsMobile();
 
@@ -118,6 +120,8 @@ const Conversas = () => {
                   clientName={selectedConversation?.clients?.name}
                   assignedTo={selectedConversation?.assigned_to}
                   assignedName={selectedConversation?.assigned_profile?.full_name}
+                  showContactInfo={showContactInfo}
+                  onToggleContactInfo={() => setShowContactInfo(!showContactInfo)}
                 />
                 <MessageInput
                   onSendMessage={handleSendMessage}
@@ -128,6 +132,17 @@ const Conversas = () => {
           </>
         )}
       </div>
+
+      {/* Coluna 3: Painel de Informações do Contato */}
+      {!isMobile && selectedConversationId && showContactInfo && (
+        <div className="w-80 border-l flex-shrink-0 animate-slide-in-right">
+          <ContactInfo
+            conversationPhone={selectedConversation?.whatsapp_phone || ""}
+            clientName={selectedConversation?.clients?.name || null}
+            onClose={() => setShowContactInfo(false)}
+          />
+        </div>
+      )}
     </div>
   );
 };
