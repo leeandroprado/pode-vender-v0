@@ -1,8 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -46,6 +62,8 @@ export default function Clientes() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   const filteredClients = clients.filter((client) => {
     const search = searchTerm.toLowerCase();
@@ -56,6 +74,17 @@ export default function Clientes() {
       client.city?.toLowerCase().includes(search)
     );
   });
+
+  // Resetar para primeira página quando buscar
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Calcular índices de paginação
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentClients = filteredClients.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
 
   const handleEdit = (client: Client) => {
     setSelectedClient(client);
@@ -147,7 +176,7 @@ export default function Clientes() {
             </div>
           ) : isMobile ? (
             <div className="space-y-3">
-              {filteredClients.map((client) => (
+              {currentClients.map((client) => (
                 <Card key={client.id}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
@@ -217,7 +246,7 @@ export default function Clientes() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredClients.map((client) => (
+                  {currentClients.map((client) => (
                     <TableRow key={client.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -259,6 +288,108 @@ export default function Clientes() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {/* Paginação */}
+          {filteredClients.length > 0 && (
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-t pt-4">
+              {/* Info de registros */}
+              <div className="text-sm text-muted-foreground">
+                Mostrando{" "}
+                <span className="font-medium">{indexOfFirstItem + 1}</span> a{" "}
+                <span className="font-medium">
+                  {Math.min(indexOfLastItem, filteredClients.length)}
+                </span>{" "}
+                de <span className="font-medium">{filteredClients.length}</span> clientes
+              </div>
+
+              <div className="flex items-center gap-4">
+                {/* Seletor de itens por página */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Por página:</span>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-[70px] h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Controles de navegação */}
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+
+                    {/* Números de página (apenas desktop) */}
+                    {!isMobile && (
+                      <>
+                        {[...Array(totalPages)].map((_, idx) => {
+                          const pageNumber = idx + 1;
+                          // Mostrar apenas páginas próximas
+                          if (
+                            pageNumber === 1 ||
+                            pageNumber === totalPages ||
+                            (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                          ) {
+                            return (
+                              <PaginationItem key={pageNumber}>
+                                <PaginationLink
+                                  onClick={() => setCurrentPage(pageNumber)}
+                                  isActive={currentPage === pageNumber}
+                                  className="cursor-pointer"
+                                >
+                                  {pageNumber}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          } else if (
+                            pageNumber === currentPage - 2 ||
+                            pageNumber === currentPage + 2
+                          ) {
+                            return <PaginationEllipsis key={pageNumber} />;
+                          }
+                          return null;
+                        })}
+                      </>
+                    )}
+
+                    {/* Indicador mobile */}
+                    {isMobile && (
+                      <PaginationItem>
+                        <span className="text-sm px-4">
+                          {currentPage} / {totalPages}
+                        </span>
+                      </PaginationItem>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                        className={
+                          currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
             </div>
           )}
         </CardContent>
