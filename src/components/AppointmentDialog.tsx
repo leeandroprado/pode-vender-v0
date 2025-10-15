@@ -13,21 +13,86 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, addDays, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import type { Appointment, CreateAppointmentInput, AppointmentStatus } from "@/types/appointments";
 import { useClients } from "@/hooks/useClients";
+import type { Agenda, WorkingHours } from "@/hooks/useAgendas";
+import { toast } from "sonner";
 
 interface AppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   appointment?: Appointment;
   agendaId?: string;
+  agenda?: Agenda;
   onSubmit: (data: CreateAppointmentInput) => void;
   defaultDate?: Date;
 }
+
+// Função para gerar opções de duração baseadas no slot_duration da agenda
+const generateDurationOptions = (slotDuration: number) => {
+  const options = [];
+  for (let i = slotDuration; i <= 240; i += slotDuration) {
+    const hours = Math.floor(i / 60);
+    const minutes = i % 60;
+    let label = '';
+    if (hours > 0) label += `${hours} hora${hours > 1 ? 's' : ''}`;
+    if (minutes > 0) label += `${label ? ' e ' : ''}${minutes} minutos`;
+    options.push({ value: i.toString(), label });
+  }
+  return options;
+};
+
+// Função para verificar se um horário está dentro do working_hours
+const isTimeWithinWorkingHours = (date: Date, time: string, agenda?: Agenda) => {
+  if (!agenda) return true;
+  
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayName = dayNames[date.getDay()] as keyof WorkingHours;
+  const dayConfig = agenda.working_hours[dayName];
+  
+  if (!dayConfig.enabled) return false;
+  
+  const [hours, minutes] = time.split(':').map(Number);
+  const timeInMinutes = hours * 60 + minutes;
+  
+  const [startHours, startMinutes] = dayConfig.start.split(':').map(Number);
+  const startTimeInMinutes = startHours * 60 + startMinutes;
+  
+  const [endHours, endMinutes] = dayConfig.end.split(':').map(Number);
+  const endTimeInMinutes = endHours * 60 + endMinutes;
+  
+  return timeInMinutes >= startTimeInMinutes && timeInMinutes <= endTimeInMinutes;
+};
+
+// Função para verificar se horário está em um break
+const isTimeInBreak = (date: Date, time: string, duration: number, agenda?: Agenda) => {
+  if (!agenda || !agenda.breaks || agenda.breaks.length === 0) return false;
+  
+  const dayOfWeek = date.getDay();
+  const [hours, minutes] = time.split(':').map(Number);
+  const startTimeInMinutes = hours * 60 + minutes;
+  const endTimeInMinutes = startTimeInMinutes + duration;
+  
+  return agenda.breaks.some((breakPeriod: any) => {
+    if (!breakPeriod.days.includes(dayOfWeek)) return false;
+    
+    const [breakStartHours, breakStartMinutes] = breakPeriod.start.split(':').map(Number);
+    const breakStartInMinutes = breakStartHours * 60 + breakStartMinutes;
+    
+    const [breakEndHours, breakEndMinutes] = breakPeriod.end.split(':').map(Number);
+    const breakEndInMinutes = breakEndHours * 60 + breakEndMinutes;
+    
+    return (
+      (startTimeInMinutes >= breakStartInMinutes && startTimeInMinutes < breakEndInMinutes) ||
+      (endTimeInMinutes > breakStartInMinutes && endTimeInMinutes <= breakEndInMinutes) ||
+      (startTimeInMinutes <= breakStartInMinutes && endTimeInMinutes >= breakEndInMinutes)
+    );
+  });
+};
 
 const appointmentTypes = [
   'Consulta',
@@ -43,10 +108,17 @@ export function AppointmentDialog({
   onOpenChange,
   appointment,
   agendaId,
+  agenda,
   onSubmit,
   defaultDate,
 }: AppointmentDialogProps) {
   const { clients } = useClients();
+  
+  const durationOptions = agenda 
+    ? generateDurationOptions(agenda.slot_duration)
+    : generateDurationOptions(30);
+  
+  const defaultDuration = agenda ? agenda.slot_duration.toString() : '60';
   const [formData, setFormData] = useState<CreateAppointmentInput>({
     title: '',
     description: '',
@@ -61,7 +133,7 @@ export function AppointmentDialog({
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(defaultDate);
   const [startTime, setStartTime] = useState('09:00');
-  const [duration, setDuration] = useState('60');
+  const [duration, setDuration] = useState(defaultDuration);
 
   useEffect(() => {
     if (appointment) {
@@ -89,6 +161,12 @@ export function AppointmentDialog({
     }
   }, [appointment, defaultDate]);
 
+  useEffect(() => {
+    if (agenda && !appointment) {
+      setDuration(agenda.slot_duration.toString());
+    }
+  }, [agenda, appointment]);
+
   const calculateEndTime = (date: Date, time: string, durationMinutes: number) => {
     const [hours, minutes] = time.split(':').map(Number);
     const start = new Date(date);
@@ -103,7 +181,20 @@ export function AppointmentDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedDate) return;
+    if (!selectedDate) {
+      toast.error('Selecione uma data');
+      return;
+    }
+
+    if (agenda && !isTimeWithinWorkingHours(selectedDate, startTime, agenda)) {
+      toast.error('Horário fora do expediente configurado para este dia');
+      return;
+    }
+
+    if (agenda && isTimeInBreak(selectedDate, startTime, parseInt(duration), agenda)) {
+      toast.error('Horário conflita com um intervalo configurado');
+      return;
+    }
 
     const { start, end } = calculateEndTime(selectedDate, startTime, parseInt(duration));
 
@@ -132,7 +223,7 @@ export function AppointmentDialog({
     });
     setSelectedDate(undefined);
     setStartTime('09:00');
-    setDuration('60');
+    setDuration(defaultDuration);
   };
 
   return (
@@ -190,7 +281,23 @@ export function AppointmentDialog({
                     onSelect={setSelectedDate}
                     initialFocus
                     className="pointer-events-auto"
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    disabled={(date) => {
+                      if (date < new Date(new Date().setHours(0, 0, 0, 0))) return true;
+                      
+                      if (agenda) {
+                        const minDate = addHours(new Date(), agenda.min_advance_hours);
+                        if (date < minDate) return true;
+                        
+                        const maxDate = addDays(new Date(), agenda.max_advance_days);
+                        if (date > maxDate) return true;
+                        
+                        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                        const dayName = dayNames[date.getDay()] as keyof WorkingHours;
+                        if (!agenda.working_hours[dayName].enabled) return true;
+                      }
+                      
+                      return false;
+                    }}
                   />
                 </PopoverContent>
               </Popover>
@@ -209,22 +316,38 @@ export function AppointmentDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="duration">Duração (minutos) *</Label>
+            <Label htmlFor="duration">
+              Duração (minutos) *
+              {agenda && (
+                <span className="text-xs text-muted-foreground ml-2">
+                  Baseado em slots de {agenda.slot_duration} min
+                </span>
+              )}
+            </Label>
             <Select value={duration} onValueChange={setDuration}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="15">15 minutos</SelectItem>
-                <SelectItem value="30">30 minutos</SelectItem>
-                <SelectItem value="45">45 minutos</SelectItem>
-                <SelectItem value="60">1 hora</SelectItem>
-                <SelectItem value="90">1 hora e 30 minutos</SelectItem>
-                <SelectItem value="120">2 horas</SelectItem>
-                <SelectItem value="180">3 horas</SelectItem>
-                <SelectItem value="240">4 horas</SelectItem>
+                {durationOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+            {agenda && selectedDate && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {(() => {
+                  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                  const dayName = dayNames[selectedDate.getDay()] as keyof WorkingHours;
+                  const dayConfig = agenda.working_hours[dayName];
+                  return dayConfig.enabled 
+                    ? `📅 Expediente: ${dayConfig.start} - ${dayConfig.end}${agenda.breaks.length > 0 ? ' | ⏸️ Intervalos configurados' : ''}`
+                    : '🚫 Dia sem expediente';
+                })()}
+              </p>
+            )}
           </div>
 
           <div className="grid gap-2">

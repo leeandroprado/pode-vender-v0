@@ -50,6 +50,8 @@ export default function Agenda() {
 
   const { agendas, isLoading: isLoadingAgendas } = useAgendas();
   
+  const selectedAgenda = agendas.find(a => a.id === selectedAgendaId);
+  
   const { appointments, isLoading, createAppointment, updateAppointment } = useAppointments({
     ...filters,
     ...getDateRange(),
@@ -250,6 +252,7 @@ export default function Agenda() {
         }}
         appointment={editingAppointment}
         agendaId={selectedAgendaId}
+        agenda={selectedAgenda}
         onSubmit={(data) => {
           if (editingAppointment) {
             updateAppointment.mutate({ id: editingAppointment.id, ...data });
