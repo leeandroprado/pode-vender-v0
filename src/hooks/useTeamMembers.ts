@@ -121,6 +121,21 @@ export const useTeamMembers = () => {
 
   const updateUserRole = useMutation({
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: UserRole }) => {
+      // Primeiro, verificar o role atual
+      const { data: currentData, error: fetchError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Se o role já é o mesmo, retornar sucesso sem fazer update
+      if (currentData?.role === newRole) {
+        return { message: 'Role já está configurado', unchanged: true };
+      }
+
+      // Fazer o update
       const { data, error } = await supabase
         .from('user_roles')
         .update({ role: newRole })
@@ -129,18 +144,22 @@ export const useTeamMembers = () => {
 
       if (error) throw error;
       
+      // Agora sim, se data estiver vazio após tentar mudar, é erro de permissão
       if (!data || data.length === 0) {
         throw new Error('Não foi possível atualizar o role. Verifique suas permissões.');
       }
       
-      return data;
+      return { data, unchanged: false };
     },
-    onSuccess: () => {
+    onSuccess: (result: any) => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
-      toast({
-        title: "Função atualizada",
-        description: "A função do usuário foi alterada com sucesso.",
-      });
+      
+      if (!result.unchanged) {
+        toast({
+          title: "Função atualizada",
+          description: "A função do usuário foi alterada com sucesso.",
+        });
+      }
     },
     onError: (error: any) => {
       toast({
