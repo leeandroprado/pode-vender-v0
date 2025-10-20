@@ -147,6 +147,13 @@ export function QRCodeDialog({ agent, open, onOpenChange }: QRCodeDialogProps) {
       if (data.success && data.instance) {
         setInstance(data.instance);
 
+        // If QR Code arrived, stop polling
+        if (data.instance.qr_code_base64 && pollingIntervalRef.current) {
+          console.log('✅ QR Code received, stopping polling');
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+
         // Stop polling if connected
         if (data.instance.status === 'connected') {
           if (pollingIntervalRef.current) {

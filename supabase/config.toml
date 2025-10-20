@@ -15,6 +15,9 @@ verify_jwt = true
 [functions.whatsapp-fetch-contacts]
 verify_jwt = true
 
+[functions.webhook-qrcode-updated]
+verify_jwt = false
+
 [functions.get-system-settings]
 verify_jwt = false
 

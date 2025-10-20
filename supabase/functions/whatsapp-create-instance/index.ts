@@ -274,7 +274,7 @@ Deno.serve(async (req) => {
       requestBody.webhook = {
         url: settings.webhook_url,
         headers: webhookHeaders,
-        events: ['MESSAGES_UPSERT'],
+        events: ['MESSAGES_UPSERT', 'QRCODE_UPDATED'],
       };
       
       console.log('Webhook configured with URL:', settings.webhook_url);
@@ -374,6 +374,47 @@ Deno.serve(async (req) => {
         }
       } catch (qrError) {
         console.error('Failed to fetch QR code separately:', qrError);
+      }
+    }
+
+    // If still no QR code after initial fetch, poll for it
+    if (!qrCodeInfo.base64 && apizapData.instance?.instanceId) {
+      console.log('Starting QR Code polling (max 10 attempts, 2s interval)...');
+      
+      for (let attempt = 1; attempt <= 10; attempt++) {
+        console.log(`QR Code polling attempt ${attempt}/10...`);
+        
+        // Wait 2 seconds between attempts
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        try {
+          const qrPollResponse = await fetch(
+            `${baseUrl}/instance/qrcode/${apizapData.instance.instanceId}`,
+            {
+              method: 'GET',
+              headers: { 'apikey': apizapApiKey },
+            }
+          );
+
+          if (qrPollResponse.ok) {
+            const qrData = await qrPollResponse.json();
+            console.log(`Polling attempt ${attempt} response:`, JSON.stringify(qrData, null, 2));
+            
+            const polledQR = extractQRCode(qrData);
+            if (polledQR.base64) {
+              console.log(`✅ QR Code obtained on attempt ${attempt}`);
+              qrCodeInfo = polledQR;
+              break; // QR Code found, stop polling
+            }
+          }
+        } catch (pollError) {
+          console.error(`Polling attempt ${attempt} failed:`, pollError);
+        }
+      }
+      
+      if (!qrCodeInfo.base64) {
+        console.warn('⚠️ QR Code not obtained after 10 polling attempts (20 seconds)');
+        console.warn('QR Code should arrive via QRCODE_UPDATED webhook event');
       }
     }
 
