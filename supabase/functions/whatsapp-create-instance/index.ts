@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
       settings[setting.setting_key] = setting.setting_value || '';
     });
 
-    const baseUrl = settings.base_url || 'https://api.apizap.tech';
+    const baseUrl = settings.base_url || 'https://application.wpp.imidiahouse.com.br';
 
     // Check if instance already exists in ApiZap
     console.log('Checking if instance exists in ApiZap...');

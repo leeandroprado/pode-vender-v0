@@ -77,9 +77,25 @@ Deno.serve(async (req) => {
     if (instance?.hash && instance?.instance_name) {
       console.log(`Deleting instance from ApiZap: ${instance.instance_name}`);
       
+      // Get base URL from system_settings
+      const supabaseAdmin = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      const { data: settingsData } = await supabaseAdmin
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_category', 'apizap')
+        .eq('setting_key', 'base_url')
+        .maybeSingle();
+
+      const baseUrl = settingsData?.setting_value || 'https://application.wpp.imidiahouse.com.br';
+      console.log('Using API base URL:', baseUrl);
+      
       try {
         const apiZapResponse = await fetch(
-          `https://api.apizap.tech/instance/delete/${instance.instance_name}`,
+          `${baseUrl}/instance/delete/${instance.instance_name}`,
           {
             method: "DELETE",
             headers: {

@@ -56,6 +56,17 @@ Deno.serve(async (req) => {
 
     console.log('Instance found:', instance.instance_name);
 
+    // Get base URL from system_settings
+    const { data: settingsData } = await supabase
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_category', 'apizap')
+      .eq('setting_key', 'base_url')
+      .maybeSingle();
+
+    const baseUrl = settingsData?.setting_value || 'https://application.wpp.imidiahouse.com.br';
+    console.log('Using API base URL:', baseUrl);
+
     // Get Apizap API key
     const apizapApiKey = Deno.env.get('APIZAP_API_KEY');
     if (!apizapApiKey) {
@@ -64,7 +75,7 @@ Deno.serve(async (req) => {
 
     // Call Apizap API to get instance status
     const apizapResponse = await fetch(
-      `https://api.apizap.tech/instance/connectionState/${instance.instance_name}`,
+      `${baseUrl}/instance/connectionState/${instance.instance_name}`,
       {
         method: 'GET',
         headers: {

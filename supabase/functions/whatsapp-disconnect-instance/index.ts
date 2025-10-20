@@ -84,10 +84,26 @@ serve(async (req) => {
       });
     }
 
+    // Get base URL from system_settings
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { data: settingsData } = await supabaseAdmin
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_category', 'apizap')
+      .eq('setting_key', 'base_url')
+      .maybeSingle();
+
+    const baseUrl = settingsData?.setting_value || 'https://application.wpp.imidiahouse.com.br';
+    console.log("Using API base URL:", baseUrl);
+
     // Disconnect via Apizap API
-    console.log("Disconnecting instance:", instance.instance_name, "with hash");
+    console.log("Disconnecting instance:", instance.instance_name);
     const disconnectResponse = await fetch(
-      `https://api.apizap.tech/instance/logout/${instance.instance_name}`,
+      `${baseUrl}/instance/logout/${instance.instance_name}`,
       {
         method: "DELETE",
         headers: {
