@@ -309,6 +309,74 @@ Deno.serve(async (req) => {
     }
 
     const apizapData: ApizapCreateResponse = await apizapResponse.json();
+    
+    // Log complete API response for debugging
+    console.log('=== COMPLETE API RESPONSE ===');
+    console.log(JSON.stringify(apizapData, null, 2));
+    console.log('=== QR CODE DATA ===');
+    console.log('qrcode field exists?', !!apizapData.qrcode);
+    console.log('qrcode.base64 exists?', !!apizapData.qrcode?.base64);
+    console.log('qrcode.code exists?', !!apizapData.qrcode?.code);
+    
+    // Helper function to extract QR code from various response structures
+    function extractQRCode(apiResponse: any) {
+      const qrCodeData = {
+        base64: null as string | null,
+        code: null as string | null,
+      };
+
+      // Structure 1: apizapData.qrcode (ApiZap original)
+      if (apiResponse.qrcode) {
+        qrCodeData.base64 = apiResponse.qrcode.base64 || null;
+        qrCodeData.code = apiResponse.qrcode.code || null;
+      }
+      // Structure 2: apizapData.qr
+      else if (apiResponse.qr) {
+        qrCodeData.base64 = apiResponse.qr.base64 || null;
+        qrCodeData.code = apiResponse.qr.code || null;
+      }
+      // Structure 3: apizapData.instance.qrcode
+      else if (apiResponse.instance?.qrcode) {
+        qrCodeData.base64 = apiResponse.instance.qrcode.base64 || null;
+        qrCodeData.code = apiResponse.instance.qrcode.code || null;
+      }
+      // Structure 4: Direct fields
+      else if (apiResponse.qrCode || apiResponse.qr_code) {
+        qrCodeData.base64 = apiResponse.qrCode || apiResponse.qr_code || null;
+        qrCodeData.code = apiResponse.qrCodeText || apiResponse.qr_code_text || null;
+      }
+
+      console.log('Extracted QR Code:', qrCodeData);
+      return qrCodeData;
+    }
+
+    let qrCodeInfo = extractQRCode(apizapData);
+
+    // If QR code not in creation response, try fetching it separately
+    if (!qrCodeInfo.base64 && apizapData.instance?.instanceId) {
+      console.log('QR Code not in creation response, fetching separately...');
+      
+      try {
+        const qrCodeResponse = await fetch(
+          `${baseUrl}/instance/qrcode/${apizapData.instance.instanceId}`,
+          {
+            method: 'GET',
+            headers: {
+              'apikey': apizapApiKey,
+            },
+          }
+        );
+
+        if (qrCodeResponse.ok) {
+          const qrCodeData = await qrCodeResponse.json();
+          console.log('Separate QR Code fetch response:', JSON.stringify(qrCodeData, null, 2));
+          qrCodeInfo = extractQRCode(qrCodeData);
+        }
+      } catch (qrError) {
+        console.error('Failed to fetch QR code separately:', qrError);
+      }
+    }
+
     console.log('Instance created successfully:', apizapData.instance.instanceId);
 
     // Save instance to database
@@ -321,8 +389,8 @@ Deno.serve(async (req) => {
         instance_id: apizapData.instance.instanceId,
         hash: apizapData.hash,
         status: apizapData.instance.status === 'connecting' ? 'connecting' : 'disconnected',
-        qr_code_base64: apizapData.qrcode.base64,
-        qr_code_text: apizapData.qrcode.code,
+        qr_code_base64: qrCodeInfo.base64,
+        qr_code_text: qrCodeInfo.code,
         integration: apizapData.instance.integration,
         settings: apizapData.settings,
       })
