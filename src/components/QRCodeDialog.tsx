@@ -102,6 +102,81 @@ export function QRCodeDialog({ agent, open, onOpenChange }: QRCodeDialogProps) {
     };
   }, [open, agent, instance?.id, instance?.qr_code_base64]);
 
+  // Intelligent Polling: Check status every 3 seconds while connecting
+  useEffect(() => {
+    if (!open || !agent || !instance?.id) return;
+    if (instance.status !== 'connecting') {
+      console.log('⏸️ Polling não necessário - Status:', instance.status);
+      return;
+    }
+
+    console.log('🔄 Iniciando polling inteligente...');
+
+    let pollCount = 0;
+    const maxPolls = 40; // 40 polls × 3s = 2 minutos
+    let isActive = true;
+
+    const pollInterval = setInterval(async () => {
+      if (!isActive) {
+        clearInterval(pollInterval);
+        return;
+      }
+
+      pollCount++;
+      
+      if (pollCount >= maxPolls) {
+        console.log('⏱️ Timeout de polling atingido (2 minutos)');
+        clearInterval(pollInterval);
+        toast({
+          title: "Tempo esgotado",
+          description: "A conexão demorou muito. Tente gerar um novo QR Code.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      try {
+        console.log(`🔍 Poll ${pollCount}/${maxPolls} - Verificando status...`);
+        
+        const { data, error } = await supabase.functions.invoke(
+          'whatsapp-get-instance-status',
+          { body: { agentId: agent.id } }
+        );
+
+        if (error) {
+          console.error('❌ Erro no polling:', error);
+          return;
+        }
+
+        console.log('📊 Status retornado:', data.status);
+
+        // Atualiza o estado local (Realtime também vai atualizar)
+        if (data.instance) {
+          setInstance(data.instance);
+        }
+
+        // Para o polling se conectou ou deu erro
+        if (data.status === 'connected') {
+          console.log('✅ Conectado! Parando polling.');
+          clearInterval(pollInterval);
+          isActive = false;
+        } else if (data.status === 'error') {
+          console.log('❌ Erro detectado! Parando polling.');
+          clearInterval(pollInterval);
+          isActive = false;
+        }
+      } catch (err) {
+        console.error('❌ Exceção no polling:', err);
+      }
+    }, 3000); // 3 segundos
+
+    return () => {
+      console.log('🛑 Limpando polling...');
+      isActive = false;
+      clearInterval(pollInterval);
+    };
+  }, [open, agent, instance?.id, instance?.status]);
+
   const createOrGetInstance = async () => {
     if (!agent) return;
 
