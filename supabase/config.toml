@@ -15,7 +15,13 @@ verify_jwt = true
 [functions.whatsapp-fetch-contacts]
 verify_jwt = true
 
+[functions.whatsapp-delete-agent]
+verify_jwt = true
+
 [functions.webhook-qrcode-updated]
+verify_jwt = false
+
+[functions.webhook-connection-update]
 verify_jwt = false
 
 [functions.get-system-settings]
@@ -35,3 +41,9 @@ verify_jwt = false
 
 [functions.public-api-create-appointment]
 verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = true
+
+[functions.update-user-email]
+verify_jwt = true

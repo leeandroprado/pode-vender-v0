@@ -274,7 +274,7 @@ Deno.serve(async (req) => {
       requestBody.webhook = {
         url: settings.webhook_url,
         headers: webhookHeaders,
-        events: ['MESSAGES_UPSERT', 'QRCODE_UPDATED'],
+        events: ['MESSAGES_UPSERT', 'QRCODE_UPDATED', 'CONNECTION.UPDATE'],
       };
       
       console.log('Webhook configured with URL:', settings.webhook_url);

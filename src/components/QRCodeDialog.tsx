@@ -36,25 +36,71 @@ export function QRCodeDialog({ agent, open, onOpenChange }: QRCodeDialogProps) {
   const [instance, setInstance] = useState<WhatsAppInstance | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [qrCodeExpiry, setQrCodeExpiry] = useState<number>(60); // 60 seconds
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const expiryTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
+  // Initialize instance when dialog opens
   useEffect(() => {
     if (open && agent) {
       createOrGetInstance();
     }
 
     return () => {
-      // Cleanup polling and timer when dialog closes
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
+      // Cleanup timer when dialog closes
       if (expiryTimerRef.current) {
         clearInterval(expiryTimerRef.current);
       }
     };
   }, [open, agent]);
+
+  // Subscribe to Realtime updates for WhatsApp connection status
+  useEffect(() => {
+    if (!open || !agent || !instance?.id) return;
+
+    console.log('🔔 Subscribing to realtime updates for instance:', instance.id);
+
+    const channel = supabase
+      .channel(`whatsapp-instance-${instance.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'whatsapp_instances',
+          filter: `id=eq.${instance.id}`,
+        },
+        (payload) => {
+          console.log('🔄 Realtime update received:', payload);
+          const updatedInstance = payload.new as WhatsAppInstance;
+          
+          setInstance(updatedInstance);
+
+          // Show toast when connected
+          if (updatedInstance.status === 'connected') {
+            toast({
+              title: "✅ WhatsApp Conectado!",
+              description: "Seu agente está pronto para atender",
+            });
+
+            // Stop expiry timer
+            if (expiryTimerRef.current) {
+              clearInterval(expiryTimerRef.current);
+            }
+          }
+
+          // Restart expiry timer when QR code updates
+          if (updatedInstance.qr_code_base64 !== instance.qr_code_base64) {
+            startExpiryTimer();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔕 Unsubscribing from realtime');
+      supabase.removeChannel(channel);
+    };
+  }, [open, agent, instance?.id, instance?.qr_code_base64]);
 
   const createOrGetInstance = async () => {
     if (!agent) return;
@@ -82,7 +128,6 @@ export function QRCodeDialog({ agent, open, onOpenChange }: QRCodeDialogProps) {
         
         // Start polling for status updates if not connected
         if (data.instance.status !== 'connected') {
-          startPolling();
           startExpiryTimer();
         }
 
@@ -107,16 +152,14 @@ export function QRCodeDialog({ agent, open, onOpenChange }: QRCodeDialogProps) {
     }
   };
 
-  const startPolling = () => {
-    // Poll every 3 seconds
-    pollingIntervalRef.current = setInterval(async () => {
-      await checkInstanceStatus();
-    }, 3000);
-  };
-
   const startExpiryTimer = () => {
     // QR code expires in 60 seconds
     setQrCodeExpiry(60);
+    
+    // Clear existing timer
+    if (expiryTimerRef.current) {
+      clearInterval(expiryTimerRef.current);
+    }
     
     expiryTimerRef.current = setInterval(() => {
       setQrCodeExpiry((prev) => {
@@ -131,54 +174,8 @@ export function QRCodeDialog({ agent, open, onOpenChange }: QRCodeDialogProps) {
     }, 1000);
   };
 
-  const checkInstanceStatus = async () => {
-    if (!agent) return;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('whatsapp-get-instance-status', {
-        body: { agentId: agent.id },
-      });
-
-      if (error) {
-        console.error('Error checking status:', error);
-        return;
-      }
-
-      if (data.success && data.instance) {
-        setInstance(data.instance);
-
-        // If QR Code arrived, stop polling
-        if (data.instance.qr_code_base64 && pollingIntervalRef.current) {
-          console.log('✅ QR Code received, stopping polling');
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-
-        // Stop polling if connected
-        if (data.instance.status === 'connected') {
-          if (pollingIntervalRef.current) {
-            clearInterval(pollingIntervalRef.current);
-          }
-          if (expiryTimerRef.current) {
-            clearInterval(expiryTimerRef.current);
-          }
-          
-          toast({
-            title: "✅ WhatsApp Conectado!",
-            description: "Seu agente está pronto para atender",
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error checking status:', error);
-    }
-  };
-
   const handleRefreshQRCode = async () => {
-    // Clear existing timers
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-    }
+    // Clear existing timer
     if (expiryTimerRef.current) {
       clearInterval(expiryTimerRef.current);
     }
