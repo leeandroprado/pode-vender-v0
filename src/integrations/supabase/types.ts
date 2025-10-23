@@ -391,7 +391,7 @@ export type Database = {
           organization_id: string | null
           phone: string
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           city?: string | null
@@ -404,7 +404,7 @@ export type Database = {
           organization_id?: string | null
           phone: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           city?: string | null
@@ -417,7 +417,7 @@ export type Database = {
           organization_id?: string | null
           phone?: string
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -535,6 +535,24 @@ export type Database = {
         }
         Relationships: []
       }
+      logs_n8n: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: number
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -621,7 +639,7 @@ export type Database = {
       orders: {
         Row: {
           client_id: string | null
-          conversation_id: string
+          conversation_id: string | null
           created_at: string | null
           id: string
           notes: string | null
@@ -632,7 +650,7 @@ export type Database = {
         }
         Insert: {
           client_id?: string | null
-          conversation_id: string
+          conversation_id?: string | null
           created_at?: string | null
           id?: string
           notes?: string | null
@@ -643,7 +661,7 @@ export type Database = {
         }
         Update: {
           client_id?: string | null
-          conversation_id?: string
+          conversation_id?: string | null
           created_at?: string | null
           id?: string
           notes?: string | null
@@ -879,10 +897,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      current_user_organization: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      current_user_organization: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
@@ -890,10 +905,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_super_admin: { Args: never; Returns: boolean }
       same_organization: {
         Args: { _owner_id: string; _user_id: string }
         Returns: boolean
