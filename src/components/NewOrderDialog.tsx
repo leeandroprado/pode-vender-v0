@@ -57,7 +57,7 @@ export function NewOrderDialog({
   const { clients } = useClients();
   const { products, filters, setFilters } = useProducts();
   
-  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [selectedClientId, setSelectedClientId] = useState<string>('no-client');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [notes, setNotes] = useState('');
   const [searchProduct, setSearchProduct] = useState('');
@@ -66,7 +66,7 @@ export function NewOrderDialog({
   // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
-      setSelectedClientId('');
+      setSelectedClientId('no-client');
       setOrderItems([]);
       setNotes('');
       setSearchProduct('');
@@ -133,7 +133,7 @@ export function NewOrderDialog({
     setIsSubmitting(true);
     try {
       await createManualOrder(
-        selectedClientId || null,
+        selectedClientId === 'no-client' ? null : selectedClientId,
         orderItems.map(item => ({
           product_id: item.product_id,
           quantity: item.quantity,
@@ -170,7 +170,7 @@ export function NewOrderDialog({
                 <SelectValue placeholder="Selecione um cliente" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sem cliente vinculado</SelectItem>
+                <SelectItem value="no-client">Sem cliente vinculado</SelectItem>
                 {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     {client.name} - {client.phone}
