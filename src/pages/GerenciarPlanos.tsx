@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { usePlans } from "@/hooks/usePlans";
 import { PlanFormDialog } from "@/components/PlanFormDialog";
+import { PlanFeaturesManager } from "@/components/PlanFeaturesManager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Eye, EyeOff, CreditCard, Settings } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Plus, Edit, Eye, EyeOff, CreditCard, Settings, Sliders } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +19,8 @@ export default function GerenciarPlanos() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [featuresDialogOpen, setFeaturesDialogOpen] = useState(false);
+  const [selectedPlanForFeatures, setSelectedPlanForFeatures] = useState<any>(null);
 
   const formatPrice = (price: number) => {
     return price.toLocaleString('pt-BR', { 
@@ -61,6 +65,11 @@ export default function GerenciarPlanos() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleConfigureFeatures = (plan: any) => {
+    setSelectedPlanForFeatures(plan);
+    setFeaturesDialogOpen(true);
   };
 
   return (
@@ -139,7 +148,17 @@ export default function GerenciarPlanos() {
                   </div>
                 </CardContent>
 
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 space-y-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleConfigureFeatures(plan)}
+                  >
+                    <Sliders className="h-4 w-4 mr-2" />
+                    Configurar Funcionalidades
+                  </Button>
+                  
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -187,6 +206,23 @@ export default function GerenciarPlanos() {
         onOpenChange={setDialogOpen}
         plan={selectedPlan}
       />
+
+      <Dialog open={featuresDialogOpen} onOpenChange={setFeaturesDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Configurar Funcionalidades</DialogTitle>
+            <DialogDescription>
+              Configure os valores das funcionalidades para o plano {selectedPlanForFeatures?.name}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedPlanForFeatures && (
+            <PlanFeaturesManager
+              planId={selectedPlanForFeatures.id}
+              planName={selectedPlanForFeatures.name}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
