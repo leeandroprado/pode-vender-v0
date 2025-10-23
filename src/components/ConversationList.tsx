@@ -53,55 +53,67 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
           </div>
         ) : (
           <div className="divide-y">
-            {conversations.map((conversation) => (
-              <div
-                key={conversation.id}
-                className={`p-4 cursor-pointer hover:bg-accent/50 transition-colors ${
-                  selectedId === conversation.id ? "bg-accent" : ""
-                }`}
-                onClick={() => onSelect(conversation.id)}
-              >
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-12 w-12 shrink-0">
-                    <AvatarFallback className="bg-primary/10">
-                      <User className="w-5 h-5" />
-                    </AvatarFallback>
-                  </Avatar>
+            {conversations.map((conversation) => {
+              const isSelected = selectedId === conversation.id;
+              
+              return (
+                <div
+                  key={conversation.id}
+                  className={`p-4 cursor-pointer transition-colors duration-200 ${
+                    isSelected 
+                      ? "bg-primary/15 border-l-2 border-primary" 
+                      : "hover:bg-accent/50"
+                  }`}
+                  onClick={() => onSelect(conversation.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-12 w-12 shrink-0">
+                      <AvatarFallback className={isSelected ? "bg-primary/20" : "bg-primary/10"}>
+                        <User className="w-5 h-5" />
+                      </AvatarFallback>
+                    </Avatar>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm truncate">
-                          {conversation.clients?.name || conversation.whatsapp_phone}
-                        </h3>
-                        {conversation.client_id && (
-                          <UserCheck className="w-3 h-3 text-primary shrink-0" />
-                        )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <h3 className={`font-semibold text-sm truncate ${
+                            isSelected ? "text-primary" : ""
+                          }`}>
+                            {conversation.clients?.name || conversation.whatsapp_phone}
+                          </h3>
+                          {conversation.client_id && (
+                            <UserCheck className="w-3 h-3 text-primary shrink-0" />
+                          )}
+                        </div>
+                        <span className={`text-xs shrink-0 ${
+                          isSelected ? "text-foreground/80 font-medium" : "text-muted-foreground"
+                        }`}>
+                          {formatTimestamp(new Date(conversation.last_message_at))}
+                        </span>
                       </div>
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        {formatTimestamp(new Date(conversation.last_message_at))}
-                      </span>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground truncate flex-1">
-                        {conversation.last_message ? (
-                          <>
-                            {conversation.last_message.sender_type !== 'client' && '✓ '}
-                            {conversation.last_message.content}
-                          </>
-                        ) : (
-                          'Nenhuma mensagem ainda'
-                        )}
-                      </p>
-                      <div className="shrink-0">
-                        <div className={`w-2 h-2 rounded-full ${getStatusColor(conversation.status)}`} />
+                      <div className="flex items-center gap-2">
+                        <p className={`text-sm truncate flex-1 ${
+                          isSelected ? "text-foreground/70" : "text-muted-foreground"
+                        }`}>
+                          {conversation.last_message ? (
+                            <>
+                              {conversation.last_message.sender_type !== 'client' && '✓ '}
+                              {conversation.last_message.content}
+                            </>
+                          ) : (
+                            'Nenhuma mensagem ainda'
+                          )}
+                        </p>
+                        <div className="shrink-0">
+                          <div className={`w-2 h-2 rounded-full ${getStatusColor(conversation.status)}`} />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
