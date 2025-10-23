@@ -33,9 +33,9 @@ Deno.serve(async (req) => {
       throw new Error('Não autenticado');
     }
 
-    const { plan_id, billing_type, credit_card_token, credit_card_holder_info } = await req.json();
+    const { planId, billingType, creditCardToken, creditCardHolderInfo } = await req.json();
 
-    console.log('Criando assinatura:', { plan_id, billing_type });
+    console.log('Criando assinatura:', { planId, billingType });
 
     // Buscar dados do usuário
     const { data: profile } = await supabaseClient
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     const { data: plan } = await supabaseClient
       .from('subscription_plans')
       .select('*')
-      .eq('id', plan_id)
+      .eq('id', planId)
       .single();
 
     if (!plan) {
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     // Criar assinatura no Asaas
     const subscriptionPayload: any = {
       customer: currentSubscription.asaas_customer_id,
-      billingType: billing_type,
+      billingType: billingType,
       value: plan.price,
       nextDueDate: nextDueDateStr,
       cycle: plan.billing_cycle,
@@ -86,11 +86,11 @@ Deno.serve(async (req) => {
     };
 
     // Adicionar dados de cartão se for pagamento com cartão
-    if (billing_type === 'CREDIT_CARD' && credit_card_token) {
+    if (billingType === 'CREDIT_CARD' && creditCardToken) {
       subscriptionPayload.creditCard = {
-        creditCardToken: credit_card_token,
+        creditCardToken: creditCardToken,
       };
-      subscriptionPayload.creditCardHolderInfo = credit_card_holder_info;
+      subscriptionPayload.creditCardHolderInfo = creditCardHolderInfo;
     }
 
     console.log('Payload da assinatura:', subscriptionPayload);
@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
     const { error: updateError } = await supabaseClient
       .from('organization_subscriptions')
       .update({
-        plan_id: plan_id,
+        plan_id: planId,
         asaas_subscription_id: asaasSubscription.id,
         asaas_next_due_date: asaasSubscription.nextDueDate,
         status: 'active',
