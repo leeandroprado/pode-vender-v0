@@ -194,7 +194,7 @@ export function NewOrderDialog({
             </div>
             <ScrollArea className="h-40 border rounded-md">
               <div className="p-2 space-y-1">
-                {products.filter(p => p.status === 'active').map((product) => (
+                {products.filter(p => p.active === true).map((product) => (
                   <Card
                     key={product.id}
                     className="p-3 flex items-center justify-between hover:bg-accent cursor-pointer"
