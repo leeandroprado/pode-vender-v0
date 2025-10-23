@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, User, MoreVertical, Search, UserPlus, UserCheck, PanelRightClose, PanelRightOpen, AlertCircle, Check, Clock, CheckCheck, ShoppingCart } from "lucide-react";
+import { Bot, User, MoreVertical, Search, UserPlus, UserCheck, PanelRightClose, PanelRightOpen, AlertCircle, Check, Clock, CheckCheck, ShoppingCart, ShoppingBag, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Message } from "@/hooks/useConversations";
@@ -18,6 +18,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useVendedores } from "@/hooks/useVendedores";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useConversationOrders } from "@/hooks/useConversationOrders";
+import { Card } from "@/components/ui/card";
 
 interface ConversationDetailProps {
   messages: Message[];
@@ -57,10 +59,16 @@ export const ConversationDetail = ({
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { itemCount } = useCart(conversationId);
+  const { data: conversationOrders = [] } = useConversationOrders(conversationId);
 
   const currentClient = clientId ? clients.find(c => c.id === clientId) : null;
   const displayName = currentClient?.name || clientName || conversationPhone;
   const hasClient = !!clientId;
+
+  // Calcular estatísticas de pedidos
+  const totalOrders = conversationOrders.length;
+  const totalSpent = conversationOrders.reduce((sum, order) => sum + Number(order.total), 0);
+  const lastOrder = conversationOrders[0];
 
   const handleOwnerToggle = (checked: boolean) => {
     const newOwner = checked ? 'ia' : 'human';
@@ -192,6 +200,37 @@ export const ConversationDetail = ({
           </div>
         </div>
       </div>
+
+      {/* Card de Estatísticas de Pedidos */}
+      {totalOrders > 0 && (
+        <Card className="mx-4 mt-3 p-3 border-primary/20 bg-primary/5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-xs">
+              <span className="flex items-center gap-1 font-medium">
+                <ShoppingBag className="w-3.5 h-3.5 text-primary" />
+                {totalOrders} pedido{totalOrders > 1 ? 's' : ''}
+              </span>
+              <span className="flex items-center gap-1 text-green-600 font-semibold">
+                <DollarSign className="w-3.5 h-3.5" />
+                R$ {totalSpent.toFixed(2)}
+              </span>
+              {lastOrder && (
+                <span className="text-muted-foreground">
+                  Último: {format(new Date(lastOrder.created_at), "dd/MM", { locale: ptBR })}
+                </span>
+              )}
+            </div>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={onToggleContactInfo}
+              className="h-7 text-xs"
+            >
+              Ver Pedidos
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Messages */}
       <div className="flex-1 min-h-0 overflow-hidden bg-muted/10">

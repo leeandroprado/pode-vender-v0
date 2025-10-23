@@ -23,6 +23,7 @@ import { OrderStatusBadge } from './OrderStatusBadge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Package, User, Phone, Calendar, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface OrderDetailsDialogProps {
   open: boolean;
@@ -39,6 +40,7 @@ export const OrderDetailsDialog = ({
 }: OrderDetailsDialogProps) => {
   const { getOrderDetails, updateOrderStatus } = useOrders();
   const { isAdmin } = useUserRole();
+  const navigate = useNavigate();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -135,14 +137,28 @@ export const OrderDetailsDialog = ({
               </div>
             )}
 
-            {/* WhatsApp Phone */}
+            {/* WhatsApp Phone & Conversation Link */}
             {order.conversations && (
-              <div className="rounded-lg border bg-card p-4">
+              <div className="rounded-lg border bg-card p-4 space-y-3">
                 <p className="text-sm flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   <span className="text-muted-foreground">WhatsApp:</span>
                   <span className="font-medium">{order.conversations.whatsapp_phone}</span>
                 </p>
+                {order.conversation_id && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      onOpenChange(false);
+                      navigate(`/conversas?id=${order.conversation_id}`);
+                    }}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Ir para conversa
+                  </Button>
+                )}
               </div>
             )}
 

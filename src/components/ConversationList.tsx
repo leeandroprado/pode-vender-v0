@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, User, UserCheck } from "lucide-react";
+import { MessageSquare, User, UserCheck, ShoppingBag } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Conversation } from "@/hooks/useConversations";
@@ -105,7 +105,13 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
                             'Nenhuma mensagem ainda'
                           )}
                         </p>
-                        <div className="shrink-0">
+                        <div className="flex items-center gap-2 shrink-0">
+                          {conversation.orders_count && conversation.orders_count > 0 && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5">
+                              <ShoppingBag className="w-3 h-3 mr-0.5" />
+                              {conversation.orders_count}
+                            </Badge>
+                          )}
                           <div className={`w-2 h-2 rounded-full ${getStatusColor(conversation.status)}`} />
                         </div>
                       </div>

@@ -16,6 +16,7 @@ export type Conversation = {
   metadata: Record<string, any>;
   client_id?: string | null;
   assigned_to?: string | null;
+  orders_count?: number;
   last_message?: {
     content: string;
     sender_type: 'client' | 'ai' | 'system';
@@ -78,7 +79,7 @@ export const useConversations = () => {
 
       if (error) throw error;
       
-      // Enriquecer com última mensagem e perfil atribuído
+      // Enriquecer com última mensagem, perfil atribuído e contagem de pedidos
       const conversationsWithData = await Promise.all(
         (data || []).map(async (conv: any) => {
           // Buscar última mensagem
@@ -101,10 +102,17 @@ export const useConversations = () => {
             assigned_profile = profile;
           }
 
+          // Contar pedidos
+          const { count: ordersCount } = await supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', conv.id);
+
           return { 
             ...conv, 
             last_message: lastMessage,
-            assigned_profile 
+            assigned_profile,
+            orders_count: ordersCount || 0,
           };
         })
       );

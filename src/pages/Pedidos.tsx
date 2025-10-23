@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -32,6 +34,8 @@ import {
   Package,
   CheckCircle2,
   Plus,
+  MessageSquare,
+  X,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -46,6 +50,10 @@ import {
 type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
 const Pedidos = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const conversationIdFilter = searchParams.get('conversation');
+  
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -61,6 +69,12 @@ const Pedidos = () => {
   const deliveredOrders = orders.filter(o => o.status === 'delivered').length;
 
   const filteredOrders = orders.filter(order => {
+    // Filtro por conversation_id
+    if (conversationIdFilter && order.conversation_id !== conversationIdFilter) {
+      return false;
+    }
+    
+    // Filtro por search term
     if (!searchTerm) return true;
     const search = searchTerm.toLowerCase();
     return (
@@ -134,8 +148,23 @@ const Pedidos = () => {
 
       {/* Filters */}
       <Card className="p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-4">
+          {/* Badge de filtro ativo */}
+          {conversationIdFilter && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="gap-2">
+                <MessageSquare className="w-3 h-3" />
+                Filtrando por conversa
+                <X 
+                  className="w-3 h-3 cursor-pointer hover:text-destructive" 
+                  onClick={() => navigate('/pedidos')} 
+                />
+              </Badge>
+            </div>
+          )}
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por ID, cliente ou telefone..."
@@ -159,6 +188,7 @@ const Pedidos = () => {
               <SelectItem value="cancelled">Cancelado</SelectItem>
             </SelectContent>
           </Select>
+          </div>
         </div>
       </Card>
 

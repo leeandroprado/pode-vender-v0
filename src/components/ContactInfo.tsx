@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { User, Bell, Pin, Settings, X, Mail, MapPin, CreditCard, Calendar, Edit2, Users } from "lucide-react";
+import { User, Bell, Pin, Settings, X, Mail, MapPin, CreditCard, Calendar, Edit2, Users, ShoppingBag, ExternalLink, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useClients } from "@/hooks/useClients";
@@ -12,6 +12,11 @@ import { useVendedores } from "@/hooks/useVendedores";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useConversationOrders } from "@/hooks/useConversationOrders";
+import { OrderDetailsDialog } from "@/components/OrderDetailsDialog";
+import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { useNavigate } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ContactInfoProps {
   conversationPhone: string;
@@ -38,10 +43,18 @@ export const ContactInfo = ({
   const { vendedores, isLoading: isLoadingVendedores } = useVendedores();
   const { isAdmin } = useUserRole();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const displayName = clientName || conversationPhone;
   
   // Buscar dados completos do cliente
   const clientData = clients.find(c => c.id === clientId);
+
+  // Buscar pedidos da conversa
+  const { data: orders = [], isLoading: isLoadingOrders } = useConversationOrders(conversationId);
+  
+  // Calcular total gasto
+  const totalSpent = orders.reduce((sum, order) => sum + Number(order.total), 0);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -152,6 +165,80 @@ export const ContactInfo = ({
         </>
       )}
 
+      {/* Histórico de Pedidos */}
+      {orders.length > 0 && (
+        <>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="orders-history" className="border-0">
+              <AccordionTrigger className="px-4 py-3 hover:bg-muted/50">
+                <div className="flex items-center gap-2 flex-1">
+                  <ShoppingBag className="w-4 h-4" />
+                  <span className="font-medium">Pedidos ({orders.length})</span>
+                  {orders.length > 0 && (
+                    <Badge variant="secondary" className="ml-auto">
+                      <DollarSign className="w-3 h-3 mr-1" />
+                      R$ {totalSpent.toFixed(2)}
+                    </Badge>
+                  )}
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                {isLoadingOrders ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 2 }).map((_, i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {orders.map((order) => (
+                      <div
+                        key={order.id}
+                        className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                        onClick={() => setSelectedOrderId(order.id)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs text-muted-foreground">
+                              #{order.id.slice(0, 8)}
+                            </span>
+                            <OrderStatusBadge status={order.status} />
+                          </div>
+                          <span className="font-semibold text-sm">
+                            R$ {Number(order.total).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {format(new Date(order.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <ShoppingBag className="w-3 h-3" />
+                            {order.order_items?.length || 0} item(s)
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full mt-2"
+                      onClick={() => navigate(`/pedidos?conversation=${conversationId}`)}
+                    >
+                      Ver todos no sistema
+                      <ExternalLink className="w-3 h-3 ml-2" />
+                    </Button>
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+          <Separator />
+        </>
+      )}
+
       {/* Área de dados do cliente */}
       <div className="flex-1 overflow-y-auto">
         {clientData ? (
@@ -250,6 +337,15 @@ export const ContactInfo = ({
           onUpdate={async (id, data) => {
             await updateClient.mutateAsync({ id, ...data });
           }}
+        />
+      )}
+
+      {/* Dialog de detalhes do pedido */}
+      {selectedOrderId && (
+        <OrderDetailsDialog
+          open={!!selectedOrderId}
+          onOpenChange={(open) => !open && setSelectedOrderId(null)}
+          orderId={selectedOrderId}
         />
       )}
     </div>
