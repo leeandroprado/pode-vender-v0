@@ -1,4 +1,4 @@
-import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar, Key, BookOpen, LogOut, Shield, BarChart, Briefcase, Library, ShoppingCart } from "lucide-react";
+import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar, Key, BookOpen, LogOut, Shield, BarChart, Briefcase, Library, ShoppingCart, CreditCard } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +40,7 @@ const managementItems = [
 // Módulo: Recursos
 const resourceItems = [
   { title: "Documentação API", url: "/api-docs", icon: BookOpen },
+  { title: "Planos", url: "/planos", icon: CreditCard },
   { title: "Minha Conta", url: "/conta", icon: UserCircle },
 ];
 

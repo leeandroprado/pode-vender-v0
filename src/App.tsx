@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import SystemSettings from "./pages/SystemSettings";
 import ApiTokens from "./pages/ApiTokens";
 import ApiDocs from "./pages/ApiDocs";
+import Planos from "./pages/Planos";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import { AdminRoute } from "./components/AdminRoute";
 
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/equipe" element={<ProtectedRoute><AdminRoute><DashboardLayout><Equipe /></DashboardLayout></AdminRoute></ProtectedRoute>} />
             <Route path="/api-tokens" element={<ProtectedRoute><AdminRoute><ApiTokens /></AdminRoute></ProtectedRoute>} />
             <Route path="/api-docs" element={<ProtectedRoute><DashboardLayout><ApiDocs /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/planos" element={<ProtectedRoute><Planos /></ProtectedRoute>} />
             <Route path="/settings-system" element={<ProtectedRoute><SuperAdminRoute><SystemSettings /></SuperAdminRoute></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
