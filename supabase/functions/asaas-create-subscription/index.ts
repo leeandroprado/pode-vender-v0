@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
       throw new Error('Não autenticado');
     }
 
-    const { planId, billingType, creditCardToken, creditCardHolderInfo } = await req.json();
+    const { planId, billingType, creditCardToken, creditCardHolderInfo, cpfCnpj, phone, fullName } = await req.json();
 
     console.log('Criando assinatura:', { planId, billingType });
 
@@ -68,6 +68,36 @@ Deno.serve(async (req) => {
 
     if (!currentSubscription?.asaas_customer_id) {
       throw new Error('Customer Asaas não encontrado. Crie um customer primeiro.');
+    }
+
+    // Atualizar customer com CPF/CNPJ e telefone antes de criar subscription
+    if (cpfCnpj) {
+      console.log('Atualizando customer no Asaas:', currentSubscription.asaas_customer_id);
+      
+      const updatePayload: any = {
+        cpfCnpj: cpfCnpj,
+      };
+
+      if (phone) updatePayload.mobilePhone = phone;
+      if (fullName) updatePayload.name = fullName;
+
+      const updateResponse = await fetch(`${ASAAS_BASE_URL}/customers/${currentSubscription.asaas_customer_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'access_token': ASAAS_API_KEY,
+        },
+        body: JSON.stringify(updatePayload),
+      });
+
+      const updatedCustomer = await updateResponse.json();
+
+      if (!updateResponse.ok) {
+        console.error('Erro ao atualizar customer no Asaas:', updatedCustomer);
+        throw new Error(`Falha ao atualizar dados do cliente: ${JSON.stringify(updatedCustomer)}`);
+      }
+
+      console.log('Customer atualizado com sucesso:', updatedCustomer.id);
     }
 
     // Calcular próximo vencimento (30 dias para MONTHLY)

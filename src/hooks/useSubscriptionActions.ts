@@ -85,26 +85,17 @@ export const useSubscriptionActions = () => {
         asaasCustomerId = customerData.customerId;
       }
 
-      // 4.1 Atualizar dados do customer com CPF/CNPJ e telefone
-      if (profile.cpf_cnpj) {
-        await supabase.functions.invoke('asaas-update-customer', {
-          body: {
-            customerId: asaasCustomerId,
-            cpfCnpj: profile.cpf_cnpj,
-            phone: profile.phone,
-            name: profile.full_name || profile.email.split('@')[0],
-          },
-        });
-      }
-
-      // 5. Criar/atualizar subscription no Asaas
+      // 5. Criar/atualizar subscription no Asaas (inclui atualização do customer)
       const { data: subscriptionData, error: subscriptionError } = await supabase.functions.invoke(
         'asaas-create-subscription',
         {
           body: {
             customerId: asaasCustomerId,
             planId: planId,
-            billingType: 'BOLETO', // Pode ser PIX, CREDIT_CARD, etc
+            billingType: 'BOLETO',
+            cpfCnpj: profile.cpf_cnpj,
+            phone: profile.phone,
+            fullName: profile.full_name,
           },
         }
       );
