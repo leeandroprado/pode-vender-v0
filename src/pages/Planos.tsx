@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { usePlans } from "@/hooks/usePlans";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useSubscriptionActions } from "@/hooks/useSubscriptionActions";
@@ -7,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreditCard, Loader2 } from "lucide-react";
 import { PlanCard } from "@/components/PlanCard";
+import { PaymentDataDialog } from "@/components/PaymentDataDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -15,6 +17,34 @@ export default function Planos() {
   const { subscription } = useSubscription();
   const { data: plans, isLoading } = usePlans();
   const { createOrUpdateSubscription, isLoading: isProcessing } = useSubscriptionActions();
+  const [paymentDataDialogOpen, setPaymentDataDialogOpen] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+
+  const handleSelectPlan = (planId: string, isCustom: boolean) => {
+    if (isCustom) {
+      // Abrir WhatsApp ou email para contato
+      window.open(
+        'https://wa.me/5511999999999?text=Olá! Tenho interesse no plano Enterprise. Gostaria de mais informações sobre preços e recursos personalizados.',
+        '_blank'
+      );
+    } else {
+      // Tentar criar/atualizar subscription
+      setSelectedPlanId(planId);
+      createOrUpdateSubscription.mutate(planId, {
+        onError: (error: any) => {
+          if (error.message === 'MISSING_PAYMENT_DATA') {
+            setPaymentDataDialogOpen(true);
+          }
+        },
+      });
+    }
+  };
+
+  const handlePaymentDataSuccess = () => {
+    if (selectedPlanId) {
+      createOrUpdateSubscription.mutate(selectedPlanId);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -56,18 +86,7 @@ export default function Planos() {
                 plan={plan}
                 current={subscription?.plan_id === plan.id}
                 isProcessing={isProcessing}
-                onSelect={() => {
-                  if (plan.is_custom) {
-                    // Abrir WhatsApp ou email para contato
-                    window.open(
-                      'https://wa.me/5511999999999?text=Olá! Tenho interesse no plano Enterprise. Gostaria de mais informações sobre preços e recursos personalizados.',
-                      '_blank'
-                    );
-                  } else {
-                    // Criar/atualizar subscription
-                    createOrUpdateSubscription.mutate(plan.id);
-                  }
-                }}
+                onSelect={() => handleSelectPlan(plan.id, plan.is_custom)}
               />
             ))}
           </div>
@@ -83,6 +102,13 @@ export default function Planos() {
             </div>
           </div>
         )}
+
+        {/* Dialog de dados de pagamento */}
+        <PaymentDataDialog
+          open={paymentDataDialogOpen}
+          onOpenChange={setPaymentDataDialogOpen}
+          onSuccess={handlePaymentDataSuccess}
+        />
       </div>
     </DashboardLayout>
   );

@@ -790,29 +790,35 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          cpf_cnpj: string | null
           created_at: string
           email: string
           full_name: string | null
           id: string
           organization_id: string | null
+          phone: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          cpf_cnpj?: string | null
           created_at?: string
           email: string
           full_name?: string | null
           id: string
           organization_id?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          cpf_cnpj?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
           organization_id?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []

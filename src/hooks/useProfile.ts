@@ -9,6 +9,8 @@ interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   organization_id: string | null;
+  cpf_cnpj: string | null;
+  phone: string | null;
 }
 
 interface UpdateProfileData {

@@ -54,5 +54,8 @@ verify_jwt = true
 [functions.asaas-create-subscription]
 verify_jwt = true
 
+[functions.asaas-update-customer]
+verify_jwt = true
+
 [functions.asaas-webhook]
 verify_jwt = false

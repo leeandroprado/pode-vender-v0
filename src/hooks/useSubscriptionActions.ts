@@ -16,7 +16,7 @@ export const useSubscriptionActions = () => {
       // 1. Buscar organization_id e dados do usuário
       const { data: profile } = await supabase
         .from('profiles')
-        .select('organization_id, email, full_name')
+        .select('organization_id, email, full_name, cpf_cnpj, phone')
         .eq('id', user.id)
         .single();
 
@@ -40,6 +40,11 @@ export const useSubscriptionActions = () => {
 
       if (!newPlan) {
         throw new Error("Plano não encontrado");
+      }
+
+      // Verificar se é plano pago e se precisa de CPF/CNPJ
+      if (newPlan.slug !== 'trial' && !profile.cpf_cnpj) {
+        throw new Error('MISSING_PAYMENT_DATA');
       }
 
       // Se for plano Trial, apenas criar subscription no banco
@@ -78,6 +83,18 @@ export const useSubscriptionActions = () => {
 
         if (customerError) throw customerError;
         asaasCustomerId = customerData.customerId;
+      }
+
+      // 4.1 Atualizar dados do customer com CPF/CNPJ e telefone
+      if (profile.cpf_cnpj) {
+        await supabase.functions.invoke('asaas-update-customer', {
+          body: {
+            customerId: asaasCustomerId,
+            cpfCnpj: profile.cpf_cnpj,
+            phone: profile.phone,
+            name: profile.full_name || profile.email.split('@')[0],
+          },
+        });
       }
 
       // 5. Criar/atualizar subscription no Asaas
