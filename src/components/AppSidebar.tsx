@@ -147,6 +147,14 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
+                  <NavLink to="/pedidos" className={getNavLinkClass}>
+                    <ShoppingCart className="h-4 w-4" />
+                    <span>Pedidos</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
                   <NavLink to="/agenda" className={getNavLinkClass}>
                     <Calendar className="h-4 w-4" />
                     <span>Agenda</span>
