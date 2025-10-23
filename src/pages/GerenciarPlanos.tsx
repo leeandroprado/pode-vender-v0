@@ -4,12 +4,14 @@ import { PlanFormDialog } from "@/components/PlanFormDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Eye, EyeOff, CreditCard } from "lucide-react";
+import { Plus, Edit, Eye, EyeOff, CreditCard, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function GerenciarPlanos() {
+  const navigate = useNavigate();
   const { data: plans, isLoading } = usePlans();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -74,10 +76,16 @@ export default function GerenciarPlanos() {
               Crie e edite planos de assinatura
             </p>
           </div>
-          <Button onClick={handleCreatePlan}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Plano
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/admin/gerenciar-funcionalidades')}>
+              <Settings className="h-4 w-4 mr-2" />
+              Gerenciar Funcionalidades
+            </Button>
+            <Button onClick={handleCreatePlan}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Plano
+            </Button>
+          </div>
         </div>
 
         {/* Plans List */}

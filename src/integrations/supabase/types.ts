@@ -728,6 +728,90 @@ export type Database = {
           },
         ]
       }
+      plan_feature_values: {
+        Row: {
+          created_at: string | null
+          feature_id: string
+          id: string
+          plan_id: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          feature_id: string
+          id?: string
+          plan_id: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          feature_id?: string
+          id?: string
+          plan_id?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_feature_values_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "plan_features"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_feature_values_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_features: {
+        Row: {
+          category: string
+          created_at: string | null
+          default_value: string | null
+          description: string | null
+          display_order: number | null
+          feature_key: string
+          feature_type: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          default_value?: string | null
+          description?: string | null
+          display_order?: number | null
+          feature_key: string
+          feature_type: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          default_value?: string | null
+          description?: string | null
+          display_order?: number | null
+          feature_key?: string
+          feature_type?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           active: boolean | null

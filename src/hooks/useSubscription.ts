@@ -52,7 +52,17 @@ export const useSubscription = () => {
 
       const { data, error } = await supabase
         .from('organization_subscriptions')
-        .select('*, plan:subscription_plans(*)')
+        .select(`
+          *,
+          plan:subscription_plans(
+            *,
+            feature_values:plan_feature_values(
+              id,
+              value,
+              feature:plan_features(*)
+            )
+          )
+        `)
         .eq('organization_id', profile.organization_id)
         .maybeSingle();
 
@@ -81,14 +91,39 @@ export const useSubscription = () => {
     trialExpired;
 
   // Função para checar se tem acesso a funcionalidade
+  // Suporta tanto a estrutura nova (relacional) quanto a antiga (JSON) durante a migração
   const hasFeature = (feature: string): boolean => {
     if (!subscription?.plan) return false;
+    
+    // Tentar buscar da estrutura relacional primeiro
+    const featureValue = (subscription.plan as any).feature_values?.find(
+      (fv: any) => fv.feature?.feature_key === feature
+    );
+    
+    if (featureValue) {
+      return featureValue.value === 'true';
+    }
+    
+    // Fallback para estrutura JSON antiga
     return subscription.plan.features[feature] === true;
   };
 
   // Função para checar limite
   const checkLimit = (limitKey: string, currentValue: number): boolean => {
     if (!subscription?.plan) return false;
+    
+    // Tentar buscar da estrutura relacional primeiro
+    const featureValue = (subscription.plan as any).feature_values?.find(
+      (fv: any) => fv.feature?.feature_key === limitKey
+    );
+    
+    if (featureValue) {
+      const limit = parseInt(featureValue.value);
+      if (limit === -1) return true; // ilimitado
+      return currentValue < limit;
+    }
+    
+    // Fallback para estrutura JSON antiga
     const limit = subscription.plan.features[limitKey];
     if (limit === -1) return true; // ilimitado
     if (limit === undefined) return true; // sem limite definido
@@ -98,6 +133,17 @@ export const useSubscription = () => {
   // Obter limite
   const getLimit = (limitKey: string): number | null => {
     if (!subscription?.plan) return null;
+    
+    // Tentar buscar da estrutura relacional primeiro
+    const featureValue = (subscription.plan as any).feature_values?.find(
+      (fv: any) => fv.feature?.feature_key === limitKey
+    );
+    
+    if (featureValue) {
+      return parseInt(featureValue.value);
+    }
+    
+    // Fallback para estrutura JSON antiga
     const limit = subscription.plan.features[limitKey];
     return limit ?? null;
   };

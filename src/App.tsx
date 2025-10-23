@@ -29,6 +29,7 @@ import { AdminRoute } from "./components/AdminRoute";
 import { OwnerRoute } from "./components/OwnerRoute";
 import Organizacoes from "./pages/Organizacoes";
 import GerenciarPlanos from "./pages/GerenciarPlanos";
+import GerenciarFuncionalidades from "./pages/GerenciarFuncionalidades";
 import DashboardGlobal from "./pages/DashboardGlobal";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => (
             <Route path="/admin/dashboard" element={<ProtectedRoute><OwnerRoute><DashboardGlobal /></OwnerRoute></ProtectedRoute>} />
             <Route path="/admin/organizacoes" element={<ProtectedRoute><OwnerRoute><DashboardLayout><Organizacoes /></DashboardLayout></OwnerRoute></ProtectedRoute>} />
             <Route path="/admin/gerenciar-planos" element={<ProtectedRoute><OwnerRoute><DashboardLayout><GerenciarPlanos /></DashboardLayout></OwnerRoute></ProtectedRoute>} />
+            <Route path="/admin/gerenciar-funcionalidades" element={<ProtectedRoute><OwnerRoute><DashboardLayout><GerenciarFuncionalidades /></DashboardLayout></OwnerRoute></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
