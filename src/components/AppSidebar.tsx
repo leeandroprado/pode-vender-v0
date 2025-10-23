@@ -1,4 +1,4 @@
-import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar, Key, BookOpen, LogOut, Shield, BarChart, Briefcase, Library } from "lucide-react";
+import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar, Key, BookOpen, LogOut, Shield, BarChart, Briefcase, Library, ShoppingCart } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +32,7 @@ const automationItems = [
 const managementItems = [
   { title: "Produtos", url: "/produtos", icon: Package },
   { title: "Clientes", url: "/clientes", icon: Users },
+  { title: "Pedidos", url: "/pedidos", icon: ShoppingCart },
   { title: "Agenda", url: "/agenda", icon: Calendar },
   { title: "Atividades", url: "/atividades", icon: Activity },
 ];

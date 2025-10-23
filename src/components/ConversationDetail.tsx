@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, User, MoreVertical, Search, UserPlus, UserCheck, PanelRightClose, PanelRightOpen, AlertCircle, Check, Clock, CheckCheck } from "lucide-react";
+import { Bot, User, MoreVertical, Search, UserPlus, UserCheck, PanelRightClose, PanelRightOpen, AlertCircle, Check, Clock, CheckCheck, ShoppingCart } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Message } from "@/hooks/useConversations";
@@ -11,7 +11,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddClientDialog } from "@/components/AddClientDialog";
+import { CartDialog } from "@/components/CartDialog";
 import { useClients } from "@/hooks/useClients";
+import { useCart } from "@/hooks/useCart";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVendedores } from "@/hooks/useVendedores";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -48,11 +50,13 @@ export const ConversationDetail = ({
 }: ConversationDetailProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showAddClientDialog, setShowAddClientDialog] = useState(false);
+  const [showCartDialog, setShowCartDialog] = useState(false);
   const { clients } = useClients();
   const { vendedores } = useVendedores();
   const { isAdmin } = useUserRole();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { itemCount } = useCart(conversationId);
 
   const currentClient = clientId ? clients.find(c => c.id === clientId) : null;
   const displayName = currentClient?.name || clientName || conversationPhone;
@@ -147,6 +151,21 @@ export const ConversationDetail = ({
                 Adicionar Cliente
               </Button>
             )}
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowCartDialog(true)}
+              className="relative"
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Carrinho
+              {itemCount > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                  {itemCount}
+                </Badge>
+              )}
+            </Button>
             
             <Button variant="ghost" size="icon">
               <Search className="w-5 h-5" />
@@ -272,6 +291,16 @@ export const ConversationDetail = ({
         conversationId={conversationId}
         defaultPhone={conversationPhone}
         onClientAdded={handleClientAdded}
+      />
+
+      <CartDialog
+        open={showCartDialog}
+        onOpenChange={setShowCartDialog}
+        conversationId={conversationId}
+        clientId={clientId || undefined}
+        onOrderCreated={() => {
+          queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        }}
       />
     </div>
   );

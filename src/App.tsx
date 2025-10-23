@@ -11,6 +11,7 @@ import Agentes from "./pages/Agentes";
 import Produtos from "./pages/Produtos";
 import Clientes from "./pages/Clientes";
 import Conversas from "./pages/Conversas";
+import Pedidos from "./pages/Pedidos";
 import Atividades from "./pages/Atividades";
 import Agenda from "./pages/Agenda";
 import Conta from "./pages/Conta";
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/produtos" element={<ProtectedRoute><DashboardLayout><Produtos /></DashboardLayout></ProtectedRoute>} />
             <Route path="/clientes" element={<ProtectedRoute><DashboardLayout><Clientes /></DashboardLayout></ProtectedRoute>} />
             <Route path="/conversas" element={<ProtectedRoute><DashboardLayout><Conversas /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/pedidos" element={<ProtectedRoute><DashboardLayout><Pedidos /></DashboardLayout></ProtectedRoute>} />
             <Route path="/atividades" element={<ProtectedRoute><AdminRoute><DashboardLayout><Atividades /></DashboardLayout></AdminRoute></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><DashboardLayout><Agenda /></DashboardLayout></ProtectedRoute>} />
             <Route path="/conta" element={<ProtectedRoute><DashboardLayout><Conta /></DashboardLayout></ProtectedRoute>} />
