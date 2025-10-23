@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const ASAAS_API_KEY = Deno.env.get('ASAAS_API_KEY')!;
-const ASAAS_BASE_URL = 'https://sandbox.asaas.com/api/v3'; // Usar sandbox para testes
+const ASAAS_BASE_URL = 'https://api.asaas.com/v3';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
