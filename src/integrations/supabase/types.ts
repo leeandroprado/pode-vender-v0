@@ -535,24 +535,6 @@ export type Database = {
         }
         Relationships: []
       }
-      logs_n8n: {
-        Row: {
-          created_at: string
-          error: string | null
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          error?: string | null
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          error?: string | null
-          id?: number
-        }
-        Relationships: []
-      }
       messages: {
         Row: {
           content: string
