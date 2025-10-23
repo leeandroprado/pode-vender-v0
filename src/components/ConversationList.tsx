@@ -85,7 +85,14 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
 
                     <div className="flex items-center gap-2">
                       <p className="text-sm text-muted-foreground truncate flex-1">
-                        {conversation.clients?.name ? conversation.whatsapp_phone : `Última mensagem há ${formatTimestamp(new Date(conversation.last_message_at))}`}
+                        {conversation.last_message ? (
+                          <>
+                            {conversation.last_message.sender_type !== 'client' && '✓ '}
+                            {conversation.last_message.content}
+                          </>
+                        ) : (
+                          'Nenhuma mensagem ainda'
+                        )}
                       </p>
                       <div className="shrink-0">
                         <div className={`w-2 h-2 rounded-full ${getStatusColor(conversation.status)}`} />

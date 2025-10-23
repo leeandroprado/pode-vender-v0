@@ -16,6 +16,10 @@ export type Conversation = {
   metadata: Record<string, any>;
   client_id?: string | null;
   assigned_to?: string | null;
+  last_message?: {
+    content: string;
+    sender_type: 'client' | 'ai' | 'system';
+  } | null;
   clients?: {
     id: string;
     name: string;
@@ -74,23 +78,38 @@ export const useConversations = () => {
 
       if (error) throw error;
       
-      // Fetch assigned profiles separately to avoid FK issues
-      const conversationsWithProfiles = await Promise.all(
+      // Enriquecer com última mensagem e perfil atribuído
+      const conversationsWithData = await Promise.all(
         (data || []).map(async (conv: any) => {
+          // Buscar última mensagem
+          const { data: lastMessage } = await supabase
+            .from('messages')
+            .select('content, sender_type')
+            .eq('conversation_id', conv.id)
+            .order('timestamp', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          // Buscar perfil atribuído
+          let assigned_profile = null;
           if (conv.assigned_to) {
             const { data: profile } = await supabase
               .from('profiles')
               .select('id, full_name, email')
               .eq('id', conv.assigned_to)
               .single();
-            
-            return { ...conv, assigned_profile: profile };
+            assigned_profile = profile;
           }
-          return conv;
+
+          return { 
+            ...conv, 
+            last_message: lastMessage,
+            assigned_profile 
+          };
         })
       );
 
-      return conversationsWithProfiles as Conversation[];
+      return conversationsWithData as Conversation[];
     },
     staleTime: 30000, // Cache for 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
