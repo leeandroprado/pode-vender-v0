@@ -6,11 +6,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, FileText, FileSpreadsheet, Loader2 } from "lucide-react";
+import { Download, FileText, FileSpreadsheet, Loader2, Lock } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useNavigate } from "react-router-dom";
 import { Product } from "@/hooks/useProducts";
 
 interface ExportDropdownProps {
@@ -20,6 +22,23 @@ interface ExportDropdownProps {
 export function ExportDropdown({ products }: ExportDropdownProps) {
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
+  const { hasFeature } = useSubscription();
+  const navigate = useNavigate();
+
+  const canExport = hasFeature('can_export_reports');
+
+  if (!canExport) {
+    return (
+      <Button 
+        variant="outline" 
+        className="gap-2"
+        onClick={() => navigate('/planos')}
+      >
+        <Lock className="h-4 w-4" />
+        Exportar (Plano Básico)
+      </Button>
+    );
+  }
 
   const exportToPDF = () => {
     setIsExporting(true);

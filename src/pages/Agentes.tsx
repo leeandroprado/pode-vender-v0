@@ -3,12 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Bot, Plus, QrCode, Settings, Loader2, CheckCircle } from "lucide-react";
+import { Bot, Plus, QrCode, Settings, Loader2, CheckCircle, Lock } from "lucide-react";
 import { useAgents } from "@/hooks/useAgents";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useNavigate } from "react-router-dom";
 import { NewAgentDialog } from "@/components/NewAgentDialog";
 import { ConfigureAgentDialog } from "@/components/ConfigureAgentDialog";
 import { QRCodeDialog } from "@/components/QRCodeDialog";
 import { WhatsAppStatusDialog } from "@/components/WhatsAppStatusDialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Agent = Tables<"agents">;
@@ -29,10 +33,15 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function Agentes() {
+  const navigate = useNavigate();
   const { agents, isLoading, updateAgent, whatsappInstances, fetchWhatsappInstances } = useAgents();
+  const { checkLimit, getLimit, plan } = useSubscription();
   const [configureAgent, setConfigureAgent] = useState<Agent | null>(null);
   const [qrCodeAgent, setQrCodeAgent] = useState<Agent | null>(null);
   const [statusAgent, setStatusAgent] = useState<Agent | null>(null);
+
+  const canCreateAgent = checkLimit('max_agents', agents?.length || 0);
+  const maxAgents = getLimit('max_agents');
 
   useEffect(() => {
     if (agents.length > 0) {
@@ -72,12 +81,33 @@ export default function Agentes() {
           </p>
         </div>
         <NewAgentDialog>
-          <Button className="gap-2 w-full sm:w-auto">
+          <Button 
+            className="gap-2 w-full sm:w-auto" 
+            disabled={!canCreateAgent}
+          >
+            {!canCreateAgent && <Lock className="h-4 w-4" />}
             <Plus className="h-4 w-4" />
             Novo Agente
           </Button>
         </NewAgentDialog>
       </div>
+
+      {!canCreateAgent && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Limite atingido</AlertTitle>
+          <AlertDescription>
+            Você atingiu o limite de {maxAgents === -1 ? 'ilimitados' : maxAgents} agente{maxAgents !== 1 ? 's' : ''} do plano {plan?.name}.{' '}
+            <Button 
+              variant="link" 
+              className="p-0 h-auto text-destructive underline"
+              onClick={() => navigate('/planos')}
+            >
+              Faça upgrade para criar mais agentes →
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
