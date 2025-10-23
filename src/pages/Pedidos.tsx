@@ -20,6 +20,7 @@ import {
 import { useOrders } from '@/hooks/useOrders';
 import { OrderStatusBadge } from '@/components/OrderStatusBadge';
 import { OrderDetailsDialog } from '@/components/OrderDetailsDialog';
+import { NewOrderDialog } from '@/components/NewOrderDialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -30,6 +31,7 @@ import {
   DollarSign,
   Package,
   CheckCircle2,
+  Plus,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -47,9 +49,10 @@ const Pedidos = () => {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [showNewOrderDialog, setShowNewOrderDialog] = useState(false);
 
   const filters = statusFilter !== 'all' ? { status: statusFilter } : undefined;
-  const { orders, loading, page, totalPages, setPage } = useOrders(filters);
+  const { orders, loading, page, totalPages, setPage, createManualOrder, refetch } = useOrders(filters);
 
   // Calcular estatísticas
   const totalOrders = orders.length;
@@ -80,6 +83,10 @@ const Pedidos = () => {
             Gerencie todos os pedidos da sua loja
           </p>
         </div>
+        <Button onClick={() => setShowNewOrderDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Pedido Manual
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -260,6 +267,14 @@ const Pedidos = () => {
           orderId={selectedOrderId}
         />
       )}
+
+      {/* New Order Dialog */}
+      <NewOrderDialog
+        open={showNewOrderDialog}
+        onOpenChange={setShowNewOrderDialog}
+        onOrderCreated={refetch}
+        createManualOrder={createManualOrder}
+      />
     </div>
   );
 };

@@ -253,6 +253,71 @@ export const useOrders = (filters?: OrderFilters) => {
     await updateOrderStatus(orderId, 'cancelled');
   };
 
+  const createManualOrder = async (
+    clientId: string | null,
+    items: Array<{
+      product_id: string;
+      quantity: number;
+      price: number;
+    }>,
+    notes?: string
+  ) => {
+    try {
+      // 1. Calcular total
+      const total = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+
+      // 2. Obter user_id atual
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // 3. Criar pedido (sem conversation_id para pedidos manuais)
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          conversation_id: null, // Pedidos manuais não têm conversa
+          client_id: clientId,
+          total,
+          notes: notes || null,
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // 4. Inserir order_items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      toast({
+        title: 'Pedido criado!',
+        description: `Pedido manual #${order.id.slice(0, 8)} criado com sucesso.`,
+      });
+
+      await fetchOrders();
+      return order;
+    } catch (error: any) {
+      console.error('Erro ao criar pedido manual:', error);
+      toast({
+        title: 'Erro ao criar pedido',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
   }, [page, filters]);
@@ -264,6 +329,7 @@ export const useOrders = (filters?: OrderFilters) => {
     totalPages,
     setPage,
     createOrder,
+    createManualOrder,
     getOrderDetails,
     updateOrderStatus,
     cancelOrder,
