@@ -1,7 +1,8 @@
-import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar, Key, BookOpen, LogOut, Shield, BarChart, Briefcase, Library, ShoppingCart, CreditCard } from "lucide-react";
+import { LayoutDashboard, Bot, Package, Users, Activity, UserCircle, MessageCircle, Settings, Calendar, Key, BookOpen, LogOut, Shield, BarChart, Briefcase, Library, ShoppingCart, CreditCard, Building2, Crown } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/contexts/AuthContext";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -45,7 +46,7 @@ const resourceItems = [
 ];
 
 export function AppSidebar() {
-  const { isSuperAdmin, isAdmin } = useUserRole();
+  const { isSuperAdmin, isAdmin, isOwner } = useUserRole();
   const { user, signOut } = useAuth();
 
   const getNavLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -205,6 +206,44 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
+        {/* Owner (apenas owner) */}
+        {isOwner && (
+          <SidebarGroup className="mb-1">
+            <SidebarGroupLabel className="px-2 py-1 text-[10px] font-semibold text-white/50 uppercase tracking-wider flex items-center gap-1">
+              <Crown className="h-3 w-3" />
+              OWNER
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/admin/dashboard" className={getNavLinkClass}>
+                      <BarChart className="h-4 w-4" />
+                      <span>Dashboard Global</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/admin/organizacoes" className={getNavLinkClass}>
+                      <Building2 className="h-4 w-4" />
+                      <span>Organizações</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/admin/gerenciar-planos" className={getNavLinkClass}>
+                      <CreditCard className="h-4 w-4" />
+                      <span>Gerenciar Planos</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
         {/* Sistema (apenas super admin) */}
         {isSuperAdmin && (
           <SidebarGroup className="mb-1">
@@ -246,8 +285,9 @@ export function AppSidebar() {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-medium text-white truncate">
+            <p className="text-sm font-medium text-white truncate flex items-center gap-1">
               {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Usuário"}
+              {isOwner && <Crown className="h-3 w-3 text-yellow-400" />}
             </p>
           </div>
           <Button 

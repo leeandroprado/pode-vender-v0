@@ -26,6 +26,10 @@ import ApiDocs from "./pages/ApiDocs";
 import Planos from "./pages/Planos";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import { AdminRoute } from "./components/AdminRoute";
+import { OwnerRoute } from "./components/OwnerRoute";
+import Organizacoes from "./pages/Organizacoes";
+import GerenciarPlanos from "./pages/GerenciarPlanos";
+import DashboardGlobal from "./pages/DashboardGlobal";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +58,12 @@ const App = () => (
             <Route path="/api-docs" element={<ProtectedRoute><DashboardLayout><ApiDocs /></DashboardLayout></ProtectedRoute>} />
             <Route path="/planos" element={<ProtectedRoute><Planos /></ProtectedRoute>} />
             <Route path="/settings-system" element={<ProtectedRoute><SuperAdminRoute><SystemSettings /></SuperAdminRoute></ProtectedRoute>} />
+            
+            {/* Owner Routes */}
+            <Route path="/admin/dashboard" element={<ProtectedRoute><OwnerRoute><DashboardGlobal /></OwnerRoute></ProtectedRoute>} />
+            <Route path="/admin/organizacoes" element={<ProtectedRoute><OwnerRoute><DashboardLayout><Organizacoes /></DashboardLayout></OwnerRoute></ProtectedRoute>} />
+            <Route path="/admin/gerenciar-planos" element={<ProtectedRoute><OwnerRoute><DashboardLayout><GerenciarPlanos /></DashboardLayout></OwnerRoute></ProtectedRoute>} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
