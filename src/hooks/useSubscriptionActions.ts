@@ -105,16 +105,21 @@ export const useSubscriptionActions = () => {
       // 6. Atualizar subscription no banco
       const { data: updatedSubscription, error: updateError } = await supabase
         .from('organization_subscriptions')
-        .upsert({
-          organization_id: profile.organization_id,
-          plan_id: planId,
-          status: 'active',
-          asaas_customer_id: asaasCustomerId,
-          asaas_subscription_id: subscriptionData.subscriptionId,
-          asaas_next_due_date: subscriptionData.nextDueDate,
-          current_period_start: new Date().toISOString(),
-          current_period_end: subscriptionData.nextDueDate,
-        })
+        .upsert(
+          {
+            organization_id: profile.organization_id,
+            plan_id: planId,
+            status: 'active',
+            asaas_customer_id: asaasCustomerId,
+            asaas_subscription_id: subscriptionData.subscriptionId,
+            asaas_next_due_date: subscriptionData.nextDueDate,
+            current_period_start: new Date().toISOString(),
+            current_period_end: subscriptionData.nextDueDate,
+          },
+          {
+            onConflict: 'organization_id',
+          }
+        )
         .select('*, plan:subscription_plans(*)')
         .single();
 
