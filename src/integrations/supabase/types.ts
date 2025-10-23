@@ -687,6 +687,65 @@ export type Database = {
           },
         ]
       }
+      organization_subscriptions: {
+        Row: {
+          asaas_customer_id: string | null
+          asaas_next_due_date: string | null
+          asaas_subscription_id: string | null
+          canceled_at: string | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          current_usage: Json | null
+          id: string
+          organization_id: string
+          plan_id: string
+          status: string
+          trial_ends_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          asaas_customer_id?: string | null
+          asaas_next_due_date?: string | null
+          asaas_subscription_id?: string | null
+          canceled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          current_usage?: Json | null
+          id?: string
+          organization_id: string
+          plan_id: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          asaas_customer_id?: string | null
+          asaas_next_due_date?: string | null
+          asaas_subscription_id?: string | null
+          canceled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          current_usage?: Json | null
+          id?: string
+          organization_id?: string
+          plan_id?: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           active: boolean | null
@@ -773,6 +832,110 @@ export type Database = {
           id?: string
           organization_id?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      subscription_invoices: {
+        Row: {
+          amount: number
+          asaas_invoice_url: string | null
+          asaas_payment_id: string
+          billing_type: string | null
+          created_at: string | null
+          due_date: string
+          id: string
+          organization_id: string
+          payment_date: string | null
+          status: string
+          subscription_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          asaas_invoice_url?: string | null
+          asaas_payment_id: string
+          billing_type?: string | null
+          created_at?: string | null
+          due_date: string
+          id?: string
+          organization_id: string
+          payment_date?: string | null
+          status: string
+          subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          asaas_invoice_url?: string | null
+          asaas_payment_id?: string
+          billing_type?: string | null
+          created_at?: string | null
+          due_date?: string
+          id?: string
+          organization_id?: string
+          payment_date?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "organization_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          billing_cycle: string
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          features: Json
+          id: string
+          is_active: boolean | null
+          is_custom: boolean | null
+          limits: Json
+          name: string
+          price: number
+          slug: string
+          trial_days: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_cycle?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          is_custom?: boolean | null
+          limits?: Json
+          name: string
+          price: number
+          slug: string
+          trial_days?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_cycle?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          is_custom?: boolean | null
+          limits?: Json
+          name?: string
+          price?: number
+          slug?: string
+          trial_days?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -906,6 +1069,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: never; Returns: boolean }
+      reset_monthly_usage: { Args: never; Returns: undefined }
       same_organization: {
         Args: { _owner_id: string; _user_id: string }
         Returns: boolean
