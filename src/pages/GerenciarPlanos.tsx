@@ -17,6 +17,17 @@ export default function GerenciarPlanos() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
+  const formatPrice = (price: number) => {
+    return price.toLocaleString('pt-BR', { 
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2 
+    });
+  };
+
+  const formatBillingCycle = (cycle: string) => {
+    return cycle === 'MONTHLY' ? 'mês' : 'ano';
+  };
+
   const handleCreatePlan = () => {
     setSelectedPlan(null);
     setDialogOpen(true);
@@ -77,72 +88,79 @@ export default function GerenciarPlanos() {
             Carregando planos...
           </div>
         ) : plans && plans.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {plans.map((plan) => (
-              <Card key={plan.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="flex items-center gap-2">
-                        {plan.name}
-                        {!plan.is_active && (
-                          <Badge variant="secondary">Inativo</Badge>
-                        )}
-                      </CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {plan.description || "Sem descrição"}
-                      </CardDescription>
+              <Card key={plan.id} className="flex flex-col hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                      {plan.name}
+                    </CardTitle>
+                    {!plan.is_active && (
+                      <Badge variant="secondary" className="shrink-0">Inativo</Badge>
+                    )}
+                  </div>
+                  {plan.description && (
+                    <CardDescription className="mt-2">
+                      {plan.description}
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                
+                <CardContent className="flex-1 space-y-4 pb-4">
+                  <div className="pb-4 border-b">
+                    <div className="text-4xl font-bold text-primary">
+                      R$ {formatPrice(plan.price)}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      por {formatBillingCycle(plan.billing_cycle)}
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-3xl font-bold">
-                        R$ {plan.price}
-                        <span className="text-sm font-normal text-muted-foreground">
-                          /{plan.billing_cycle === 'MONTHLY' ? 'mês' : 'ano'}
-                        </span>
-                      </div>
-                    </div>
 
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex justify-between">
-                        <span>Slug:</span>
-                        <span className="font-mono text-xs">{plan.slug}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Trial:</span>
-                        <span className="font-medium">{plan.trial_days} dias</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Ordem:</span>
-                        <span className="font-medium">{plan.display_order}</span>
-                      </div>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-muted-foreground">Identificador:</span>
+                      <span className="font-mono text-xs bg-muted px-2 py-1 rounded">{plan.slug}</span>
                     </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-muted-foreground">Período trial:</span>
+                      <span className="font-medium">{plan.trial_days} dias</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-muted-foreground">Ordem exibição:</span>
+                      <span className="font-medium">{plan.display_order}</span>
+                    </div>
+                  </div>
+                </CardContent>
 
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleEditPlan(plan)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Editar
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleActive(plan)}
-                      >
-                        {plan.is_active ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                <CardContent className="pt-0">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleEditPlan(plan)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button
+                      variant={plan.is_active ? "outline" : "default"}
+                      size="sm"
+                      onClick={() => handleToggleActive(plan)}
+                    >
+                      {plan.is_active ? (
+                        <>
+                          <EyeOff className="h-4 w-4 mr-2" />
+                          Desativar
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ativar
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
