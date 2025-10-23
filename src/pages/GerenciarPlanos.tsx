@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { usePlans } from "@/hooks/usePlans";
 import { PlanFormDialog } from "@/components/PlanFormDialog";
 import { Button } from "@/components/ui/button";
@@ -63,8 +62,7 @@ export default function GerenciarPlanos() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -175,13 +173,12 @@ export default function GerenciarPlanos() {
             </Button>
           </div>
         )}
-      </div>
-
+      
       <PlanFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         plan={selectedPlan}
       />
-    </DashboardLayout>
+    </div>
   );
 }
