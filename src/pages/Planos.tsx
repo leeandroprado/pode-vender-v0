@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { usePlans } from "@/hooks/usePlans";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useSubscriptionActions } from "@/hooks/useSubscriptionActions";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Loader2 } from "lucide-react";
 import { PlanCard } from "@/components/PlanCard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -13,6 +14,7 @@ export default function Planos() {
   const navigate = useNavigate();
   const { subscription } = useSubscription();
   const { data: plans, isLoading } = usePlans();
+  const { createOrUpdateSubscription, isLoading: isProcessing } = useSubscriptionActions();
 
   return (
     <DashboardLayout>
@@ -53,6 +55,7 @@ export default function Planos() {
                 key={plan.id}
                 plan={plan}
                 current={subscription?.plan_id === plan.id}
+                isProcessing={isProcessing}
                 onSelect={() => {
                   if (plan.is_custom) {
                     // Abrir WhatsApp ou email para contato
@@ -61,12 +64,23 @@ export default function Planos() {
                       '_blank'
                     );
                   } else {
-                    // Navegar para checkout (implementaremos depois)
-                    console.log('Selecionar plano:', plan.slug);
+                    // Criar/atualizar subscription
+                    createOrUpdateSubscription.mutate(plan.id);
                   }
                 }}
               />
             ))}
+          </div>
+        )}
+
+        {/* Loading overlay */}
+        {isProcessing && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="bg-card p-8 rounded-lg shadow-lg flex flex-col items-center gap-4">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <p className="text-lg font-medium">Processando alteração de plano...</p>
+              <p className="text-sm text-muted-foreground">Aguarde um momento</p>
+            </div>
           </div>
         )}
       </div>

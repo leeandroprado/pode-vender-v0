@@ -7,10 +7,11 @@ import { Plan } from "@/hooks/usePlans";
 interface PlanCardProps {
   plan: Plan;
   current: boolean;
+  isProcessing?: boolean;
   onSelect: () => void;
 }
 
-export function PlanCard({ plan, current, onSelect }: PlanCardProps) {
+export function PlanCard({ plan, current, isProcessing = false, onSelect }: PlanCardProps) {
   const renderFeatureValue = (value: any): string => {
     if (value === -1) return "Ilimitado";
     if (value === true) return "Incluído";
@@ -87,7 +88,7 @@ export function PlanCard({ plan, current, onSelect }: PlanCardProps) {
         <Button
           className="w-full"
           variant={current ? 'outline' : isRecommended ? 'default' : 'outline'}
-          disabled={current}
+          disabled={current || isProcessing}
           onClick={onSelect}
         >
           {current
