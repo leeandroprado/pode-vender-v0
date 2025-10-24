@@ -157,15 +157,20 @@ export const useSetFeatureValue = () => {
 
   return useMutation({
     mutationFn: async ({ planId, featureId, value }: { planId: string; featureId: string; value: string }) => {
-      const { data, error } = await supabase
-        .from('plan_feature_values')
-        .upsert({
+    const { data, error } = await supabase
+      .from('plan_feature_values')
+      .upsert(
+        {
           plan_id: planId,
           feature_id: featureId,
           value,
-        })
-        .select()
-        .single();
+        },
+        {
+          onConflict: 'plan_id,feature_id'
+        }
+      )
+      .select()
+      .single();
 
       if (error) throw error;
       return data;
